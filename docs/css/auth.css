@@ -1,0 +1,160 @@
+/* ==========================================================================
+   AUTH LAYOUT (Centering Logic)
+   ========================================================================== */
+
+/* This targets the <main> tag on my login.html page */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    /* Calculates height: Screen height minus header and footer */
+    min-height: calc(100vh - 180px); 
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+/* 1. Modal Overlay (If I use it as a popup later) */
+.auth-modal {
+    display: none; 
+    position: fixed;
+    z-index: 2000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 2. The White Box (Shared by both standalone and modal) */
+.auth-box {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Soft shadow like your screenshot */
+    text-align: center;
+    animation: slideDown 0.4s ease-out;
+}
+
+/* ==========================================================================
+   ELEMENT STYLES
+   ========================================================================== */
+
+/* Close Button (Only visible in Modal) */
+.close-auth {
+    position: absolute;
+    top: 15px; right: 20px;
+    font-size: 28px;
+    color: #888;
+    cursor: pointer;
+    line-height: 1;
+}
+
+/* Typography */
+.auth-box h2 {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+    color: #2d4d2d; /* Matching your dark green button */
+    font-weight: 700;
+}
+
+.auth-box p {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #fff;
+    transition: all 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #2d4d2d;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(45, 77, 45, 0.1);
+}
+
+/* Login Button */
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    background-color: #2d4d2d; /* The specific dark green from your image */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    background-color: #1e331e;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Switch Link */
+.switch-auth {
+    margin-top: 25px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.switch-auth a {
+    color: #2d4d2d;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.switch-auth a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Contact | CarTees</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/contact.css">
+  
+  <script src="js/script.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  <script src="js/contact.js" defer></script>
+</head>
+<body>
+  
+ <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html" class="active">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <section class="contact-hero">
+    <h1>Contact Us</h1>
+    <p>We’d love to hear from you. Get in touch!</p>
+  </section>
+
+  <main class="contact-container" style="display:flex;">
+    <div class="contact-form">
+      <h2>Send us a message</h2>
+      <form>
+        <input type="text" placeholder="Your Name" required>
+        <input type="email" placeholder="Your Email" required>
+        <textarea placeholder="Your Message" required></textarea>
+        <button type="submit">Send Message</button>
+      </form>
+    </div>
+
+    <div class="contact-info">
+      <h2>Our Store</h2>
+      <p><strong>Address:</strong> 123 Car Street, Cairo, Egypt</p>
+      <p><strong>Email:</strong> support@cartees.com</p>
+      <p><strong>Phone:</strong> +20 123 456 789</p>
+      <p><strong>Hours:</strong> Sat–Thu, 9AM – 6PM</p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+      <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+  </body>
+</html>

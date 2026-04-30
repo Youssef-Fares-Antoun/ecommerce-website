@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  
+  <title>Porsche 911 Tee | CarTees</title> 
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/product.css">
+  
+  <script src="js/script.js" defer></script>
+  <script src="js/product.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  
+  <style>
+    /* Price styling */
+    .price {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+    .price .old-price {
+      text-decoration: line-through;
+      color: #999;
+      margin-right: 10px;
+    }
+    .price .new-price {
+      color: green;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .price .savings {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cartModal" class="cart-modal">
+    <div class="cart-modal-content">
+      <p id="cartModalMessage"></p>
+      <div class="cart-modal-buttons">
+        <button id="viewCartBtn" onclick="window.location.href='cart.html'">View Cart</button>
+        <button id="continueShoppingBtn" onclick="window.location.href='index.html'">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <main class="product-page" style="display:block;">
+    <div class="product-container">
+      
+      <div class="product-image">
+        <img id="mainImage" src="images/P1Back.png" alt="Mclaren P1 Tee">
+        <div class="thumbnails">
+          <img src="images/P1Front.png" alt="Front view" onclick="changeImage('images/P1Front.png')">
+          <img src="images/P1Back.png" alt="Back view" onclick="changeImage('images/P1Back.png')">
+        </div>
+      </div>
+
+      <div class="product-details">
+        <h1>Mclaren P1 Tee</h1>
+
+        <div class="price">
+          <span class="old-price">LE 700.00</span>
+          <span class="new-price">LE 500.00</span>
+          <span class="savings">Save LE 200.00</span>
+        </div>
+
+        <p class="description">
+          A premium Mclaren P1 inspired tee made from high-quality cotton. 
+          Perfect for motorsport fans who love performance and style.
+        </p>
+
+        <div class="option-group">
+          <label for="size">Size:</label>
+          <select id="size" name="size">
+            <option>Small</option>
+            <option>Medium</option>
+            <option>Large</option>
+            <option>X-Large</option>
+          </select>
+        </div>
+
+        <div class="option-group">
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" value="1" min="1">
+        </div>
+
+        <div class="buttons">
+          <button class="btn add-to-cart"
+            onclick="addToCartWithPopup('Mclaren P1 Tee', 500, 'images/P1Back.png')">
+            🛒 Add to Cart
+          </button>
+          <button class="btn buy-now"
+            onclick="addToCart('Mclaren P1 Tee', 500, 'images/P1Back.png', false); window.location.href='checkout.html';">
+            ⚡ Buy Now
+          </button>
+        </div>
+      </div>
+      
+      </div>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+      <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+  </body>
+</html>

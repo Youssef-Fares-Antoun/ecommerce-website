@@ -1,0 +1,306 @@
+/* ===== GENERAL RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background-color: #111;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+}
+
+/* ===== NAVBAR ===== */
+/* NOTE: Most navbar styles are now in style.css */
+/* These are specific overrides for home.css */
+
+.navbar {
+  background-color: #000;
+  color: #fff;
+}
+.navbar a {
+  color: black;
+}
+.navbar a:hover,
+.navbar a.active {
+  color: #ffcc00;
+}
+.navbar a::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 2px;
+  background: #ffcc00;
+  transition: width .3s;
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+}
+.navbar a:hover::after {
+  width: 100%;
+}
+.logo span {
+  color: #ffcc00;
+}
+.hamburger span {
+  background-color: black; /* Make hamburger bars white on this page */
+}
+
+
+/* ===== HERO SECTION ===== */
+.hero {
+  position: relative; 
+  background: url('../images/GT3 TRACK HOMEPAGE.png') center/cover no-repeat;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4); 
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative; 
+  z-index: 2;
+  text-align: center;
+  color: #fff;
+  padding: 0 20px;
+}
+
+.hero h1 {
+  font-size: 56px;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 12px rgba(0,0,0,0.7);
+}
+
+.hero p {
+  font-size: 20px;
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+  line-height: 1.6;
+  text-shadow: 1px 1px 8px rgba(0,0,0,0.6);
+}
+
+/* ===== SHOP NOW BUTTON ===== */
+.hero button {
+  padding: 15px 35px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, #ffcc00, #ff9900);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero button:hover {
+  background: linear-gradient(90deg, #ff9900, #ffcc00);
+  transform: scale(1.08);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+}
+
+/* ===== SHOP BY BRAND ===== */
+.brands {
+  max-width: 1200px;
+  margin: 0 auto 70px;
+  padding: 0 20px;
+  text-align: center;
+}
+.brands h2 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  color: #111;
+}
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+}
+.brand-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.brand-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+.brand-card img {
+  width: 100px;
+  height: auto;
+  margin-bottom: 15px;
+}
+.brand-card h3 {
+  font-size: 18px;
+  color: #000;
+}
+
+/* ===== FEATURED PRODUCTS ===== */
+.featured {
+  max-width: 1200px;
+  margin: 0 auto 70px;
+  padding: 0 20px;
+  text-align: center;
+}
+.featured h2 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  color: #111;
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
+}
+.product-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+.product-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+  margin-bottom: 15px;
+}
+.product-card h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.product-card p {
+  font-weight: bold;
+  color: #ffcc00;
+  margin-bottom: 12px;
+}
+.product-card button {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.product-card button:hover {
+  background: #ffcc00;
+  color: #000;
+}
+
+/* ===== REVIEWS ===== */
+.reviews {
+  background: #111;
+  color: #fff;
+  padding: 60px 20px;
+  text-align: center;
+}
+.reviews h2 {
+  font-size: 32px;
+  margin-bottom: 30px;
+}
+.review-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.review {
+  background: #222;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 300px;
+  font-style: italic;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+.review cite {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+  color: #ffcc00;
+  font-style: normal;
+}
+
+/* ===== NEWSLETTER ===== */
+/* Note: Newsletter styles are in style.css */
+
+
+/* ==================================
+// ✅ NEW: HOME PAGE RESPONSIVE
+// ================================== */
+@media (max-width: 900px) {
+  .hero h1 {
+    font-size: 40px;
+  }
+  .hero p {
+    font-size: 18px;
+  }
+  
+  .brand-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr 1fr; /* 2 columns on tablet */
+    gap: 15px;
+  }
+
+  .review-cards {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    height: 400px;
+  }
+  .hero h1 {
+    font-size: 32px;
+  }
+  .hero p {
+    font-size: 16px;
+  }
+
+  .brand-grid {
+    grid-template-columns: 1fr 1fr; /* 2 columns on mobile */
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+  }
+}

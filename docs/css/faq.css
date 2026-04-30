@@ -1,0 +1,88 @@
+/* ===== FAQ Page Styles ===== */
+/* Note: Header styles are in style.css */
+
+/* Header overrides */
+.logo span {
+  color: #145214;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: #145214;
+}
+
+/* ===== FAQ Section ===== */
+.faq-container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 0 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 2em;
+  color: #222;
+}
+
+.faq-item {
+  border-bottom: 1px solid #ddd;
+  padding: 15px 0;
+}
+
+.faq-question {
+  font-weight: bold;
+  cursor: pointer;
+  position: relative;
+  padding-right: 25px;
+  font-size: 1.1em;
+  transition: color 0.3s;
+}
+
+.faq-question:hover {
+  color: #145214; 
+}
+
+.faq-question::after {
+  content: '+';
+  position: absolute;
+  right: 0;
+  font-weight: bold;
+  transition: transform 0.3s;
+}
+
+.faq-question.active::after {
+  content: '−'; /* Use a proper minus sign */
+  transform: rotate(180deg);
+}
+.faq-question.active {
+    color: #145214;
+}
+
+.faq-answer {
+  display: none;
+  padding-top: 10px;
+  color: #555;
+  font-size: 1em;
+  line-height: 1.6;
+}
+
+.faq-answer.show {
+  display: block;
+}
+
+/* Mobile-friendly adjustments */
+@media (max-width: 600px) {
+  .faq-container {
+    padding: 0 15px;
+    margin: 30px auto;
+  }
+
+  h1 {
+    font-size: 1.5em;
+  }
+
+  .faq-question {
+    font-size: 1em;
+  }
+}

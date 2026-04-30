@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>FAQ | CarTees</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/faq.css">
+  
+  <script src="js/script.js" defer></script>
+  <script src="js/cart.js" defer></script>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html" class="active">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <div class="faq-container">
+    <h1>Frequently Asked Questions</h1>
+
+    <div class="faq-item">
+      <div class="faq-question">What is your return policy?</div>
+      <div class="faq-answer">
+        We offer a 30-day return policy for unused products. Please contact our support to initiate a return.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Do you ship all around Egypt?</div>
+      <div class="faq-answer">
+        No, we currently only ship within <strong>Cairo</strong>.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">How long does delivery take?</div>
+      <div class="faq-answer">
+        Deliveries within Cairo typically take 3–5 business days.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">How can I track my order?</div>
+      <div class="faq-answer">
+        After your order is shipped, you will receive a tracking number via email to monitor your package.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Do you offer discounts for bulk orders?</div>
+      <div class="faq-answer">
+        No, currently we don't offer bulk orders but you can contact us for special requests.
+      </div>
+    </div>
+  </div>
+
+  <footer style="margin-top: 40px;">
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+      <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+  <script>
+    const questions = document.querySelectorAll('.faq-question');
+    questions.forEach(q => {
+      q.addEventListener('click', () => {
+        q.classList.toggle('active');
+        const answer = q.nextElementSibling;
+        answer.classList.toggle('show');
+      });
+    });
+  </script>
+</body>
+</html>

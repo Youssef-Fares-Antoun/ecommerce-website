@@ -1,0 +1,132 @@
+/* Note: Body styles are in style.css */
+
+.container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping */
+  gap: 30px;
+}
+
+.checkout-form, .order-summary {
+  flex: 1;
+  min-width: 300px; /* Prevent over-squishing */
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.order-summary {
+    flex-basis: 300px; /* Give it a base size */
+    flex-grow: 1;
+}
+.checkout-form {
+    flex-basis: 500px; /* Give it a base size */
+    flex-grow: 2;
+}
+
+
+h2 {
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  font-size: 22px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.form-row .form-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.order-total {
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: right;
+}
+
+.checkout-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #145214; /* Match site green */
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.checkout-btn:hover {
+  background: #0e3d0e;
+}
+
+.instapay-details {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #145214;
+  display: none;
+  background-color: #f0fff0;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #c4e1c4;
+}
+
+.error-msg {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* 📱 Mobile Responsive */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    padding: 15px;
+    gap: 20px;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

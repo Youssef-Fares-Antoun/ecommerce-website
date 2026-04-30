@@ -1,0 +1,157 @@
+/* =================== GLOBAL STYLES =================== */
+/* Note: Most global styles are in style.css */
+
+/* =================== PRODUCT PAGE =================== */
+.product-page {
+  padding: 50px 20px; /* Added horizontal padding */
+  background: #f9f9f9;
+}
+
+.product-container {
+  display: flex;
+  max-width: 1100px;
+  margin: 0 auto;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* Left Side - Image + Thumbnails */
+.product-image {
+  flex: 1;
+  max-width: 450px;
+  position: relative;
+}
+
+.product-image img#mainImage {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  margin-bottom: 15px;
+  transition: transform 0.3s ease;
+  cursor: zoom-in;
+}
+.product-image img#mainImage:hover {
+  transform: scale(1.05);
+}
+
+/* Thumbnails */
+.thumbnails {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.thumbnails img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.thumbnails img:hover,
+.thumbnails img.active {
+  border-color: #145214;
+  transform: scale(1.05);
+}
+
+/* Right Side - Details */
+.product-details {
+  flex: 1;
+  min-width: 300px; /* Prevents squishing */
+}
+.product-details h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+.product-details .price {
+  font-size: 1.5rem;
+  color: #145214;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+.product-details .description {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+/* Options */
+.option-group {
+  margin-bottom: 20px;
+}
+.option-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.option-group select,
+.option-group input {
+  padding: 8px 10px;
+  font-size: 1rem;
+  width: 150px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Buttons */
+.buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 12px 20px;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  flex: 1; /* Make buttons grow */
+}
+.add-to-cart {
+  background: #222;
+  color: white;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+.add-to-cart:hover {
+  background: #444;
+  transform: translateY(-2px);
+}
+.buy-now {
+  background: #145214;
+  color: white;
+  box-shadow: 0 3px 8px rgba(20,82,20,0.4);
+}
+.buy-now:hover {
+  background: #0e3d0e;
+  transform: translateY(-2px);
+}
+
+
+/* =================== RESPONSIVE =================== */
+@media (max-width: 768px) {
+  .product-container {
+    flex-direction: column;
+    gap: 30px;
+  }
+  .product-image {
+    max-width: 100%; /* Allow image to be full width */
+  }
+  .product-details h1 {
+    font-size: 1.8rem;
+  }
+  .buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+}

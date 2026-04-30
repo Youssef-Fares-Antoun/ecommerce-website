@@ -1,0 +1,92 @@
+/* profile.css */
+
+.profile-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 0 20px;
+    min-height: 70vh;
+}
+
+/* Sidebar Styling */
+.profile-sidebar {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    height: fit-content;
+}
+
+.user-info {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.profile-pic {
+    font-size: 50px;
+    background: #f0f0f0;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+}
+
+.sidebar-menu .menu-item {
+    display: block;
+    padding: 12px 15px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: 0.3s;
+}
+
+.sidebar-menu .menu-item:hover, 
+.sidebar-menu .menu-item.active {
+    background: #2d4d2d;
+    color: white;
+}
+
+.sidebar-menu .logout {
+    color: #cc0000;
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+/* Content Area Styling */
+.profile-content {
+    background: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.content-card h2 {
+    color: #2d4d2d;
+    margin-bottom: 25px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Responsive fix for Mobile (iPhone) */
+@media (max-width: 768px) {
+    .profile-container {
+        grid-template-columns: 1fr;
+    }
+    .form-row {
+        flex-direction: column;
+    }
+}

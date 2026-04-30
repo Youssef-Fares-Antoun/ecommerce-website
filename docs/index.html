@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | CarTees</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+  
+  <script src="js/script.js" defer></script>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-container">
+    <div class="auth-box">
+      <h2>Welcome Back</h2>
+      <p>Login to access your garage.</p>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required>
+        </div>
+        
+        <button type="submit" class="btn-primary">Login</button>
+      </form>
+
+      <p class="switch-auth">
+        Don't have an account? <a href="register.html">Register here</a>
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="#">Instagram</a> | <a href="#">Facebook</a>
+    </div>
+    <p>&copy; 2026 CarTees. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

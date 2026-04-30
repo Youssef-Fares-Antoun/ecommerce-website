@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Learn more about CarTees - premium car-inspired t-shirts for motorsport enthusiasts.">
+  <meta name="keywords" content="About CarTees, motorsport fashion, racing clothing">
+  <meta name="author" content="CarTees">
+  <title>About Us | CarTees</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/script.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  
+  <style>
+    /* Page-specific styles */
+    .about-hero {
+      background: url('images/GT3 TRACK HOMEPAGE.png') center/cover no-repeat;
+      position: relative;
+      color: white;
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+    .about-hero-text {
+      position: relative; z-index: 2;
+    }
+    .about-hero h1 { font-size: 40px; margin-bottom: 10px; }
+    
+    .about-content {
+      padding: 40px 20px; 
+      max-width: 1000px; 
+      margin: auto; 
+      line-height: 1.7;
+    }
+    .about-content section {
+      margin-bottom: 30px;
+    }
+    .about-content h2 {
+      color:#145214; 
+      margin-bottom:10px;
+      font-size: 1.8rem;
+    }
+    .about-content ul {
+      margin-left:20px; 
+      list-style:disc;
+    }
+    .about-content li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html" class="active">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <section class="about-hero">
+    <div class="about-hero-text">
+      <h1>About CarTees</h1>
+      <p>Driven by passion. Inspired by speed. Crafted for enthusiasts.</p>
+    </div>
+  </section>
+
+  <main class="about-content" style="display:block;">
+    <section>
+      <h2 style="color:#145214; margin-bottom:10px;">Our Story</h2>
+      <p>
+        CarTees was founded with a simple mission: to bring the excitement of motorsport into everyday fashion. 
+        What started as a passion project for car enthusiasts has grown into a premium clothing brand that celebrates iconic cars and legendary drivers. 
+      </p>
+    </section>
+
+    <section style="margin-top:30px;">
+      <h2 style="color:#145214; margin-bottom:10px;">Our Mission</h2>
+      <p>
+        We aim to design high-quality, comfortable t-shirts that capture the spirit of racing and automotive excellence. 
+        Every piece is crafted with care, combining style, durability, and a nod to the thrilling world of performance cars. 
+      </p>
+    </section>
+
+    <section style="margin-top:30px;">
+      <h2 style="color:#145214; margin-bottom:10px;">Why Choose Us?</h2>
+      <ul style="margin-left:20px; list-style:disc;">
+        <li>✔ Premium cotton and eco-friendly materials</li>
+        <li>✔ Unique designs inspired by Porsche, Ferrari, and McLaren</li>
+        <li>✔ Free worldwide shipping</li>
+        <li>✔ Trusted by car enthusiasts across the globe</li>
+      </ul>
+    </section>
+  </main>
+
+  <section class="newsletter">
+    <h3>Join the CarTees Club</h3>
+    <p>Get exclusive offers, discounts, and early access to new drops.</p>
+    <form id="newsletterForm" onsubmit="event.preventDefault(); alert('✅ You’re subscribed!');">
+      <input type="email" placeholder="Enter your email" required>
+      <button type="submit">Subscribe</button>
+    </form>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+      <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+  </body>
+</html>

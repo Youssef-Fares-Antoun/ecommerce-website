@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Shopping Cart | CarTees</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/cart.css">
+  
+  <script src="js/script.js" defer></script>
+
+</head>
+<body>
+
+  <div id="emptyCartModal" class="cart-modal" style="display: none;">
+    <div class="cart-modal-content">
+      <p style="font-size: 1.1rem; margin-bottom: 20px;">⚠️ Your cart is empty!<br>Please add items before checking out.</p>
+      <div class="cart-modal-buttons">
+        <button id="modalShopBtn" style="background: #145214; color: white;">Start Shopping</button>
+        <button id="modalCloseBtn" style="background: #ddd; color: #333;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main style="display:block; max-width: 1000px; margin: auto;">
+    <h1>Your Cart</h1>
+    <div id="cart-items">
+        </div>
+
+    <div class="cart-summary">
+      <h2>Total: <span id="cart-total">LE 0.00</span></h2>
+      <div class="cart-actions">
+        <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
+        <button class="clear-btn" onclick="clearCart()">Clear Cart</button>
+        <button class="continue-btn" onclick="window.location.href='shop.html'">Continue Shopping</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+      <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+</body>
+</html>

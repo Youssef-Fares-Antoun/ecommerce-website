@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | CarTees</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+  
+  <script src="js/script.js" defer></script>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-container">
+    <div class="auth-box">
+      <h2>Join the Club</h2>
+      <p>Create an account to track your orders.</p>
+      
+      <form id="registerForm">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="Create a password" required>
+        </div>
+        <button type="submit" class="btn-primary">Register</button>
+      </form>
+
+      <p class="switch-auth">Already have an account? <a href="index.html">Login here</a></p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="#">Instagram</a> | <a href="#">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

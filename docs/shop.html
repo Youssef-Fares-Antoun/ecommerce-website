@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Shop premium car-inspired t-shirts from Porsche, Ferrari, McLaren, and Lamborghini. Free shipping on all orders at CarTees." />
+  <meta name="keywords" content="Car Tees, Porsche shirt, Ferrari shirt, McLaren shirt, Lamborghini shirt, motorsport clothing, racing tees" />
+  <meta name="author" content="CarTees" />
+  <title>Shop | CarTees</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/shop.css" />
+
+  <script src="js/script.js" defer></script>
+  <script src="js/shop.js" defer></script>
+  <script src="js/cart.js" defer></script>
+
+  <style>
+    /* Sale badge */
+    .badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: black;
+      color: white;
+      font-size: 0.8em;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* Price styles */
+    .price {
+      margin-top: 8px;
+      font-size: 1em;
+    }
+    .price .old-price {
+      text-decoration: line-through;
+      color: #999;
+      margin-right: 6px;
+    }
+    .price .new-price {
+      color: green;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    .price .save-price {
+      color: red;
+      font-size: 0.9em;
+    }
+
+    /* Ensure card is positioned relative for badge */
+    .card {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="shop.html" class="active">Shop All</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+
+    <div class="icons">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search products..." aria-label="Search products" />
+        <a href="#" id="searchToggle" class="search-icon" aria-label="Search Products">🔍</a>
+      </div>
+
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      
+      <div class="cart-icon" onclick="window.location.href='cart.html'">
+        🛒
+        <span id="cart-indicator"></span>
+      </div>
+      
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Discover Our Exclusive Collection</h1>
+      <p>Premium car-inspired tees designed for enthusiasts who live and breathe speed.</p>
+      <a href="#productGrid" class="btn-primary">Shop Now</a>
+    </div>
+  </section>
+
+  <main>
+    <aside>
+      <h3>Filter by Brand</h3>
+      <ul id="brandFilter">
+        <li data-brand="all" class="active">All</li>
+        <li data-brand="porsche">Porsche</li>
+        <li data-brand="mclaren">McLaren</li>
+        <li data-brand="ferrari">Ferrari</li>
+        <li data-brand="AMG">AMG</li>
+        <li data-brand="BMW">BMW</li>
+      </ul>
+
+      <div class="featured">
+        <h4>🌟 Featured</h4>
+        <a href="product4.html">
+          <img src="images/SennaBack.png" alt="McLaren Senna Tee Featured" />
+        </a>
+        <p><strong>Senna Limited Edition Tee</strong></p>
+        <p class="price">
+          <span class="old-price">LE 900.00</span>
+          <span class="new-price">LE 700.00</span>
+          <span class="save-price">Save LE 200.00</span>
+        </p>
+        <button class="btn-add" onclick="addToCart('McLaren Senna Tee', 700, 'images/SennaBack.png')">Add to Cart</button>
+      </div>
+    </aside>
+
+    <section class="products">
+      <div class="sortbar">
+        <p><strong>Showing All Products</strong></p>
+        <select id="sortSelect" aria-label="Sort Products">
+          <option value="default">Sort by</option>
+          <option value="low-high">Price: Low to High</option>
+          <option value="high-low">Price: High to Low</option>
+          <option value="a-z">Name: A - Z</option>
+          <option value="z-a">Name: Z - A</option>
+        </select>
+      </div>
+
+      <div class="grid" id="productGrid">
+        <div class="card" data-category="porsche" data-brand="porsche" data-price="500">
+          <div class="badge">Sale</div>
+          <a href="product1.html">
+            <img src="images/911Back.png" alt="Porsche 911 Tee" />
+          </a>
+          <h4>Porsche 911 Tee</h4>
+          <p class="price">
+            <span class="old-price">LE 700.00</span>
+            <span class="new-price">LE 500.00</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+        </div>
+
+        <div class="card" data-category="ferrari" data-brand="ferrari" data-price="500">
+          <div class="badge">Sale</div>
+          <a href="product2.html">
+            <img src="images/SF90Back.png" alt="Ferrari SF90 Tee" />
+          </a>
+          <h4>Ferrari SF90 Tee</h4>
+          <p class="price">
+            <span class="old-price">LE 700.00</span>
+            <span class="new-price">LE 500.00</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+        </div>
+
+        <div class="card" data-category="mclaren" data-brand="mclaren" data-price="500">
+          <div class="badge">Sale</div>
+          <a href="product3.html">
+            <img src="images/P1Back.png" alt="McLaren P1 Tee" />
+          </a>
+          <h4>McLaren P1 Tee</h4>
+          <p class="price">
+            <span class="old-price">LE 700.00</span>
+            <span class="new-price">LE 500.00</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+        </div>
+
+        <div class="card" data-category="mclaren" data-brand="mclaren" data-price="700">
+          <div class="badge">Sale</div>
+          <a href="product4.html">
+            <img src="images/SennaBack.png" alt="McLaren Senna Tee" />
+          </a>
+          <h4>McLaren Senna Tee</h4>
+          <p class="price">
+            <span class="old-price">LE 900.00</span>
+            <span class="new-price">LE 700.00</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+        </div>
+
+        <div class="card" data-category="AMG" data-brand="AMG" data-price="600">
+          <div class="badge">Sale</div>
+          <a href="product5.html">
+            <img src="images/GtBlackBack.png" alt="AMG GT Black Tee" />
+          </a>
+          <h4>AMG GT Black Tee</h4>
+          <p class="price">
+            <span class="old-price">LE 800.00</span>
+            <span class="new-price">LE 600.00</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+        </div>
+
+        <div class="card" data-category="BMW" data-brand="BMW" data-price="500">
+          <div class="badge">Sale</div>
+          <a href="product6.html">
+            <img src="images/M4 CompetitionBack.png" alt="M4 Competition Tee" />
+          </a>
+          <h4>M4 Competition Tee</h4>
+          <p class="price">
+            <span class="old-price">LE 700.00</span>
+            <span class="new-price">LE 500.00</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="newsletter">
+    <h3>Join the CarTees Club</h3>
+    <p>Get exclusive offers, discounts, and early access to new drops.</p>
+    <form id="newsletterForm" onsubmit="event.preventDefault(); alert('✅ You’re subscribed!');">
+      <input type="email" placeholder="Enter your email" required />
+      <button type="submit" class="btn-primary">Subscribe</button>
+    </form>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQ</a>
+      <a href="shop.html">Shop</a>
+      <a href="terms.html">Terms & Conditions</a>
+    </div>
+    <div class="socials">
+      <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+      <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+    </div>
+    <p>&copy; 2025 CarTees. All rights reserved.</p>
+  </footer>
+  <div id="cartModal" class="cart-modal" aria-live="polite">
+    <div class="cart-modal-content">
+      <p>Product added to cart!</p>
+      <div class="cart-modal-buttons">
+        <button id="continueShoppingBtn" class="btn-secondary">Continue Shopping</button>
+        <button id="viewCartBtn" class="btn-primary">View Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Brand filter from URL (moved to script.js)
+    
+    // Cart badge fallback (moved to script.js)
+  </script>
+</body>
+</html>

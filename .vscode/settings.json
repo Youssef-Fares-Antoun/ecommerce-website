@@ -1,0 +1,6 @@
+{
+    "files.watcherExclude": {
+        "**/target": true
+    },
+    "livePreview.defaultPreviewPath": "/docs/index.html"
+}
