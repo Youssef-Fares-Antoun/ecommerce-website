@@ -259,26 +259,44 @@ function initSearchFilter() {
 
   // Search
   if (searchIcon && searchInput) {
-    searchIcon.addEventListener("click", (e) => {
-      e.preventDefault();
-      searchInput.classList.toggle("active");
-      if (searchInput.classList.contains("active")) searchInput.focus();
-    });
+  // 1. Get the container wrapper for the animation
+  const searchBar = document.getElementById("searchBar"); 
 
-    searchInput.addEventListener("keyup", () => {
-      const filter = searchInput.value.toLowerCase();
-      products.forEach(product => {
-        const name = product.querySelector("h4").textContent.toLowerCase();
-        // Search by brand too
-        const brand = product.dataset.brand ? product.dataset.brand.toLowerCase() : "";
-        
-        if (name.includes(filter) || brand.includes(filter)) {
-            product.style.display = "flex";
-        } else {
-            product.style.display = "none";
-        }
-      });
-    });
+  searchIcon.addEventListener("click", (e) => {
+    e.preventDefault();
+    
+    // 2. Toggle classes from your CSS
+    if (searchBar) searchBar.classList.toggle("show");
+    searchInput.classList.toggle("active");
+    
+    // 3. Auto-focus when opened
+    if (searchInput.classList.contains("active")) {
+      searchInput.focus();
+    }
+  });
+
+  // 4. Live Filtering Logic
+  searchInput.addEventListener("input", () => { // "input" is better than "keyup" for instant results
+    const filter = searchInput.value.toLowerCase();
+    
+    // If you are using the array-filtering from shop.js, call that function:
+    if (typeof searchProducts === "function") {
+        searchProducts(); 
+    } else {
+        // Fallback: DOM-based filtering for static elements
+        products.forEach(product => {
+          const name = product.querySelector("h4").textContent.toLowerCase();
+          const brand = product.dataset.brand ? product.dataset.brand.toLowerCase() : "";
+          
+          if (name.includes(filter) || brand.includes(filter)) {
+              product.style.display = "flex";
+          } else {
+              product.style.display = "none";
+          }
+        });
+    }
+  });
+
   }
 
   // Brand Filter

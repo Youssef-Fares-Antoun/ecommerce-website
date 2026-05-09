@@ -70,10 +70,19 @@
 
     <div class="icons">
       <div class="search-wrapper">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search products..." aria-label="Search products" />
-        <a href="#" id="searchToggle" class="search-icon" aria-label="Search Products">🔍</a>
+        <div class="search-bar" id="searchBar">
+          <input 
+            type="text" 
+            id="searchInput" 
+            class="search-input" 
+            placeholder="Search the showroom..." 
+            oninput=" searchProducts()"
+          />
+        </div>
+          
+        <a href="javascript:void(0)" id="searchToggle" class="search-icon" aria-label="Toggle Search">🔍</a>
       </div>
-
+      
       <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
       
       <div class="cart-icon" onclick="window.location.href='cart.html'">
@@ -128,14 +137,6 @@
     <section class="products">
       <div class="sortbar">
         <!-- Search bar integrated here -->
-        <div class="search-container">
-            <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Search car models (e.g. Porsche)..." 
-                oninput="searchProducts()"
-            >
-        </div>
         <p><strong>Showing All Products</strong></p>
         <select id="sortSelect" aria-label="Sort Products" onchange="sortProducts()">
           <option value="default">Sort by</option>
@@ -187,11 +188,5 @@
     </div>
     <p>&copy; 2025 CarTees. All rights reserved.</p>
   </footer>
-
-  <script>
-    // Brand filter from URL (moved to script.js)
-    
-    // Cart badge fallback (moved to script.js)
-  </script>
 </body>
 </html>
