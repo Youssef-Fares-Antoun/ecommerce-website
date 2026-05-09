@@ -95,5 +95,31 @@ function proceedToCheckout() {
   }
 }
 
+// ✅ NEW: Logic for the "Added to Cart" Success Pop-up
+function addToCartWithPopup(name, price, image) {
+  // 1. Call your existing addToCart logic (assuming it's in your script.js or cart.js)
+  if (typeof addToCart === "function") {
+    addToCart(name, price, image);
+  }
+
+  // 2. Show the Success Modal
+  const modal = document.getElementById('cartModal');
+  const message = document.getElementById('cartModalMessage');
+  
+  if (modal && message) {
+    message.innerText = `The ${name} has been added to your fleet!`;
+    modal.style.display = 'flex';
+    
+    // Update the green dot immediately
+    updateCartIndicator();
+  }
+}
+
+// Function to close the success modal
+function closeModal() {
+  const modal = document.getElementById('cartModal');
+  if (modal) modal.style.display = 'none';
+}
+
 // Run on page load
 document.addEventListener("DOMContentLoaded", updateCartIndicator);

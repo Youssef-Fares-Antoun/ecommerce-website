@@ -1,57 +1,121 @@
-// =====================
-// SHOP.JS
-// =====================
+// docs/js/shop.js
+let fetchedProducts = []; // To store products fetched from the database
+// 1. Fetch products from the Database
+async function loadProducts() {
+    try {
+        const response = await fetch('/api/products');
+        const products = await response.json();
 
-// ---- Add to Cart ----
-// Note: addToCart functions are now globally in script.js
-// This file can now focus on filtering/sorting
+        const featuredItem = products.find(p => p.isFeatured === true);
 
-// ---- Update Cart Indicator ----
-// Note: updateCartIndicator is now globally in script.js
-
-// ---- Cart Modal ----
-// Note: addToCartWithPopup in script.js handles this
-
-// ---- Product Filtering ----
-// Note: initSearchFilter in script.js handles this
-
-// ---- Sorting ----
-// Note: initSearchFilter in script.js handles this
-
-// ---- Sidebar Click Handling ----
-document.querySelectorAll("#brandFilter li").forEach(li => {
-  li.addEventListener("click", () => {
-    document.querySelectorAll("#brandFilter li").forEach(el => el.classList.remove("active"));
-    li.classList.add("active");
-    
-    // We need to call the global filter function
-    const brand = li.dataset.brand;
-    const products = document.querySelectorAll(".products .grid .card");
-    const brandFilter = document.getElementById("brandFilter");
-    applyBrandFilter(brand, products, brandFilter); // This function is in script.js
-  });
-});
-
-
-// ---- Toggle Search Bar ----
-document.addEventListener("DOMContentLoaded", () => {
-  // The global script.js now handles search toggle, sorting, and indicator
-  
-  // ---- Brand Pre-Selection from URL ----
-  const urlParams = new URLSearchParams(window.location.search);
-  const brandParam = urlParams.get("brand");
-
-  if (brandParam) {
-    const brandItem = document.querySelector(`#brandFilter li[data-brand="${brandParam.toLowerCase()}"]`);
-    if (brandItem) {
-      document.querySelectorAll("#brandFilter li").forEach(el => el.classList.remove("active"));
-      brandItem.classList.add("active");
-      
-      // We need to call the global filter function
-      const products = document.querySelectorAll(".products .grid .card");
-      const brandFilter = document.getElementById("brandFilter");
-      applyBrandFilter(brandParam.toLowerCase(), products, brandFilter);
+    if (featuredItem) {
+        const featuredContainer = document.querySelector('.featured');
+        featuredContainer.innerHTML = `
+        <h4>🌟 Featured</h4>
+        <a href="product_detail.html?id=${featuredItem.id}">
+            <img src="images/${featuredItem.image}" alt="${featuredItem.name}" />
+        </a>
+        <p><strong>${featuredItem.name}</strong></p>
+        <p class="price">
+            <span class="old-price">LE ${(featuredItem.price + 200).toFixed(2)}</span>
+            <span class="new-price">LE ${featuredItem.price.toFixed(2)}</span>
+        </p>
+        <button class="btn-add" onclick="addToCartWithPopup('${featuredItem.name}', ${featuredItem.price}, 'images/${featuredItem.image}')">
+    Add to Cart
+</button>
+    `;
     }
-  }
 
+        const grid = document.getElementById('productGrid');
+        if (!grid) return;
+
+        grid.innerHTML = ''; // Clear hardcoded items
+
+        fetchedProducts = products; // Store for sorting/filtering
+        renderGrid(fetchedProducts);
+
+        // After cards exist, check if the URL wants a specific brand
+        handleUrlParams();
+
+    } catch (err) {
+        console.error("❌ Showroom Load Failed:", err);
+    }
+}
+
+// 2. Sidebar Click Handling
+document.querySelectorAll("#brandFilter li").forEach(li => {
+    li.addEventListener("click", () => {
+        document.querySelectorAll("#brandFilter li").forEach(el => el.classList.remove("active"));
+        li.classList.add("active");
+        
+        const brand = li.dataset.brand;
+        applyBrandFilter(brand); 
+    });
 });
+
+// 3. Brand Pre-Selection Logic
+function handleUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const brandParam = urlParams.get("brand");
+
+    if (brandParam) {
+        const brandItem = document.querySelector(`#brandFilter li[data-brand="${brandParam.toLowerCase()}"]`);
+        if (brandItem) brandItem.click();
+    }
+}
+
+// 4. Initialize everything
+document.addEventListener("DOMContentLoaded", loadProducts);
+
+// Logic for the Brand Sidebar
+function applyBrandFilter(brand) {
+    if (brand === "all") {
+        renderGrid(fetchedProducts);
+    } else {
+        // Filter the global fleet and send the results to the grid
+        const filtered = fetchedProducts.filter(p => p.category.toLowerCase() === brand.toLowerCase());
+        renderGrid(filtered);
+    }
+}
+
+// Logic for the Sort Dropdown
+function sortProducts() {
+    const criteria = document.getElementById('sortSelect').value;
+    let results = [...fetchedProducts]; // Work on a copy to keep the original data safe
+
+    if (criteria === "low-high") results.sort((a, b) => a.price - b.price);
+    if (criteria === "high-low") results.sort((a, b) => b.price - a.price);
+    if (criteria === "a-z") results.sort((a, b) => a.name.localeCompare(b.name));
+    if (criteria === "z-a") results.sort((a, b) => b.name.localeCompare(a.name));
+
+    renderGrid(results);
+}
+
+// Grid Rendering Logic (Used for both initial load and filtering/sorting)
+function renderGrid(products) {
+  const grid = document.getElementById('productGrid');
+    if (!grid) return;
+    grid.innerHTML = ''; // clearing the grid before rendering
+
+    products.forEach(product => {
+      const oldprice = product.price + 200;
+      const card = `
+        <div class="card" data-brand="${product.category}">
+          <div class="badge">Sale</div>
+          <a href="product_detail.html?id=${product.id}">
+            <img src="images/${product.image}" alt="${product.name}" />
+          </a>
+          <h4>${product.name}</h4>
+          <p class="price">
+            <span class="old-price">LE ${oldprice.toFixed(2)}</span>
+            <span class="new-price">LE ${product.price.toFixed(2)}</span>
+            <span class="save-price">Save LE 200.00</span>
+          </p>
+          <button class="btn-add" onclick="addToCartWithPopup('${product.name}', ${product.price}, 'images/${product.image}')">
+            Add to Cart
+          </button>
+      `;
+      grid.innerHTML += card;
+    });
+}
+

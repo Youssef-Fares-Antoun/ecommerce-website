@@ -108,25 +108,27 @@
         <li data-brand="BMW">BMW</li>
       </ul>
 
-      <div class="featured">
-        <h4>🌟 Featured</h4>
-        <a href="product4.html">
-          <img src="images/SennaBack.png" alt="McLaren Senna Tee Featured" />
-        </a>
-        <p><strong>Senna Limited Edition Tee</strong></p>
-        <p class="price">
-          <span class="old-price">LE 900.00</span>
-          <span class="new-price">LE 700.00</span>
-          <span class="save-price">Save LE 200.00</span>
-        </p>
-        <button class="btn-add" onclick="addToCart('McLaren Senna Tee', 700, 'images/SennaBack.png')">Add to Cart</button>
-      </div>
+  <div class="featured">
+    <h4>🌟 Featured</h4>
+    <!-- Change the href to use your dynamic detail page -->
+    <a href="product_detail.html?id=4"> 
+        <img src="images/SennaBack.png" alt="McLaren Senna Tee Featured" />
+    </a>
+    <p><strong>Senna Limited Edition Tee</strong></p>
+    <p class="price">
+        <span class="old-price">LE 900.00</span>
+        <span class="new-price">LE 700.00</span>
+        <span class="save-price">Save LE 200.00</span>
+    </p>
+    <!-- Ensure the button also matches your database info -->
+    <button class="btn-add" onclick="addToCart('McLaren Senna Tee', 700, 'images/SennaBack.png')">Add to Cart</button>
+  </div>
     </aside>
 
     <section class="products">
       <div class="sortbar">
         <p><strong>Showing All Products</strong></p>
-        <select id="sortSelect" aria-label="Sort Products">
+        <select id="sortSelect" aria-label="Sort Products" onchange="sortProducts()">
           <option value="default">Sort by</option>
           <option value="low-high">Price: Low to High</option>
           <option value="high-low">Price: High to Low</option>
@@ -136,83 +138,8 @@
       </div>
 
       <div class="grid" id="productGrid">
-        <div class="card" data-category="porsche" data-brand="porsche" data-price="500">
-          <div class="badge">Sale</div>
-          <a href="product1.html">
-            <img src="images/911Back.png" alt="Porsche 911 Tee" />
-          </a>
-          <h4>Porsche 911 Tee</h4>
-          <p class="price">
-            <span class="old-price">LE 700.00</span>
-            <span class="new-price">LE 500.00</span>
-            <span class="save-price">Save LE 200.00</span>
-          </p>
-        </div>
-
-        <div class="card" data-category="ferrari" data-brand="ferrari" data-price="500">
-          <div class="badge">Sale</div>
-          <a href="product2.html">
-            <img src="images/SF90Back.png" alt="Ferrari SF90 Tee" />
-          </a>
-          <h4>Ferrari SF90 Tee</h4>
-          <p class="price">
-            <span class="old-price">LE 700.00</span>
-            <span class="new-price">LE 500.00</span>
-            <span class="save-price">Save LE 200.00</span>
-          </p>
-        </div>
-
-        <div class="card" data-category="mclaren" data-brand="mclaren" data-price="500">
-          <div class="badge">Sale</div>
-          <a href="product3.html">
-            <img src="images/P1Back.png" alt="McLaren P1 Tee" />
-          </a>
-          <h4>McLaren P1 Tee</h4>
-          <p class="price">
-            <span class="old-price">LE 700.00</span>
-            <span class="new-price">LE 500.00</span>
-            <span class="save-price">Save LE 200.00</span>
-          </p>
-        </div>
-
-        <div class="card" data-category="mclaren" data-brand="mclaren" data-price="700">
-          <div class="badge">Sale</div>
-          <a href="product4.html">
-            <img src="images/SennaBack.png" alt="McLaren Senna Tee" />
-          </a>
-          <h4>McLaren Senna Tee</h4>
-          <p class="price">
-            <span class="old-price">LE 900.00</span>
-            <span class="new-price">LE 700.00</span>
-            <span class="save-price">Save LE 200.00</span>
-          </p>
-        </div>
-
-        <div class="card" data-category="AMG" data-brand="AMG" data-price="600">
-          <div class="badge">Sale</div>
-          <a href="product5.html">
-            <img src="images/GtBlackBack.png" alt="AMG GT Black Tee" />
-          </a>
-          <h4>AMG GT Black Tee</h4>
-          <p class="price">
-            <span class="old-price">LE 800.00</span>
-            <span class="new-price">LE 600.00</span>
-            <span class="save-price">Save LE 200.00</span>
-          </p>
-        </div>
-
-        <div class="card" data-category="BMW" data-brand="BMW" data-price="500">
-          <div class="badge">Sale</div>
-          <a href="product6.html">
-            <img src="images/M4 CompetitionBack.png" alt="M4 Competition Tee" />
-          </a>
-          <h4>M4 Competition Tee</h4>
-          <p class="price">
-            <span class="old-price">LE 700.00</span>
-            <span class="new-price">LE 500.00</span>
-            <span class="save-price">Save LE 200.00</span>
-          </p>
-        </div>
+        <!-- JavaScript will inject cards here from the database -->
+        <p>Loading the elite fleet...</p> 
       </div>
     </section>
   </main>
@@ -225,6 +152,17 @@
       <button type="submit" class="btn-primary">Subscribe</button>
     </form>
   </section>
+
+  <!-- SUCCESS MODAL: Shows when an item is added -->
+<div id="cartModal" class="cart-modal">
+  <div class="cart-modal-content">
+    <p id="cartModalMessage"></p>
+    <div class="cart-modal-buttons">
+      <button onclick="window.location.href='cart.html'">View Cart</button>
+      <button onclick="closeModal()">Continue Shopping</button>
+    </div>
+  </div>
+</div>
 
   <footer>
     <div class="footer-links">

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | CarTees</title> 
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/product.css">
+
+    <script src="js/script.js" defer></script>
+    <script src="js/product.js" defer></script>
+    <script src="js/cart.js" defer></script>
+
+    <style>
+        /* Maintaining your specific price styling */
+        .price {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        .price .old-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 10px;
+        }
+        .price .new-price {
+            color: green;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .price .savings {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cartModal" class="cart-modal">
+        <div class="cart-modal-content">
+            <p id="cartModalMessage">Product added to cart!</p>
+            <div class="cart-modal-buttons">
+                <button id="viewCartBtn" onclick="window.location.href='cart.html'">View Cart</button>
+                <button id="continueShoppingBtn" onclick="window.location.href='shop.html'">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+        <nav class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="shop.html">Shop All</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="faq.html">FAQ</a>
+        </nav>
+
+        <div class="icons">
+            <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+            <div class="cart-icon" onclick="window.location.href='cart.html'">
+                🛒
+                <span id="cart-indicator"></span>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="product-page" style="display:block;">
+        <div class="product-container">
+            
+            <div class="product-image">
+                <img id="mainImage" src="" alt="Loading product image...">
+                
+                <div class="thumbnails" id="thumbnailContainer">
+                    </div>
+            </div>
+
+            <div class="product-details">
+                <h1 id="productTitle">Loading...</h1>
+
+                <div class="price">
+                    <span class="old-price" id="oldPrice"></span>
+                    <span class="new-price" id="currentPrice"></span>
+                    <span class="savings" id="savingsAmount"></span>
+                </div>
+
+                <p class="description" id="productDescription">
+                    Fetching product details from the fleet...
+                </p>
+
+                <div class="option-group">
+                    <label for="size">Size:</label>
+                    <select id="size" name="size">
+                        <option>Small</option>
+                        <option>Medium</option>
+                        <option>Large</option>
+                        <option>X-Large</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" value="1" min="1">
+                </div>
+
+                <div class="buttons">
+                    <button class="btn add-to-cart" id="addToCartBtn">
+                        🛒 Add to Cart
+                    </button>
+                    <button class="btn buy-now" id="buyNowBtn">
+                        ⚡ Buy Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact</a>
+            <a href="faq.html">FAQ</a>
+            <a href="shop.html">Shop</a>
+            <a href="terms.html">Terms & Conditions</a>
+        </div>
+        <div class="socials">
+            <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
+            <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
+        </div>
+        <p>&copy; 2026 CarTees. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
