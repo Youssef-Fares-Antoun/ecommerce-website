@@ -1,0 +1,3 @@
+docs/**/*.html linguist-documentation=false
+docs/**/*.css linguist-documentation=false
+package-lock.json linguist-generated=true
