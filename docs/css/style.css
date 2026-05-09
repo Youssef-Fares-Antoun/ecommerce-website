@@ -161,9 +161,8 @@ nav a:hover {
   opacity: 0;
   overflow: hidden;
   transition: width 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: transparent;
+  box-shadow: none;
   padding: 0;
 }
 
@@ -186,7 +185,7 @@ nav a:hover {
 .search-bar.show {
   width: 240px;
   opacity: 1;
-  padding: 5px;
+  padding: 0;
 }
 
 .search-icon {
@@ -198,8 +197,8 @@ nav a:hover {
 
 
 /* ==================================
-// ✅ NEW: HAMBURGER & MOBILE MENU STYLES
-// ================================== */
+✅ NEW: Mobile Search Bar (Separate from Desktop)
+ ================================== */  
 
 /* Hamburger Icon */
 .hamburger {
