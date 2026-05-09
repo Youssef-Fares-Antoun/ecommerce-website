@@ -121,12 +121,21 @@
         <span class="save-price">Save LE 200.00</span>
     </p>
     <!-- Ensure the button also matches your database info -->
-    <button class="btn-add" onclick="addToCart('McLaren Senna Tee', 700, 'images/SennaBack.png')">Add to Cart</button>
+    <button class="btn-add" onclick="addToCartWithPopup('McLaren Senna Tee', 700, 'images/SennaBack.png')">Add to Cart</button>
   </div>
     </aside>
 
     <section class="products">
       <div class="sortbar">
+        <!-- Search bar integrated here -->
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Search car models (e.g. Porsche)..." 
+                oninput="searchProducts()"
+            >
+        </div>
         <p><strong>Showing All Products</strong></p>
         <select id="sortSelect" aria-label="Sort Products" onchange="sortProducts()">
           <option value="default">Sort by</option>
@@ -178,15 +187,6 @@
     </div>
     <p>&copy; 2025 CarTees. All rights reserved.</p>
   </footer>
-  <div id="cartModal" class="cart-modal" aria-live="polite">
-    <div class="cart-modal-content">
-      <p>Product added to cart!</p>
-      <div class="cart-modal-buttons">
-        <button id="continueShoppingBtn" class="btn-secondary">Continue Shopping</button>
-        <button id="viewCartBtn" class="btn-primary">View Cart</button>
-      </div>
-    </div>
-  </div>
 
   <script>
     // Brand filter from URL (moved to script.js)
