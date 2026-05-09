@@ -64,8 +64,6 @@ function handleUrlParams() {
     }
 }
 
-// 4. Initialize everything
-document.addEventListener("DOMContentLoaded", loadProducts);
 
 // Logic for the Brand Sidebar
 function applyBrandFilter(brand) {
@@ -114,8 +112,34 @@ function renderGrid(products) {
           <button class="btn-add" onclick="addToCartWithPopup('${product.name}', ${product.price}, 'images/${product.image}')">
             Add to Cart
           </button>
-      `;
+        </div>
+        `;
       grid.innerHTML += card;
     });
 }
 
+// Logic for the Search Bar
+function searchProducts() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    // Filter the current fleet based on name or brand category
+    const filteredResults = fetchedProducts.filter(product => {
+        const nameMatch = product.name.toLowerCase().includes(searchTerm);
+        const brandMatch = product.category.toLowerCase().includes(searchTerm);
+        return nameMatch || brandMatch;
+    });
+
+    // Update the showroom grid
+    renderGrid(filteredResults);
+    
+    // Update the counter text
+    const counterText = document.querySelector('.sortbar p strong');
+    if (counterText) {
+        counterText.innerText = searchTerm === "" 
+            ? "Showing All Products" 
+            : `Found ${filteredResults.length} results for "${searchTerm}"`;
+    }
+}
+
+// 4. Initialize everything
+document.addEventListener("DOMContentLoaded", loadProducts);
