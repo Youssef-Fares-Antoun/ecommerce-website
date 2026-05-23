@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const path = require('path');
 const { Sequelize, DataTypes } = require('sequelize');
 
@@ -26,6 +27,12 @@ const Product = sequelize.define('Product', {
   image: { type: DataTypes.STRING },
   category: { type: DataTypes.STRING },
   isFeatured: { type: DataTypes.BOOLEAN, defaultValue: false } // NEW: The featured flag
+});
+
+const User = sequelize.define('User', {
+  name: { type: DataTypes.STRING, allowNull: false },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true },
+  password: { type: DataTypes.STRING, allowNull: false }
 });
 
 // --- ZONE 4: DB INITIALIZATION ---
@@ -125,6 +132,62 @@ app.delete('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: "Server error during deletion." });
   }
 });
+
+//3. REGISTER NEW USER
+app.post('/api/register', async (req, res) => {
+  const { name, email, password } = req.body;
+
+  try {
+    const userExits = await User.findOne({ where: { email: email } });
+    if (userExits) {
+      return res.status(400).json({ message: "This email is already registered. Try logging in or use a different email." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      name: name,
+      email: email,
+      password: hashedPassword
+    });
+
+    res.status(201).json({ 
+      message: "Registration successful! Welcome to the REVVO family.", 
+      user: { id: newUser.id, name: newUser.name, email: newUser.email } 
+    });
+  } catch (err) {
+    console.error("Registration Error:", err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
+//4. LOGIN USER
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { email: email } });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password. Please try again." });
+    }
+
+    // Cleaned up user.rows[0].password -> user.password
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Invalid email or password. Please try again." });
+    }
+
+    res.json({
+      message: "Login successful! Welcome back to the REVVO family.",
+      user: { id: user.id, name: user.name, email: user.email }
+    });
+  } catch (err) {
+    console.error("Login Error:", err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 // --- ZONE 6: START THE ENGINE ---
 app.listen(PORT, () => {
   console.log(`🚀 REVVO Server flying at http://localhost:${PORT}`);

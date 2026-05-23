@@ -350,106 +350,182 @@ function initSearchFilter() {
 }
 
 // =====================
-// 5. AUTHENTICATION SYSTEM (MODAL VERSION)
+// 4.5 COMPONENT INJECTION
+// =====================
+function injectAuthModal() {
+  // If the modal is already on the page, don't inject it twice
+  if (document.getElementById("authModal")) return;
+
+  const modalHTML = `
+  <div id="authModal" class="cart-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; position: relative;">
+      
+      <span onclick="document.getElementById('authModal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer;">&times;</span>
+
+      <div id="loginSection">
+        <h2 style="margin-bottom: 20px;">Garage Access</h2>
+        <form id="loginForm">
+          <input type="email" id="loginEmail" placeholder="Email" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+          <input type="password" id="loginPassword" placeholder="Password" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+          <button type="submit" class="btn-primary" style="width: 100%;">Ignition (Login)</button>
+        </form>
+        <p style="margin-top: 15px; font-size: 0.9em; text-align: center;">
+          No keys? <a href="javascript:void(0)" onclick="document.getElementById('loginSection').style.display='none'; document.getElementById('registerSection').style.display='block';" style="color: red;">Register here</a>
+        </p>
+      </div>
+
+      <div id="registerSection" style="display: none;">
+        <h2 style="margin-bottom: 20px;">Join the Crew</h2>
+        <form id="registerForm">
+          <input type="text" id="regName" placeholder="Full Name" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+          <input type="email" id="regEmail" placeholder="Email" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+          <input type="password" id="regPassword" placeholder="Password" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+          <button type="submit" class="btn-primary" style="width: 100%;">Create Profile</button>
+        </form>
+        <p style="margin-top: 15px; font-size: 0.9em; text-align: center;">
+          Already in the crew? <a href="javascript:void(0)" onclick="document.getElementById('registerSection').style.display='none'; document.getElementById('loginSection').style.display='block';" style="color: red;">Login here</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+  `;
+
+  // Inject the HTML right before the closing </body> tag
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// =====================
+// 5. AUTHENTICATION SYSTEM (DATABASE VERSION)
 // =====================
 
 function initAuth() {
-  const loginModal = document.getElementById("loginModal");
-  const registerModal = document.getElementById("registerModal");
+  injectAuthModal(); 
   const userIcon = document.getElementById("userIcon");
+  const authModal = document.getElementById("authModal");
 
-  // A. Check Login State on Page Load
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   if (currentUser && userIcon) {
+
     // User is logged in
-    userIcon.textContent = "✅"; // Change icon to indicate success
-    userIcon.style.border = "2px solid #145214";
-    userIcon.style.borderRadius = "50%";
-    userIcon.style.padding = "2px";
-    userIcon.title = `Logged in as ${currentUser.name}`;
+    userIcon.innerHTML = "👤 My Profile"; 
+    userIcon.href = "profile.html"; 
+    userIcon.style.border = "none";
+    userIcon.style.padding = "0";
+    userIcon.title = `Profile of ${currentUser.name}`;
     
-    // Logout logic
+    userIcon.onclick = null; 
+  } else if (userIcon && authModal) {
+    // User is NOT logged in -> Click opens the Auth Modal
+    userIcon.innerHTML = "Login / Register";
+    userIcon.href = "javascript:void(0)";
+    
     userIcon.onclick = (e) => {
       e.preventDefault();
-      if (confirm(`Hello, ${currentUser.name}! Do you want to logout?`)) {
-        localStorage.removeItem("currentUser");
-        location.reload(); 
-      }
-    };
-  } else if (userIcon) {
-    // User is NOT logged in -> Click opens Login Modal
-    userIcon.onclick = (e) => {
-      e.preventDefault();
-      openModal('login');
+      authModal.style.display = "flex";
     };
   }
+  
 
-  // B. Handle Registration
+  // B. Handle Registration (Sending to PostgreSQL)
   const registerForm = document.getElementById("registerForm");
   if (registerForm) {
-    registerForm.addEventListener("submit", (e) => {
+    registerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("regName").value;
       const email = document.getElementById("regEmail").value;
       const password = document.getElementById("regPassword").value;
 
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      
-      if (users.find(u => u.email === email)) {
-        alert("This email is already registered!");
-        return;
-      }
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await response.json();
 
-      users.push({ name, email, password });
-      localStorage.setItem("users", JSON.stringify(users));
-      
-      alert("Registration successful! Please login.");
-      openModal('login'); // Switch to login
-      registerForm.reset();
+        if (response.ok) {
+          alert("Registration successful! Please login.");
+          // Switch to Login view
+          document.getElementById('registerSection').style.display = 'none';
+          document.getElementById('loginSection').style.display = 'block';
+          registerForm.reset();
+        } else {
+          alert(data.message); 
+        }
+      } catch (err) {
+        console.error("Registration Error:", err);
+      }
     });
   }
 
-  // C. Handle Login
+  // C. Handle Login (Checking PostgreSQL)
   const loginForm = document.getElementById("loginForm");
   if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value;
       const password = document.getElementById("loginPassword").value;
 
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      const user = users.find(u => u.email === email && u.password === password);
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
 
-      if (user) {
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        alert("Login successful!");
-        closeAuthModals();
-        location.reload(); 
-      } else {
-        alert("Invalid email or password.");
+        if (response.ok) {
+          // Store safe user data locally to keep them logged in (No Passwords!)
+          localStorage.setItem("currentUser", JSON.stringify(data.user));
+          alert("Login successful!");
+          authModal.style.display = "none";
+          location.reload(); 
+        } else {
+          alert(data.message); 
+        }
+      } catch (err) {
+        console.error("Login Error:", err);
       }
     });
   }
 }
 
-// Helper: Open Modal
-function openModal(type) {
-  closeAuthModals();
-  if (type === 'login') {
-    const modal = document.getElementById("loginModal");
-    if(modal) modal.style.display = "flex";
-  } else if (type === 'register') {
-    const modal = document.getElementById("registerModal");
-    if(modal) modal.style.display = "flex";
+// =====================
+// 5.5 PROFILE DASHBOARD LOGIC
+// =====================
+
+function initProfile() {
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const userEmailDisplay = document.getElementById("userEmailDisplay");
+  const inputName = document.getElementById("inputName");
+  const inputEmail = document.getElementById("inputEmail");
+  
+  // If we are not on the profile page, skip this logic
+  if (!userNameDisplay) return;
+
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  
+  // Security Check: Kick unauthenticated users back to the homepage
+  if (!currentUser) {
+    window.location.href = "home.html";
+    return;
   }
+
+  // 1. Populate the Sidebar
+  userNameDisplay.textContent = currentUser.name;
+  userEmailDisplay.textContent = currentUser.email;
+
+  // 2. Populate the Account Details Form
+  if (inputName) inputName.value = currentUser.name;
+  if (inputEmail) inputEmail.value = currentUser.email;
 }
 
-// Helper: Close Modals
-function closeAuthModals() {
-  const loginModal = document.getElementById("loginModal");
-  const registerModal = document.getElementById("registerModal");
-  if (loginModal) loginModal.style.display = "none";
-  if (registerModal) registerModal.style.display = "none";
+function handleLogout() {
+  if (confirm("Are you sure you want to cut the engine and log out?")) {
+    localStorage.removeItem("currentUser");
+    window.location.href = "home.html"; // Redirect to storefront
+  }
 }
 
 // =====================
@@ -461,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSearchFilter(); 
   updateCartIndicator(); 
   initAuth(); 
+  initProfile();
 
   // Initialize Hamburger
   const hamburger = document.querySelector(".hamburger");
@@ -487,33 +564,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // Auth Modal Close Buttons (X)
-  document.querySelectorAll('.close-auth').forEach(btn => {
-    btn.addEventListener('click', closeAuthModals);
-  });
-
-  // Switch Links (Login <-> Register)
-  const toRegister = document.getElementById("toRegister");
-  const toLogin = document.getElementById("toLogin");
-  
-  if (toRegister) {
-    toRegister.addEventListener("click", (e) => {
-        e.preventDefault();
-        openModal('register');
-    });
-  }
-  if (toLogin) {
-    toLogin.addEventListener("click", (e) => {
-        e.preventDefault();
-        openModal('login');
-    });
-  }
-
-  // Close modals when clicking outside
+  // Close auth modal when clicking outside of it
   window.addEventListener("click", (e) => {
-    const loginModal = document.getElementById("loginModal");
-    const registerModal = document.getElementById("registerModal");
-    if (e.target === loginModal) loginModal.style.display = "none";
-    if (e.target === registerModal) registerModal.style.display = "none";
+    const authModal = document.getElementById("authModal");
+    if (e.target === authModal) {
+      authModal.style.display = "none";
+    }
   });
 });
