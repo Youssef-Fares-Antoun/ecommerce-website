@@ -408,7 +408,7 @@ function initAuth() {
   if (currentUser && userIcon) {
 
     // User is logged in
-    userIcon.innerHTML = "👤 My Profile"; 
+    userIcon.innerHTML = "👤 "; 
     userIcon.href = "profile.html"; 
     userIcon.style.border = "none";
     userIcon.style.padding = "0";

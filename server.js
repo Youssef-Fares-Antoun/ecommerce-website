@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // --- ZONE 1: MIDDLEWARE ---
 // CRITICAL: This allows your server to read JSON data sent from Postman
@@ -12,9 +13,13 @@ app.use(express.json());
 // Serves your frontend files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'docs')));
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'docs', 'home.html'));
+});
+
 // --- ZONE 2: DATABASE CONNECTION ---
 // Updated with your specific password: 'passsword'
-const sequelize = new Sequelize('EcommerceDB', 'postgres', 'password', {
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: 'localhost',
   dialect: 'postgres',
   logging: false 
@@ -187,6 +192,25 @@ app.post('/api/login', async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
+
+//5. GET ALL USERS
+app.get('/api/users', async (req, res) =>{
+  try{
+    const allUsers = await User.findAll({
+      attributes: { exclude: ['password'] }
+    });
+
+    if(allUsers.length === 0){
+      return res.json({ message: "The database is connected, but there are no registered users yet."});
+    }
+
+    res.json(allUsers);
+  } catch(err) {
+    console.error("Diagnostic Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch users from the database." });
+  }
+});
+
 
 // --- ZONE 6: START THE ENGINE ---
 app.listen(PORT, () => {
