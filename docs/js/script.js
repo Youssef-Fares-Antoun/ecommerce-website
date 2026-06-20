@@ -568,6 +568,43 @@ function handleLogout() {
 }
 
 // =====================
+// 5.6 DYNAMIC SHOWROOM (Loading from Database)
+// =====================
+async function loadShowroom() {
+  const showroom = document.getElementById("dynamic-showroom");
+
+  if(!showroom) return;
+
+  try {
+    const response = await fetch('/api/products');
+    const products = await response.json();
+
+    showroom.innerHTML = "";
+
+    products.forEach(product => {
+      const card = document.createElement("article");
+      card.className = "product-card";
+      
+      card.innerHTML = `
+        <a href="product_detail.html?id=${product.id}">
+          <img src="${product.image}" alt="${product.name}">
+        </a>
+        <h3>${product.name}</h3>
+        <p class="price">
+          <span class="new-price">LE ${product.price.toFixed(2)}</span>
+        </p>
+        <button onclick="window.location.href='product_detail.html?id=${product.id}'">View</button>
+      `;
+
+      showroom.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Showroom Load Error:", err);
+    showroom.innerHTML = "<p>The garage is currently closed. Please check back later!</p>";
+  }
+}
+
+// =====================
 // 6. INITIALIZATION
 // =====================
 document.addEventListener("DOMContentLoaded", () => {
@@ -577,6 +614,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCartIndicator(); 
   initAuth(); 
   initProfile();
+  loadShowroom();
 
   // Initialize Hamburger
   const hamburger = document.querySelector(".hamburger");

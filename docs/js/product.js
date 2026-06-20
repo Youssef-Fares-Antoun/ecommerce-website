@@ -32,10 +32,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const descEl = document.getElementById('productDescription');
         
         if (titleEl) titleEl.innerText = product.name;
-        if (mainImg) mainImg.src = `images/${product.image}`;
+        if (mainImg) mainImg.src = product.image;
         
         // 4. Handle Pricing Logic (Adding the "Sale" effect)
-        const currentPriceVal = product.price;
+        const currentPriceVal = parseFloat(product.price);
         const oldPriceVal = currentPriceVal + 200;
 
         const currentPriceEl = document.getElementById('currentPrice');
@@ -58,13 +58,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (addToCartBtn) {
             addToCartBtn.onclick = () => {
-                addToCartWithPopup(product.name, product.price, `images/${product.image}`);
+                addToCartWithPopup(product.name, product.price, product.image);
             };
         }
 
         if (buyNowBtn) {
             buyNowBtn.onclick = () => {
-                addToCart(product.name, product.price, `images/${product.image}`, false);
+                addToCart(product.name, product.price, product.image, false);
                 window.location.href = 'checkout.html';
             };
         }

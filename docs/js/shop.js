@@ -13,14 +13,14 @@ async function loadProducts() {
         featuredContainer.innerHTML = `
         <h4>🌟 Featured</h4>
         <a href="product_detail.html?id=${featuredItem.id}">
-            <img src="images/${featuredItem.image}" alt="${featuredItem.name}" />
+            <img src="${featuredItem.image}" alt="${featuredItem.name}" />
         </a>
         <p><strong>${featuredItem.name}</strong></p>
         <p class="price">
             <span class="old-price">LE ${(featuredItem.price + 200).toFixed(2)}</span>
             <span class="new-price">LE ${featuredItem.price.toFixed(2)}</span>
         </p>
-        <button class="btn-add" onclick="addToCartWithPopup('${featuredItem.name}', ${featuredItem.price}, 'images/${featuredItem.image}')">
+        <button class="btn-add" onclick="addToCartWithPopup('${featuredItem.name}', ${featuredItem.price}, '${featuredItem.image}')">
     Add to Cart
 </button>
     `;
@@ -101,7 +101,7 @@ function renderGrid(products) {
         <div class="card" data-brand="${product.category}">
           <div class="badge">Sale</div>
           <a href="product_detail.html?id=${product.id}">
-            <img src="images/${product.image}" alt="${product.name}" />
+            <img src="${product.image}" alt="${product.name}" />
           </a>
           <h4>${product.name}</h4>
           <p class="price">
@@ -109,7 +109,7 @@ function renderGrid(products) {
             <span class="new-price">LE ${product.price.toFixed(2)}</span>
             <span class="save-price">Save LE 200.00</span>
           </p>
-          <button class="btn-add" onclick="addToCartWithPopup('${product.name}', ${product.price}, 'images/${product.image}')">
+          <button class="btn-add" onclick="addToCartWithPopup('${product.name}', ${product.price}, '${product.image}')">
             Add to Cart
           </button>
         </div>
