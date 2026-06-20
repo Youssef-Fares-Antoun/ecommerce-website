@@ -221,20 +221,20 @@ app.put('/api/users/:id', async (req, res) => {
     const user = await User.findByPk(userId);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found. Please check the ID and try again." });
+      return res.status(404).json({ message: "User not found." });
     }
 
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.address = address || user.address; 
+   
+    user.address = address 
     await user.save();
 
-    res.json({ message: "Profile updated successfully!", user: { id: user.id, name: user.name, email: user.email, address: user.address } });
+    res.json({ message: "Profile updated successfully!", 
+      user: { id: user.id, name: user.name, email: user.email, address: user.address } });
   } catch (err) {
     console.error("Profile Update Error:", err.message);
     res.status(500).json({ error: "Failed to update profile. Please try again later." });
   }
-
+});
 
 
 // --- ZONE 6: START THE ENGINE ---
