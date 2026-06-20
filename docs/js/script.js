@@ -500,7 +500,8 @@ function initProfile() {
   const userEmailDisplay = document.getElementById("userEmailDisplay");
   const inputName = document.getElementById("inputName");
   const inputEmail = document.getElementById("inputEmail");
-  
+  const inputAddress = document.getElementById("inputAddress");
+  const saveProfileBtn = document.getElementById("save-profile-btn");
   // If we are not on the profile page, skip this logic
   if (!userNameDisplay) return;
 
@@ -508,7 +509,7 @@ function initProfile() {
   
   // Security Check: Kick unauthenticated users back to the homepage
   if (!currentUser) {
-    window.location.href = "home.html";
+    window.location.href = "index.html";
     return;
   }
 
@@ -524,9 +525,42 @@ function initProfile() {
 function handleLogout() {
   if (confirm("Are you sure you want to cut the engine and log out?")) {
     localStorage.removeItem("currentUser");
-    window.location.href = "home.html"; // Redirect to storefront
+    window.location.href = "index.html"; // Redirect to storefront
   }
 }
+
+if ( inputAddress && currentUser.address ) {
+  inputAddress.value = currentUser.address;
+}
+
+if (saveProfileBtn) {
+  saveProfileBtn.addEventListener("click", async (e) => {
+    e.preventDefault(); //stopping page refreshing
+
+    const newAddress = inputAddress ? inputAddress.value : "";
+    try {
+      const response = await fetch(`/api/users/${currentUser.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ address: newAddress })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Profile updated successfully!");
+
+        // Update localStorage with new address
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
+      } else {
+        alert(data.error || "Failed to update profile.");
+      }
+    } catch (err) {
+      console.error("Profile Update Error:", err);
+      alert("An error occurred while updating your profile. Please try again later.");
+    }
 
 // =====================
 // 6. INITIALIZATION

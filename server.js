@@ -37,7 +37,8 @@ const Product = sequelize.define('Product', {
 const User = sequelize.define('User', {
   name: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
-  password: { type: DataTypes.STRING, allowNull: false }
+  password: { type: DataTypes.STRING, allowNull: false },
+  address: { type: DataTypes.STRING, allowNull: true  },
 });
 
 // --- ZONE 4: DB INITIALIZATION ---
@@ -210,6 +211,30 @@ app.get('/api/users', async (req, res) =>{
     res.status(500).json({ error: "Failed to fetch users from the database." });
   }
 });
+
+//6. Update User Profile (Saving the shipping address)
+app.put('/api/users/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { name, email, address } = req.body;
+
+  try {
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found. Please check the ID and try again." });
+    }
+
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.address = address || user.address; 
+    await user.save();
+
+    res.json({ message: "Profile updated successfully!", user: { id: user.id, name: user.name, email: user.email, address: user.address } });
+  } catch (err) {
+    console.error("Profile Update Error:", err.message);
+    res.status(500).json({ error: "Failed to update profile. Please try again later." });
+  }
+
 
 
 // --- ZONE 6: START THE ENGINE ---
