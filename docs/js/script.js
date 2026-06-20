@@ -520,14 +520,8 @@ function initProfile() {
   // 2. Populate the Account Details Form
   if (inputName) inputName.value = currentUser.name;
   if (inputEmail) inputEmail.value = currentUser.email;
-}
 
-function handleLogout() {
-  if (confirm("Are you sure you want to cut the engine and log out?")) {
-    localStorage.removeItem("currentUser");
-    window.location.href = "index.html"; // Redirect to storefront
-  }
-}
+
 
 if ( inputAddress && currentUser.address ) {
   inputAddress.value = currentUser.address;
@@ -561,6 +555,17 @@ if (saveProfileBtn) {
       console.error("Profile Update Error:", err);
       alert("An error occurred while updating your profile. Please try again later.");
     }
+
+    
+    });
+  }
+}
+function handleLogout() {
+  if (confirm("Are you sure you want to cut the engine and log out?")) {
+    localStorage.removeItem("currentUser");
+    window.location.href = "index.html"; // Redirect to storefront
+  }
+}
 
 // =====================
 // 6. INITIALIZATION
