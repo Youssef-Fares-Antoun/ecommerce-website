@@ -581,7 +581,9 @@ async function loadShowroom() {
 
     showroom.innerHTML = "";
 
-    products.forEach(product => {
+    const bestSellers = products.filter(product => product.isBestSeller === true).slice(0,4);
+
+    bestSellers.forEach(product => {
       const card = document.createElement("article");
       card.className = "product-card";
       
@@ -591,7 +593,7 @@ async function loadShowroom() {
         </a>
         <h3>${product.name}</h3>
         <p class="price">
-          <span class="new-price">LE ${product.price.toFixed(2)}</span>
+          <span class="new-price">LE ${parseFloat(product.price).toFixed(2)}</span>
         </p>
         <button onclick="window.location.href='product_detail.html?id=${product.id}'">View</button>
       `;
@@ -601,6 +603,38 @@ async function loadShowroom() {
   } catch (err) {
     console.error("Showroom Load Error:", err);
     showroom.innerHTML = "<p>The garage is currently closed. Please check back later!</p>";
+  }
+}
+
+// =====================
+// 5.7 DYNAMIC BRANDS (Homepage)
+// =====================
+async function loadBrands() {
+  const brandGrid = document.getElementById("dynamic-brands");
+
+  if (!brandGrid) return;
+
+  try {
+    const response = await fetch('/api/brands');
+    const brands = await response.json();
+
+    brandGrid.innerHTML = "";
+
+    brands.forEach(brand => {
+      const article = document.createElement("article");
+      article.className = "brand-card";
+     
+      article.onclick = () => window.location.href = `shop.html?brand=${brand.filterValue}`;
+
+      article.innerHTML = `
+      <img src="${brand.logo}" alt="${brand.name} Logo">
+        <h3>${brand.name}</h3>
+      `;
+
+      brandGrid.appendChild(article);
+    });
+  } catch (err) {
+    console.error("Brand Load Error:", err);  
   }
 }
 
@@ -615,6 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initAuth(); 
   initProfile();
   loadShowroom();
+  loadBrands();
 
   // Initialize Hamburger
   const hamburger = document.querySelector(".hamburger");

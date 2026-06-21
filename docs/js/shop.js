@@ -42,16 +42,42 @@ async function loadProducts() {
     }
 }
 
-// 2. Sidebar Click Handling
-document.querySelectorAll("#brandFilter li").forEach(li => {
-    li.addEventListener("click", () => {
-        document.querySelectorAll("#brandFilter li").forEach(el => el.classList.remove("active"));
-        li.classList.add("active");
-        
-        const brand = li.dataset.brand;
-        applyBrandFilter(brand); 
+// 2. Sidebar Logic
+async function loadBrandsSidebar() {
+    const filterList = document.getElementById("brandFilter");
+    if(!filterList) return;
+
+    try{
+        const response = await fetch('/api/brands');
+        const brands = await response.json();
+
+        filterList.innerHTML = '<li data-brand="all" class="active">All</li>';
+
+        brands.forEach(brand => {
+            const li = document.createElement("li");
+            li.dataset.brand = brand.filterValue;
+            li.textContent = brand.name;
+            filterList.appendChild(li);
+        });
+    } catch (err) {
+        console.error("Brand Load Error:", err);
+    }
+}
+
+//Sidebar Click Handling
+const brandFilterContainer = document.getElementById("brandFilter");
+if (brandFilterContainer) {
+    brandFilterContainer.addEventListener("click", (e) => {
+        if (e.target.tagName === "LI") {
+            document.querySelectorAll("#brandFilter li").forEach(el => el.classList.remove("active"));
+            e.target.classList.add("active");
+            
+            const brand = e.target.dataset.brand;
+            applyBrandFilter(brand); 
+        }
     });
-});
+}
+
 
 // 3. Brand Pre-Selection Logic
 function handleUrlParams() {
@@ -142,4 +168,7 @@ function searchProducts() {
 }
 
 // 4. Initialize everything
-document.addEventListener("DOMContentLoaded", loadProducts);
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadBrandsSidebar(); // 1st: Build the sidebar
+    await loadProducts();      // 2nd: Build the products
+});

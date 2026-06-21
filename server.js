@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 });
 
 // --- ZONE 2: DATABASE CONNECTION ---
-// Updated with your specific password: 'passsword'
+// Updated with your specific password: 'password'
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: 'localhost',
   dialect: 'postgres',
@@ -31,7 +31,14 @@ const Product = sequelize.define('Product', {
   price: { type: DataTypes.FLOAT, allowNull: false },
   image: { type: DataTypes.STRING },
   category: { type: DataTypes.STRING },
-  isFeatured: { type: DataTypes.BOOLEAN, defaultValue: false } // NEW: The featured flag
+  isFeatured: { type: DataTypes.BOOLEAN, defaultValue: false }, 
+  isBestSeller: { type: DataTypes.BOOLEAN, defaultValue: false }
+});
+
+const Brand = sequelize.define('Brand', {
+  name: { type: DataTypes.STRING, allowNull: false },
+  logo: { type: DataTypes.STRING, allowNull: false },
+  filterValue: { type: DataTypes.STRING, allowNull: false }
 });
 
 const User = sequelize.define('User', {
@@ -64,7 +71,21 @@ async function initDb() {
     } else {
       console.log(`📦 Warehouse active: ${count} products found. Skipping seeding.`);
     }
-    
+
+    const brandCount = await Brand.count();
+
+    if (brandCount === 0) {
+      console.log("🏷️ Printing brand labels...");
+      await Brand.bulkCreate([
+        { name: "Porsche", logo: "images/Porsche Logo.png", filterValue: "porsche" },
+        { name: "Ferrari", logo: "images/Ferrari Logo.png", filterValue: "ferrari" },
+        { name: "McLaren", logo: "images/McLaren Logo.png", filterValue: "mclaren" },
+        { name: "AMG", logo: "images/AMG Logo.png", filterValue: "amg" },
+        { name: "BMW", logo: "images/BMW M Logo.png", filterValue: "bmw" }
+      ]);
+    }else {
+      console.log(`🏷️ Brands active: ${brandCount} brands found. Skipping seeding.`);
+    }
   } catch (error) {
     console.error("❌ DB Error:", error);
   }
@@ -233,6 +254,15 @@ app.put('/api/users/:id', async (req, res) => {
   } catch (err) {
     console.error("Profile Update Error:", err.message);
     res.status(500).json({ error: "Failed to update profile. Please try again later." });
+  }
+});
+
+app.get('/api/brands', async (req, res) => {
+  try {
+    const brands = await Brand.findAll();
+    res.json(brands);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch brands" });
   }
 });
 
