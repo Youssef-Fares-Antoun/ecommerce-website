@@ -651,7 +651,11 @@ async function loadSiteReviews() {
 
     reviewGrid.innerHTML = "";
 
-    reviews.forEach(review => {
+    const topReviews = reviews
+      .sort((a, b) => b.rating - a.rating) // Sort descending by rating
+      .slice(0, 4);                        // Take only the first 4
+
+    topReviews.forEach(review => {
       const stars = "⭐".repeat(review.rating); 
       
       const article = document.createElement("article");
