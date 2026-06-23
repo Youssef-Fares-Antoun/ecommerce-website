@@ -48,6 +48,21 @@ const User = sequelize.define('User', {
   address: { type: DataTypes.STRING, allowNull: true  },
 });
 
+const SiteReview = sequelize.define('SiteReview', {
+  reviewerName: { type: DataTypes.STRING, allowNull: false },
+  rating: { type: DataTypes.INTEGER, allowNull: false }, // 1 to 5 stars
+  comment: { type: DataTypes.TEXT, allowNull: false }
+});
+
+const ProductReview = sequelize.define('ProductReview', {
+  reviewerName: { type: DataTypes.STRING, allowNull: false },
+  rating: { type: DataTypes.INTEGER, allowNull: false }, 
+  comment: { type: DataTypes.TEXT, allowNull: false }
+});
+
+Product.hasMany(ProductReview);
+ProductReview.belongsTo(Product);
+
 // --- ZONE 4: DB INITIALIZATION ---
 async function initDb() {
   try {
@@ -86,6 +101,20 @@ async function initDb() {
     }else {
       console.log(`🏷️ Brands active: ${brandCount} brands found. Skipping seeding.`);
     }
+
+    const siteReviewCount = await SiteReview.count();
+
+    if (siteReviewCount === 0) {
+      console.log("⭐ Writing starter site reviews...");
+      await SiteReview.bulkCreate([
+        { reviewerName: "Ahmed T.", rating: 5, comment: "Amazing quality tees, perfect fit and fast shipping! Will buy again." },
+        { reviewerName: "Sarah M.", rating: 5, comment: "As a Porsche fan, I absolutely love the 911 shirt. The fabric is premium." },
+        { reviewerName: "Karim R.", rating: 4, comment: "Great designs. Would love to see more brands added in the future!" }
+      ]);
+    } else {
+      console.log(`⭐ Reviews active: ${siteReviewCount} site reviews found.`);
+    }
+
   } catch (error) {
     console.error("❌ DB Error:", error);
   }
@@ -263,6 +292,55 @@ app.get('/api/brands', async (req, res) => {
     res.json(brands);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch brands" });
+  }
+});
+
+//7. GET ALL SITE REVIEWS
+app.get('/api/site-reviews', async (req, res) => {
+  try {
+    const reviews = await SiteReview.findAll({ order: [['createdAt', 'DESC']] });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch site reviews" });
+  }
+});
+
+//8. POST A NEW SITE REVIEW
+app.post('/api/site-reviews', async (req, res) => {
+  try {
+    const newReview = await SiteReview.create(req.body);
+    res.status(201).json(newReview);
+  } catch (err) {
+    res.status(400).json({ error: "Failed to add site review" });
+  }
+});
+
+//9. GET REVIEWS FOR A SPECIFIC PRODUCT
+app.get('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const reviews = await ProductReview.findAll({ 
+      where: { ProductId: req.params.id },
+      order: [['createdAt', 'DESC']] 
+    });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch product reviews" });
+  }
+});
+
+//10. POST A NEW PRODUCT REVIEW
+app.post('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const { reviewerName, rating, comment } = req.body;
+    const newReview = await ProductReview.create({
+      ProductId: req.params.id,
+      reviewerName,
+      rating,
+      comment
+    });
+    res.status(201).json(newReview);
+  } catch (err) {
+    res.status(400).json({ error: "Failed to add product review" });
   }
 });
 

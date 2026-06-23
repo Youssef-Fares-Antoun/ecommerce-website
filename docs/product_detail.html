@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/product.css">
+    <link rel="stylesheet" href="css/home.css">
 
     <script src="js/script.js" defer></script>
     <script src="js/product.js" defer></script>
@@ -119,6 +120,51 @@
             </div>
         </div>
     </main>
+
+    <section class="product-reviews-section">
+      <hr class="review-divider">
+      
+      <div class="reviews-layout">
+        
+        <!-- LEFT COLUMN: Summary & Form -->
+        <div class="reviews-sidebar">
+          <h2>Customer Reviews</h2>
+          <div class="overall-rating">
+            <h3 class="global-stars">⭐⭐⭐⭐⭐</h3>
+            <p><strong>5 out of 5</strong> global rating</p>
+          </div>
+          
+          <div class="write-review-box">
+            <h3>Review this product</h3>
+            <p>Share your thoughts with other customers</p>
+            
+            <form id="productReviewForm" class="detailed-review-form" onsubmit="event.preventDefault();">
+              <input type="text" id="prodReviewerName" placeholder="Your Name" required>
+              
+              <select id="prodReviewRating">
+                <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
+                <option value="4">⭐⭐⭐⭐ - Good</option>
+                <option value="3">⭐⭐⭐ - Okay</option>
+                <option value="2">⭐⭐ - Poor</option>
+                <option value="1">⭐ - Terrible</option>
+              </select>
+
+              <textarea id="prodReviewComment" placeholder="What did you like or dislike?" required rows="4"></textarea>
+              <button type="submit">Write a customer review</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: The Stacked Reviews -->
+        <div class="reviews-list-column">
+          <h3>Top reviews from CarTees</h3>
+          <div id="dynamic-product-reviews">
+            <p>Loading reviews...</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
 
     <footer>
         <div class="footer-links">

@@ -43,10 +43,10 @@
 <body>
 
   <header class="navbar">
-    <div class="logo"><a href="home.html">Car<span>Tees</span></a></div>
+    <div class="logo"><a href="index.html">Car<span>Tees</span></a></div>
 
     <nav class="nav-links">
-      <a href="home.html" class="active">Home</a>
+      <a href="index.html" class="active">Home</a>
       <a href="shop.html">Shop All</a>
       <a href="about.html">About</a>
       <a href="contact.html">Contact</a>
@@ -89,19 +89,28 @@
 
   <section class="reviews">
     <h2>⭐ What Our Customers Say</h2>
-    <div class="review-cards">
-      <blockquote class="review">
-        <p>"Amazing quality tees, perfect fit and awesome car designs!"</p>
-        <cite>- Ahmed K.</cite>
-      </blockquote>
-      <blockquote class="review">
-        <p>"As a Porsche fan, I love the 911 shirt. Feels premium."</p>
-        <cite>- Maria S.</cite>
-      </blockquote>
-      <blockquote class="review">
-        <p>"Fast shipping and the McLaren tee is 🔥🔥🔥"</p>
-        <cite>- John D.</cite>
-      </blockquote>
+    
+    <div class="review-grid" id="dynamic-reviews">
+      <p>Loading reviews...</p>
+    </div>
+
+    <div class="leave-review-section">
+      <h3>Leave a Review</h3>
+      <form id="siteReviewForm">
+        <input type="text" id="reviewerName" placeholder="Your Name" required>
+        
+        <select id="reviewRating">
+          <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+          <option value="4">⭐⭐⭐⭐ (4/5)</option>
+          <option value="3">⭐⭐⭐ (3/5)</option>
+          <option value="2">⭐⭐ (2/5)</option>
+          <option value="1">⭐ (1/5)</option>
+        </select>
+
+        <textarea id="reviewComment" placeholder="Tell us what you think!" required rows="3"></textarea>
+        
+        <button type="submit">Submit Review</button>
+      </form>
     </div>
   </section>
 

@@ -133,6 +133,168 @@
   transform: translateY(-2px);
 }
 
+/* ========================================= */
+/* DETAILED REVIEWS SECTION (Dark Theme)     */
+/* ========================================= */
+
+.product-reviews-section {
+    max-width: 1200px;
+    margin: 60px auto 40px auto;
+    padding: 40px;
+    background-color: #111; /* Adds a sleek dark background to the reviews area */
+    color: #fff;
+    border-radius: 12px;
+}
+
+.review-divider {
+    border: 0;
+    border-top: 1px solid #444;
+    margin-bottom: 30px;
+}
+
+.reviews-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* 1/3 Sidebar, 2/3 Reviews List */
+    gap: 50px;
+}
+
+/* --- LEFT SIDEBAR (Summary & Form) --- */
+.reviews-sidebar h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.overall-rating {
+    margin-bottom: 30px;
+}
+
+/* 🟢 THE CLEAN CLASS FOR THE STARS */
+.global-stars {
+    color: #ffcc00;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.write-review-box {
+    background-color: #1a1a1a;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.write-review-box h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.write-review-box p {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 20px;
+}
+
+.detailed-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detailed-review-form input,
+.detailed-review-form select,
+.detailed-review-form textarea {
+    padding: 12px;
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.detailed-review-form button {
+    padding: 12px;
+    background: #fff; 
+    color: #000;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.detailed-review-form button:hover {
+    background: #e6e6e6;
+}
+
+/* --- RIGHT COLUMN (Stacked Reviews) --- */
+.reviews-list-column h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.detailed-review-row {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #333;
+}
+
+.reviewer-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.avatar {
+    background: #333;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+}
+
+.reviewer-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.review-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.review-stars {
+    color: #ffcc00;
+    font-size: 14px;
+}
+
+.verified-purchase {
+    color: #ff9900; 
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.review-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #ddd;
+}
+
+/* Responsive for Mobile */
+@media (max-width: 800px) {
+    .reviews-layout {
+        grid-template-columns: 1fr; /* Stack sidebar on top of reviews on phones */
+    }
+    .product-reviews-section {
+        padding: 20px; /* Less padding on mobile */
+    }
+}
+
 
 /* =================== RESPONSIVE =================== */
 @media (max-width: 768px) {

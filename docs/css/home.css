@@ -221,45 +221,121 @@ body {
 }
 
 /* ===== REVIEWS ===== */
+/* ===== DYNAMIC REVIEWS & FORM ===== */
 .reviews {
   background: #111;
   color: #fff;
   padding: 60px 20px;
   text-align: center;
 }
+
 .reviews h2 {
   font-size: 32px;
   margin-bottom: 30px;
 }
-.review-cards {
+
+.review-grid {
   display: flex;
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
+  margin-bottom: 50px;
 }
-.review {
+
+.review-card {
   background: #222;
-  padding: 20px;
+  padding: 25px;
   border-radius: 12px;
-  max-width: 300px;
-  font-style: italic;
+  width: 300px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  text-align: left;
 }
-.review cite {
-  display: block;
-  margin-top: 12px;
-  font-weight: bold;
+
+.review-card h4 {
+  margin-bottom: 12px;
+  color: #ffcc00; /* CarTees Yellow Stars */
+  font-size: 18px;
+}
+
+.review-card .review-comment {
+  font-style: italic;
+  margin-bottom: 15px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.review-card strong {
   color: #ffcc00;
-  font-style: normal;
+}
+
+/* --- Review Submission Form --- */
+.leave-review-section {
+  max-width: 500px;
+  margin: 0 auto;
+  background: #000;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  border: 1px solid #333;
+}
+
+.leave-review-section h3 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+#siteReviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left;
+}
+
+#siteReviewForm input,
+#siteReviewForm select,
+#siteReviewForm textarea {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  font-family: inherit;
+}
+
+#siteReviewForm input::placeholder,
+#siteReviewForm textarea::placeholder {
+  color: #888;
+}
+
+#siteReviewForm textarea {
+  resize: vertical;
+}
+
+#siteReviewForm button {
+  padding: 12px;
+  background: #ffcc00;
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 5px;
+}
+
+#siteReviewForm button:hover {
+  background: #ff9900;
+  transform: scale(1.02);
 }
 
 /* ===== NEWSLETTER ===== */
 /* Note: Newsletter styles are in style.css */
 
-
-/* ==================================
-// ✅ NEW: HOME PAGE RESPONSIVE
-// ================================== */
+/*==================================
+ ✅ NEW: HOME PAGE RESPONSIVE
+==================================*/ 
 @media (max-width: 900px) {
   .hero h1 {
     font-size: 40px;

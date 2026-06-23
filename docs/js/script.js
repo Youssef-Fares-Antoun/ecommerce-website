@@ -639,6 +639,148 @@ async function loadBrands() {
 }
 
 // =====================
+//5.8 DYNAMIC SITE REVIEWS
+// =====================
+async function loadSiteReviews() {
+  const reviewGrid = document.getElementById("dynamic-reviews");
+  if (!reviewGrid) return;
+
+  try {
+    const response = await fetch('/api/site-reviews');
+    const reviews = await response.json();
+
+    reviewGrid.innerHTML = "";
+
+    reviews.forEach(review => {
+      const stars = "⭐".repeat(review.rating); 
+      
+      const article = document.createElement("article");
+      article.className = "review-card"; 
+      
+      article.innerHTML = `
+        <h4>${stars}</h4>
+        <p class="review-comment">"${review.comment}"</p>
+        <p><strong>- ${review.reviewerName}</strong></p>
+      `;
+      reviewGrid.appendChild(article);
+    });
+  } catch (err) {
+    console.error("Reviews Load Error:", err);
+    reviewGrid.innerHTML = "<p>Could not load reviews at this time.</p>";
+  }
+}
+
+function initSiteReviewForm() {
+  const form = document.getElementById("siteReviewForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("reviewerName").value;
+    const rating = document.getElementById("reviewRating").value;
+    const comment = document.getElementById("reviewComment").value;
+
+    try {
+      const response = await fetch('/api/site-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
+      });
+
+      if (response.ok) {
+        alert("Thank you for your review!");
+        form.reset();
+        loadSiteReviews();
+      }
+    } catch (err) {
+      console.error("Failed to post review:", err);
+    }
+  });
+}
+
+// =====================
+// 5.9 DYNAMIC PRODUCT REVIEWS (Product Detail Page)
+// =====================
+async function loadProductReviews(productId) {
+  const reviewGrid = document.getElementById("dynamic-product-reviews");
+  if (!reviewGrid) return;
+
+  try {
+    const response = await fetch(`/api/products/${productId}/reviews`);
+    const reviews = await response.json();
+    
+    reviewGrid.innerHTML = ""; 
+
+    if (reviews.length === 0) {
+      reviewGrid.innerHTML = "<p style='color: #fff;'>No reviews yet. Be the first to review this tee!</p>";
+      return;
+    }
+
+    reviews.forEach(review => {
+      const stars = "⭐".repeat(review.rating); 
+      
+      const article = document.createElement("article");
+      article.className = "detailed-review-row"; 
+      
+      article.innerHTML = `
+        <div class="reviewer-profile">
+          <div class="avatar">👤</div>
+          <span class="reviewer-name">${review.reviewerName}</span>
+        </div>
+        <div class="review-rating-row">
+          <span class="review-stars">${stars}</span>
+          <span class="verified-purchase">Verified Purchase</span>
+        </div>
+        <p class="review-text">"${review.comment}"</p>
+      `;
+      reviewGrid.appendChild(article);
+    });
+  } catch (err) {
+    console.error("Product Reviews Load Error:", err);
+  }
+}
+
+function initProductReviewForm(productId) {
+  const form = document.getElementById("productReviewForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); 
+    
+    // 1. Tell us the button actually fired
+    console.log("🚀 Submit clicked! Sending review to server...");
+    
+    const name = document.getElementById("prodReviewerName").value;
+    const rating = document.getElementById("prodReviewRating").value;
+    const comment = document.getElementById("prodReviewComment").value;
+
+    try {
+      const response = await fetch(`/api/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
+      });
+
+      if (response.ok) {
+        alert("Thanks for your review!");
+        form.reset(); 
+        loadProductReviews(productId); 
+      } else {
+        // 2. LOUD BACKEND ERROR
+        alert("Server Error: The backend refused to save the review. Check console!");
+        console.error("Backend Status:", response.status);
+      }
+    } catch (err) {
+      // 3. LOUD NETWORK ERROR
+      alert("Network Error: Could not reach the Node server!");
+      console.error("Failed to post product review:", err);
+    }
+  });
+}
+
+
+// =====================
 // 6. INITIALIZATION
 // =====================
 document.addEventListener("DOMContentLoaded", () => {
@@ -650,6 +792,22 @@ document.addEventListener("DOMContentLoaded", () => {
   initProfile();
   loadShowroom();
   loadBrands();
+
+
+  // Smart Check: Only load Site Reviews if we are on the Homepage
+  if (document.getElementById("dynamic-reviews")) {
+    loadSiteReviews();
+    initSiteReviewForm();
+  }
+
+  // Smart Check: Only load Product Reviews if we are on a Product Page
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentProductId = urlParams.get('id');
+  
+  if (currentProductId && document.getElementById("dynamic-product-reviews")) {
+      loadProductReviews(currentProductId);
+      initProductReviewForm(currentProductId);
+  }
 
   // Initialize Hamburger
   const hamburger = document.querySelector(".hamburger");
