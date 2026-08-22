@@ -1,6 +1,7 @@
 {
     "files.watcherExclude": {
-        "**/target": true
+        "**/target/**": true
     },
-    "livePreview.defaultPreviewPath": "/docs/home.html"
+    "livePreview.defaultPreviewPath": "/docs/home.html",
+    "liveServer.settings.port": 5501
 }

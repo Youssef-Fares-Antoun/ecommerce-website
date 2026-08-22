@@ -1,77 +1,110 @@
-/* profile.css */
-
+/* Profile Layout Structure */
 .profile-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
+    display: flex;
     gap: 30px;
     max-width: 1200px;
-    margin: 50px auto;
+    margin: 40px auto;
     padding: 0 20px;
-    min-height: 70vh;
+    align-items: flex-start; /* Prevents the sidebar from stretching vertically */
 }
 
 /* Sidebar Styling */
 .profile-sidebar {
-    background: #fff;
-    padding: 30px;
+    flex: 0 0 300px; 
+    background: #ffffff;
+    padding: 30px 20px;
     border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    height: fit-content;
-}
-
-.user-info {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); /* Soft shadow */
     text-align: center;
-    margin-bottom: 30px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
 }
 
 .profile-pic {
     font-size: 50px;
-    background: #f0f0f0;
-    width: 80px;
-    height: 80px;
-    line-height: 80px;
+    background: #f4f4f4;
+    width: 90px;
+    height: 90px;
+    line-height: 90px;
     border-radius: 50%;
-    margin: 0 auto 15px;
+    margin: 0 auto 15px auto;
+    color: #888;
 }
 
-.sidebar-menu .menu-item {
-    display: block;
-    padding: 12px 15px;
-    color: #555;
+.user-info h3 { 
+    margin: 0 0 5px 0; 
+    color: #222; 
+    font-size: 1.3em;
+}
+
+.user-info p { 
+    margin: 0 0 25px 0; 
+    color: #666; 
+    font-size: 0.9em; 
+}
+
+/* Sidebar Menu Buttons */
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
     text-decoration: none;
+    color: #555;
+    padding: 14px 20px;
     border-radius: 8px;
-    margin-bottom: 5px;
-    transition: 0.3s;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.2s ease;
+    text-align: left;
 }
 
-.sidebar-menu .menu-item:hover, 
-.sidebar-menu .menu-item.active {
-    background: #2d4d2d;
-    color: white;
+.menu-item:hover {
+    background: #f8f9fa;
+    color: #145214;
 }
 
-.sidebar-menu .logout {
-    color: #cc0000;
-    margin-top: 20px;
-    border-top: 1px solid #eee;
-    padding-top: 20px;
+/* Active State */
+.menu-item.active {
+    background: #145214; /* CarTees Green */
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(20, 82, 20, 0.2);
 }
 
-/* Content Area Styling */
+/* Special styling for Logout */
+.menu-item.logout {
+    color: #d9534f;
+    margin-top: 15px;
+    border: 1px solid #fce8e8;
+}
+
+.menu-item.logout:hover {
+    background: #d9534f;
+    color: #ffffff;
+    border-color: #d9534f;
+}
+
+/* Main Content Area */
 .profile-content {
-    background: #fff;
+    flex: 1; /* Takes up the remaining width */
+}
+
+.content-card {
+    background: #ffffff;
     padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .content-card h2 {
-    color: #2d4d2d;
-    margin-bottom: 25px;
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #145214;
+    border-bottom: 2px solid #f4f4f4;
+    padding-bottom: 12px;
 }
 
+/* Beautiful Form Styling */
 .form-row {
     display: flex;
     gap: 20px;
@@ -81,12 +114,88 @@
     flex: 1;
 }
 
-/* Responsive fix for Mobile (iPhone) */
+.form-group {
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9em;
+}
+
+/* The actual inputs */
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1em;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box; 
+    background-color: #fff;
+}
+
+/* What happens when a user clicks the input */
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #145214;
+    box-shadow: 0 0 0 4px rgba(20, 82, 20, 0.1); /* Soft green glow */
+}
+
+/* The disabled email box */
+.form-group input:disabled {
+    background-color: #f9fafb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+}
+
+.form-group textarea {
+    resize: vertical; /* Let them drag it taller, but not wider */
+    min-height: 120px;
+}
+
+/* Save Button */
+#save-profile-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 8px;
+    margin-top: 10px;
+    background: #145214;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+#save-profile-btn:hover {
+    background: #0f3d0f;
+}
+
+/* Responsive fix for Mobile */
 @media (max-width: 768px) {
     .profile-container {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+    .profile-sidebar {
+        flex: auto;
+        width: 100%;
+        box-sizing: border-box;
     }
     .form-row {
         flex-direction: column;
+        gap: 0;
     }
 }

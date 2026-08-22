@@ -1,5 +1,6 @@
 // docs/js/shop.js
 let fetchedProducts = []; // To store products fetched from the database
+
 // 1. Fetch products from the Database
 async function loadProducts() {
     try {
@@ -8,23 +9,23 @@ async function loadProducts() {
 
         const featuredItem = products.find(p => p.isFeatured === true);
 
-    if (featuredItem) {
-        const featuredContainer = document.querySelector('.featured');
-        featuredContainer.innerHTML = `
-        <h4>🌟 Featured</h4>
-        <a href="product_detail.html?id=${featuredItem.id}">
-            <img src="${featuredItem.image}" alt="${featuredItem.name}" />
-        </a>
-        <p><strong>${featuredItem.name}</strong></p>
-        <p class="price">
-            <span class="old-price">LE ${(featuredItem.price + 200).toFixed(2)}</span>
-            <span class="new-price">LE ${featuredItem.price.toFixed(2)}</span>
-        </p>
-        <button class="btn-add" onclick="addToCartWithPopup('${featuredItem.name}', ${featuredItem.price}, '${featuredItem.image}')">
-    Add to Cart
-</button>
-    `;
-    }
+        if (featuredItem) {
+            const featuredContainer = document.querySelector('.featured');
+            featuredContainer.innerHTML = `
+            <h4>🌟 Featured</h4>
+            <a href="product_detail.html?id=${featuredItem.id}">
+                <img src="${featuredItem.image}" alt="${featuredItem.name}" />
+            </a>
+            <p><strong>${featuredItem.name}</strong></p>
+            <p class="price">
+                <span class="old-price">LE ${(featuredItem.price + 200).toFixed(2)}</span>
+                <span class="new-price">LE ${featuredItem.price.toFixed(2)}</span>
+            </p>
+            <button class="btn-add" onclick="window.location.href='product_detail.html?id=${featuredItem.id}'">
+                View Details
+            </button>
+        `;
+        }
 
         const grid = document.getElementById('productGrid');
         if (!grid) return;
@@ -78,7 +79,6 @@ if (brandFilterContainer) {
     });
 }
 
-
 // 3. Brand Pre-Selection Logic
 function handleUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -89,7 +89,6 @@ function handleUrlParams() {
         if (brandItem) brandItem.click();
     }
 }
-
 
 // Logic for the Brand Sidebar
 function applyBrandFilter(brand) {
@@ -135,8 +134,8 @@ function renderGrid(products) {
             <span class="new-price">LE ${product.price.toFixed(2)}</span>
             <span class="save-price">Save LE 200.00</span>
           </p>
-          <button class="btn-add" onclick="addToCartWithPopup('${product.name}', ${product.price}, '${product.image}')">
-            Add to Cart
+          <button class="btn-add" onclick="window.location.href='product_detail.html?id=${product.id}'">
+            View Details
           </button>
         </div>
         `;

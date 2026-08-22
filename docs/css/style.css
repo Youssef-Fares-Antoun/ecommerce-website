@@ -760,10 +760,46 @@ footer .socials a:hover {
     color: white;
 }
 
+/* --- CUSTOM SIZE BUTTONS --- */
+.size-selector-group {
+    display: flex !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 15px !important;
+}
+
+button.size-btn {
+    width: 45px !important;
+    height: 45px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #333333 !important;
+    border: 1px solid #cccccc !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: normal !important;
+    box-shadow: none !important;
+}
+
+button.size-btn:hover {
+    border-color: #000 !important;
+    background-color: #f9f9f9 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+button.size-btn.selected {
+    border: 2px solid #000000 !important;
+    font-weight: bold !important;
+}
+
 
 /* ==================================
-// ✅ NEW: GENERAL RESPONSIVE STYLES
-// ================================== */
+ ✅ NEW: GENERAL RESPONSIVE STYLES
+ ================================== */
 @media (max-width: 600px) {
   .hero-text h1 {
     font-size: 2.5rem;

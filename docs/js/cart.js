@@ -1,3 +1,7 @@
+// =====================
+// CART DISPLAY LOGIC
+// =====================
+
 // Get cart items from localStorage
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -40,9 +44,9 @@ function updateCartIndicator() {
   const indicator = document.getElementById("cart-indicator") || document.getElementById("cart-count");
   if (!indicator) return; 
 
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
   
-  if (cart.length > 0) {
+  if (currentCart.length > 0) {
     indicator.classList.add("active");
     indicator.style.display = 'block';
   } else {
@@ -51,11 +55,11 @@ function updateCartIndicator() {
   }
 }
 
-// ✅ NEW: Logic to show the In-App Pop-up
+// Logic to show the In-App Pop-up for Checkout
 function proceedToCheckout() {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
   
-  if (cart.length === 0) {
+  if (currentCart.length === 0) {
     // 1. Get the modal element
     const modal = document.getElementById("emptyCartModal");
     
@@ -93,32 +97,6 @@ function proceedToCheckout() {
     // Cart has items -> Go to checkout
     window.location.href = 'checkout.html';
   }
-}
-
-// ✅ NEW: Logic for the "Added to Cart" Success Pop-up
-function addToCartWithPopup(name, price, image) {
-  // 1. Call your existing addToCart logic (assuming it's in your script.js or cart.js)
-  if (typeof addToCart === "function") {
-    addToCart(name, price, image);
-  }
-
-  // 2. Show the Success Modal
-  const modal = document.getElementById('cartModal');
-  const message = document.getElementById('cartModalMessage');
-  
-  if (modal && message) {
-    message.innerText = `The ${name} has been added to your fleet!`;
-    modal.style.display = 'flex';
-    
-    // Update the green dot immediately
-    updateCartIndicator();
-  }
-}
-
-// Function to close the success modal
-function closeModal() {
-  const modal = document.getElementById('cartModal');
-  if (modal) modal.style.display = 'none';
 }
 
 // Run on page load

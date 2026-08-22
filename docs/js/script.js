@@ -2,35 +2,33 @@
 // 1. CART SYSTEM
 // =====================
 
-// Load cart from localStorage
 function getCart() {
   return JSON.parse(localStorage.getItem("cart")) || [];
 }
 
-// Save cart to localStorage
 function saveCart(cart) {
   localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-// Add product to cart
 function addToCart(name, price, image, redirect = false) {
   let cart = getCart();
 
-  // Get size & quantity from inputs (if available on the page)
   const sizeInput = document.getElementById("size");
-  const size = sizeInput ? sizeInput.value : "Default";
+  const size = sizeInput ? sizeInput.value.trim() : "";
+  const errorMsg = document.getElementById("size-error");
+
+  if (size === "" || size === "Default") {
+    if (errorMsg) errorMsg.style.display = "block"; 
+    return false;
+  }
 
   const quantityInput = document.getElementById("quantity");
   const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
-  // Get current main image if exists (always save relative path)
   const mainImage = document.getElementById("mainImage");
   let imagePath = mainImage ? mainImage.getAttribute("src") : image;
-
-  // Normalize image path
   imagePath = imagePath.replace(/^\//, "");
 
-  // Check if same product + size already exists
   const existing = cart.find(item => item.name === name && item.size === size);
   if (existing) {
     existing.quantity += quantity;
@@ -39,23 +37,29 @@ function addToCart(name, price, image, redirect = false) {
   }
 
   saveCart(cart);
-  updateCartIndicator(); // Update dot immediately
+  updateCartIndicator();
 
   if (redirect) {
     window.location.href = "cart.html";
   }
+  return true;
 }
 
-// Custom Add to Cart Popup (Centered)
 function addToCartWithPopup(name, price, image) {
+  const sizeInput = document.getElementById("size");
+  const size = sizeInput ? sizeInput.value.trim() : "";
+  const errorMsg = document.getElementById("size-error");
+
+  if (size === "" || size === "Default") {
+    if (errorMsg) errorMsg.style.display = "block"; 
+    return; 
+  }
+
   addToCart(name, price, image, false);
 
-  const sizeInput = document.getElementById("size");
-  const size = sizeInput ? sizeInput.value : "Default";
   const quantityInput = document.getElementById("quantity");
   const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
-  // Create modal if it doesn’t exist
   let modal = document.getElementById("cartModal");
   if (!modal) {
     modal = document.createElement("div");
@@ -74,14 +78,11 @@ function addToCartWithPopup(name, price, image) {
   }
 
   const message = document.getElementById("cartModalMessage");
-  const viewCartBtn = document.getElementById("viewCartBtn");
-  const continueBtn = document.getElementById("continueShoppingBtn");
-
   message.textContent = `${quantity} × ${name} (Size: ${size}) has been added to your cart.`;
   modal.style.display = "flex";
 
-  viewCartBtn.onclick = () => window.location.href = "cart.html";
-  continueBtn.onclick = () => modal.style.display = "none";
+  document.getElementById("viewCartBtn").onclick = () => window.location.href = "cart.html";
+  document.getElementById("continueShoppingBtn").onclick = () => modal.style.display = "none";
 
   window.addEventListener("click", function outsideClick(e) {
     if (e.target === modal) {
@@ -100,6 +101,7 @@ function removeFromCart(name, size) {
   saveCart(cart);
   displayCart();
   updateCartIndicator();
+  displayCheckoutSummary(); 
 }
 
 function updateQuantity(name, size, change) {
@@ -116,12 +118,13 @@ function updateQuantity(name, size, change) {
   saveCart(cart);
   displayCart();
   updateCartIndicator();
+  displayCheckoutSummary(); 
 }
 
 function displayCart() {
   const cartItemsContainer = document.getElementById("cart-items");
   const cartTotal = document.getElementById("cart-total");
-  if (!cartItemsContainer || !cartTotal) return; // Only run on cart.html
+  if (!cartItemsContainer || !cartTotal) return; 
 
   const cart = getCart();
   let total = 0;
@@ -170,7 +173,6 @@ function clearCart() {
   updateCartIndicator();
 }
 
-// Checkout Handler
 function proceedToCheckout() {
   const cart = getCart();
   if (cart.length === 0) {
@@ -191,25 +193,112 @@ function proceedToCheckout() {
 // =====================
 // 3. CHECKOUT PAGE LOGIC
 // =====================
-function handlePlaceOrder(e) {
+
+function displayCheckoutSummary() {
+  const orderSummaryContainer = document.getElementById("order-items"); 
+  const orderTotalDisplay = document.getElementById("order-total");     
+
+  if (!orderSummaryContainer || !orderTotalDisplay) return; 
+
+  const cart = getCart();
+  let total = 0;
+  orderSummaryContainer.innerHTML = "";
+
+  if (cart.length === 0) {
+    orderSummaryContainer.innerHTML = "<p style='color:red;'>Your cart is empty.</p>";
+    orderTotalDisplay.textContent = "0.00";
+    return;
+  }
+
+  cart.forEach(item => {
+    const itemTotal = item.price * item.quantity;
+    total += itemTotal;
+
+    const itemDiv = document.createElement("div");
+    itemDiv.style.display = "flex";
+    itemDiv.style.justifyContent = "space-between";
+    itemDiv.style.padding = "10px 0";
+    itemDiv.style.borderBottom = "1px solid #eee";
+
+    itemDiv.innerHTML = `
+      <div style="font-size: 14px;">
+        <strong>${item.quantity}x</strong> ${item.name} <br>
+        <small style="color: #666;">Size: ${item.size}</small>
+      </div>
+      <div style="font-weight: bold; font-size: 14px;">
+        LE ${itemTotal.toFixed(2)}
+      </div>
+    `;
+    orderSummaryContainer.appendChild(itemDiv);
+  });
+
+  orderTotalDisplay.textContent = total.toFixed(2);
+}
+
+async function autofillCheckout() {
+    const guestForm = document.getElementById("guestAddressForm");
+    const savedView = document.getElementById("savedAddressView");
+    const addressList = document.getElementById("checkout-address-list");
+    if (!guestForm) return; 
+  
+    try {
+      const response = await fetch('/api/addresses/me');
+      if (response.ok) {
+        const addresses = await response.json();
+  
+        if (addresses.length > 0) {
+            guestForm.style.display = "none";
+            savedView.style.display = "block";
+            window.isAmazonMode = true;
+            
+            addressList.innerHTML = "";
+            addresses.forEach((addr, index) => {
+                const isChecked = (addr.isDefault || index === 0) ? "checked" : "";
+                const selectedClass = isChecked ? "selected-address" : "";
+                
+                const div = document.createElement("div");
+                div.className = `amazon-address-card ${selectedClass}`;
+                div.innerHTML = `
+                    <input type="radio" name="selectedAddress" value="${addr.id}" id="addr_${addr.id}" ${isChecked} 
+                           style="margin-top: 5px; cursor: pointer; transform: scale(1.2);" 
+                           onclick="document.querySelectorAll('.amazon-address-card').forEach(c => c.classList.remove('selected-address')); this.parentElement.classList.add('selected-address');">
+                    <label for="addr_${addr.id}" style="cursor: pointer; width: 100%;">
+                        <strong style="display:block; font-size: 1.1em; color: #222;">${addr.firstName} ${addr.lastName}</strong>
+                        <span style="display:block; color: #555; margin-top: 4px;">${addr.street}</span>
+                        <span style="display:block; color: #555;">${addr.city}, ${addr.governorate}</span>
+                        <span style="display:block; color: #555; margin-top: 4px;">Phone: ${addr.phone}</span>
+                    </label>
+                `;
+                addressList.appendChild(div);
+            });
+        }
+      }
+    } catch (err) {
+      console.log("Guest checkout. Showing normal form.");
+    }
+}
+
+async function handlePlaceOrder(e) {
   e.preventDefault();
 
-  const fields = ["firstName", "lastName", "address", "city", "governorate", "phone", "payment"];
+  let fieldsToValidate = ["payment"];
+  if (!window.isAmazonMode) {
+      fieldsToValidate = ["firstName", "lastName", "address", "city", "governorate", "phone", "payment"];
+  }
+
   let allValid = true;
 
-  // Clear errors
-  fields.forEach(id => {
+  fieldsToValidate.forEach(id => {
     const el = document.getElementById(id);
     if(el) {
         el.style.borderColor = "#ccc";
         if (el.nextElementSibling && el.nextElementSibling.classList.contains("error-msg")) {
-        el.nextElementSibling.remove();
+          el.nextElementSibling.remove();
         }
     }
   });
 
-  // Validate
-  fields.forEach(id => {
+  fieldsToValidate.forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.value.trim()) {
       allValid = false;
@@ -225,11 +314,24 @@ function handlePlaceOrder(e) {
 
   if (!allValid) return;
 
-  alert("✅ Order placed successfully!");
-  localStorage.removeItem("cart");
-  window.location.href = "index.html";
+  const cart = getCart();
+  try {
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cart: cart })
+    });
+    const data = await response.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Error connecting to the payment gateway.");
+    }
+  } catch (err) {
+    console.error("Checkout Error:", err);
+    alert("Network error. Could not reach the server.");
+  }
 }
-
 
 // =====================
 // 4. SHARED UTILITIES
@@ -253,41 +355,29 @@ function initSearchFilter() {
   const searchIcon = document.getElementById("searchIcon") || document.getElementById("searchToggle");
   const searchInput = document.getElementById("searchInput");
   const brandFilter = document.getElementById("brandFilter");
-  const products = document.querySelectorAll(".products .card"); // Assuming shop.html structure
+  const products = document.querySelectorAll(".products .card"); 
   const sortSelect = document.getElementById("sortSelect");
-  const grid = document.getElementById("productGrid"); // or .grid
+  const grid = document.getElementById("productGrid"); 
 
-  // Search
   if (searchIcon && searchInput) {
-  // 1. Get the container wrapper for the animation
   const searchBar = document.getElementById("searchBar"); 
-
   searchIcon.addEventListener("click", (e) => {
     e.preventDefault();
-    
-    // 2. Toggle classes from your CSS
     if (searchBar) searchBar.classList.toggle("show");
     searchInput.classList.toggle("active");
-    
-    // 3. Auto-focus when opened
     if (searchInput.classList.contains("active")) {
       searchInput.focus();
     }
   });
 
-  // 4. Live Filtering Logic
-  searchInput.addEventListener("input", () => { // "input" is better than "keyup" for instant results
+  searchInput.addEventListener("input", () => { 
     const filter = searchInput.value.toLowerCase();
-    
-    // If you are using the array-filtering from shop.js, call that function:
     if (typeof searchProducts === "function") {
         searchProducts(); 
     } else {
-        // Fallback: DOM-based filtering for static elements
         products.forEach(product => {
           const name = product.querySelector("h4").textContent.toLowerCase();
           const brand = product.dataset.brand ? product.dataset.brand.toLowerCase() : "";
-          
           if (name.includes(filter) || brand.includes(filter)) {
               product.style.display = "flex";
           } else {
@@ -296,26 +386,19 @@ function initSearchFilter() {
         });
     }
   });
-
   }
 
-  // Brand Filter
   if (brandFilter) {
     brandFilter.addEventListener("click", e => {
       if (e.target.tagName === "LI") {
         const brand = e.target.getAttribute("data-brand");
-        
-        // Update Active Class
         brandFilter.querySelectorAll("li").forEach(li => li.classList.remove("active"));
         e.target.classList.add("active");
 
-        // Filter
         products.forEach(product => {
             const productBrand = product.getAttribute("data-brand");
             product.style.display = (brand === "all" || productBrand.toLowerCase() === brand.toLowerCase()) ? "flex" : "none";
         });
-        
-        // Update Heading
         const heading = document.querySelector(".sortbar p strong");
         if (heading) {
             heading.textContent = brand === "all" ? "Showing All Products" : `Showing ${brand} Products`;
@@ -324,12 +407,10 @@ function initSearchFilter() {
     });
   }
 
-  // Sort
   if (sortSelect && grid) {
     sortSelect.addEventListener("change", () => {
       let cards = Array.from(grid.querySelectorAll(".card"));
       const val = sortSelect.value;
-
       if(val === 'low-high') {
           cards.sort((a, b) => parseFloat(a.dataset.price) - parseFloat(b.dataset.price));
       } else if (val === 'high-low') {
@@ -343,7 +424,6 @@ function initSearchFilter() {
             return nameB.localeCompare(nameA);
           });
       }
-
       cards.forEach(card => grid.appendChild(card));
     });
   }
@@ -353,15 +433,12 @@ function initSearchFilter() {
 // 4.5 COMPONENT INJECTION
 // =====================
 function injectAuthModal() {
-  // If the modal is already on the page, don't inject it twice
   if (document.getElementById("authModal")) return;
 
   const modalHTML = `
   <div id="authModal" class="cart-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
     <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; position: relative;">
-      
       <span onclick="document.getElementById('authModal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer;">&times;</span>
-
       <div id="loginSection">
         <h2 style="margin-bottom: 20px;">Garage Access</h2>
         <form id="loginForm">
@@ -373,7 +450,6 @@ function injectAuthModal() {
           No keys? <a href="javascript:void(0)" onclick="document.getElementById('loginSection').style.display='none'; document.getElementById('registerSection').style.display='block';" style="color: red;">Register here</a>
         </p>
       </div>
-
       <div id="registerSection" style="display: none;">
         <h2 style="margin-bottom: 20px;">Join the Crew</h2>
         <form id="registerForm">
@@ -386,48 +462,47 @@ function injectAuthModal() {
           Already in the crew? <a href="javascript:void(0)" onclick="document.getElementById('registerSection').style.display='none'; document.getElementById('loginSection').style.display='block';" style="color: red;">Login here</a>
         </p>
       </div>
-
     </div>
   </div>
   `;
-
-  // Inject the HTML right before the closing </body> tag
   document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
 // =====================
-// 5. AUTHENTICATION SYSTEM (DATABASE VERSION)
+// 5. AUTHENTICATION SYSTEM
 // =====================
 
-function initAuth() {
+async function initAuth() {
   injectAuthModal(); 
   const userIcon = document.getElementById("userIcon");
   const authModal = document.getElementById("authModal");
 
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let currentUser = null;
+    try {
+      const response = await fetch('/api/users/me');
+      if (response.ok) {
+        const data = await response.json();
+        currentUser = data.user;
+      }
+    } catch (err) {
+      console.error("Auth check failed:", err);
+  }  
   if (currentUser && userIcon) {
-
-    // User is logged in
     userIcon.innerHTML = "👤 "; 
     userIcon.href = "profile.html"; 
     userIcon.style.border = "none";
     userIcon.style.padding = "0";
     userIcon.title = `Profile of ${currentUser.name}`;
-    
     userIcon.onclick = null; 
   } else if (userIcon && authModal) {
-    // User is NOT logged in -> Click opens the Auth Modal
     userIcon.innerHTML = "Login / Register";
     userIcon.href = "javascript:void(0)";
-    
     userIcon.onclick = (e) => {
       e.preventDefault();
       authModal.style.display = "flex";
     };
   }
   
-
-  // B. Handle Registration (Sending to PostgreSQL)
   const registerForm = document.getElementById("registerForm");
   if (registerForm) {
     registerForm.addEventListener("submit", async (e) => {
@@ -443,10 +518,8 @@ function initAuth() {
           body: JSON.stringify({ name, email, password })
         });
         const data = await response.json();
-
         if (response.ok) {
           alert("Registration successful! Please login.");
-          // Switch to Login view
           document.getElementById('registerSection').style.display = 'none';
           document.getElementById('loginSection').style.display = 'block';
           registerForm.reset();
@@ -459,7 +532,6 @@ function initAuth() {
     });
   }
 
-  // C. Handle Login (Checking PostgreSQL)
   const loginForm = document.getElementById("loginForm");
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
@@ -474,13 +546,10 @@ function initAuth() {
           body: JSON.stringify({ email, password })
         });
         const data = await response.json();
-
         if (response.ok) {
-          // Store safe user data locally to keep them logged in (No Passwords!)
-          localStorage.setItem("currentUser", JSON.stringify(data.user));
           alert("Login successful!");
           authModal.style.display = "none";
-          location.reload(); 
+          location.reload();
         } else {
           alert(data.message); 
         }
@@ -495,109 +564,274 @@ function initAuth() {
 // 5.5 PROFILE DASHBOARD LOGIC
 // =====================
 
-function initProfile() {
+async function initProfile() {
   const userNameDisplay = document.getElementById("userNameDisplay");
   const userEmailDisplay = document.getElementById("userEmailDisplay");
-  const inputName = document.getElementById("inputName");
-  const inputEmail = document.getElementById("inputEmail");
-  const inputAddress = document.getElementById("inputAddress");
-  const saveProfileBtn = document.getElementById("save-profile-btn");
-  // If we are not on the profile page, skip this logic
+  
   if (!userNameDisplay) return;
 
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  
-  // Security Check: Kick unauthenticated users back to the homepage
+  let currentUser = null;
+  try {
+    const response = await fetch('/api/users/me');
+    if (response.ok) {
+      const data = await response.json();
+      currentUser = data.user;
+    }
+  } catch (err) {
+    console.error("Profile load error:", err);
+  }
+    
   if (!currentUser) {
     window.location.href = "index.html";
     return;
   }
 
-  // 1. Populate the Sidebar
   userNameDisplay.textContent = currentUser.name;
   userEmailDisplay.textContent = currentUser.email;
+  if(document.getElementById("displayUserName")) document.getElementById("displayUserName").textContent = currentUser.name;
+  if(document.getElementById("displayUserEmail")) document.getElementById("displayUserEmail").textContent = currentUser.email;
 
-  // 2. Populate the Account Details Form
-  if (inputName) inputName.value = currentUser.name;
-  if (inputEmail) inputEmail.value = currentUser.email;
+  // 🚀 Fetch and Draw the Address Book
+  const loadAddresses = async () => {
+      const addrList = document.getElementById("saved-addresses-list");
+      if(!addrList) return;
+      try {
+          const res = await fetch('/api/addresses/me');
+          const addresses = await res.json();
+          addrList.innerHTML = "";
+          
+          if(addresses.length === 0) {
+              addrList.innerHTML = "<p>You haven't saved any addresses yet.</p>";
+              return;
+          }
+          
+          addresses.forEach(addr => {
+              const div = document.createElement("div");
+              div.style.padding = "20px";
+              div.style.borderStyle = "solid";
+              div.style.borderWidth = addr.isDefault ? "2px" : "1px";
+              div.style.borderColor = addr.isDefault ? "#145214" : "#e5e7eb";
+              div.style.borderRadius = "8px";
+              div.style.background = addr.isDefault ? "#f4fff4" : "#ffffff";
+              div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)";
+              
+              // 🚀 RESTORED: The Beautiful Green Pill Button!
+              const badgeOrButton = addr.isDefault 
+                ? '<span style="background: #e8f5e9; color:#145214; padding: 4px 12px; border-radius: 20px; font-size:0.8em; font-weight:bold; border: 1px solid #c8e6c9; white-space: nowrap; flex-shrink: 0;">★ Default</span>'
+                : `<button type="button" onclick="setDefaultAddress(${addr.id})" style="background: #fff; color: #145214; border: 1px solid #145214; padding: 6px 14px !important; border-radius: 20px !important; font-size: 0.85em !important; font-weight: bold !important; cursor: pointer; transition: all 0.2s ease; width: auto !important; min-width: 0 !important; white-space: nowrap; flex-shrink: 0; box-shadow: none !important;" onmouseover="this.style.background='#145214'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#145214';">Set as Default</button>`;
 
+              div.innerHTML = `
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 15px;">
+                      <strong style="font-size:1.1em; color: #222; flex-grow: 1; word-break: break-word;">${addr.firstName} ${addr.lastName}</strong>
+                      ${badgeOrButton}
+                  </div>
+                  <span style="display:block; color:#444; margin-bottom: 4px;">${addr.street}</span>
+                  <span style="display:block; color:#444; margin-bottom: 4px;">${addr.city}, ${addr.governorate}</span>
+                  <span style="display:block; color:#444; margin-top: 8px;">Phone: ${addr.phone}</span>
+              `;
+              addrList.appendChild(div);
+          });
+      } catch(e) { 
+          console.error(e); 
+          addrList.innerHTML = "<p>Could not load addresses.</p>";
+      }
+  };
+  loadAddresses();
 
+  // 🚀 Toggle Form Logic
+  const showFormBtn = document.getElementById("showFormBtn");
+  const cancelFormBtn = document.getElementById("cancelFormBtn");
+  const newAddressWrapper = document.getElementById("newAddressWrapper");
 
-if ( inputAddress && currentUser.address ) {
-  inputAddress.value = currentUser.address;
+  if(showFormBtn && newAddressWrapper) {
+      showFormBtn.addEventListener("click", () => {
+          newAddressWrapper.style.display = "block";
+          showFormBtn.style.display = "none"; // Hides the "+ Add New Address" button while form is open
+      });
+  }
+
+  if(cancelFormBtn && newAddressWrapper) {
+      cancelFormBtn.addEventListener("click", () => {
+          newAddressWrapper.style.display = "none";
+          showFormBtn.style.display = "block"; // Brings the button back
+          document.getElementById("newAddressForm").reset(); // Clears any half-typed info
+      });
+  }
+
+  // 🚀 Save a New Address
+  const newAddrForm = document.getElementById("newAddressForm");
+  if(newAddrForm) {
+      newAddrForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const data = {
+              firstName: document.getElementById("addrFirst").value,
+              lastName: document.getElementById("addrLast").value,
+              street: document.getElementById("addrStreet").value,
+              city: document.getElementById("addrCity").value,
+              governorate: document.getElementById("addrGov").value,
+              phone: document.getElementById("addrPhone").value
+          };
+          try {
+              const res = await fetch('/api/addresses/me', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify(data)
+              });
+              if(res.ok) {
+                  alert("Address saved to your Address Book!");
+                  newAddrForm.reset();
+                  
+                  // Hide the form and show the button again!
+                  if (newAddressWrapper && showFormBtn) {
+                      newAddressWrapper.style.display = "none";
+                      showFormBtn.style.display = "block";
+                  }
+                  
+                  loadAddresses(); // Instantly update the visual list
+              } else {
+                  alert("Failed to save address.");
+              }
+          } catch(e) { alert("Network error. Could not save address."); }
+      });
+  }
+
+  // Profile Tab Switching (Updated for My Details vs My Addresses)
+  const menuItems = document.querySelectorAll(".sidebar-menu .menu-item:not(.logout)");
+  const detailsCard = document.getElementById("details-card");
+  const addressesCard = document.getElementById("addresses-card");
+  const ordersCard = document.getElementById("orders-card");
+  const settingsCard = document.getElementById("settings-card");
+
+  menuItems.forEach(item => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      
+      menuItems.forEach(m => m.classList.remove("active"));
+      item.classList.add("active");
+
+      if (detailsCard) detailsCard.style.display = "none";
+      if (addressesCard) addressesCard.style.display = "none";
+      if (ordersCard) ordersCard.style.display = "none";
+      if (settingsCard) settingsCard.style.display = "none";
+
+      const target = item.getAttribute("href");
+      if (target === "#details") {
+        if (detailsCard) detailsCard.style.display = "block";
+      } else if (target === "#addresses") {
+        if (addressesCard) addressesCard.style.display = "block";
+      } else if (target === "#orders") {
+        if (ordersCard) ordersCard.style.display = "block";
+        if (typeof loadOrderHistory === 'function') loadOrderHistory(); 
+      } else if (target === "#settings") {
+        if (settingsCard) settingsCard.style.display = "block";
+      }
+    });
+  });
 }
 
-if (saveProfileBtn) {
-  saveProfileBtn.addEventListener("click", async (e) => {
-    e.preventDefault(); //stopping page refreshing
-
-    const newAddress = inputAddress ? inputAddress.value : "";
+// 🚀 NEW: Global function so the generated buttons can trigger the API
+window.setDefaultAddress = async function(addressId) {
     try {
-      const response = await fetch(`/api/users/${currentUser.id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({ address: newAddress })
-      });
+        const res = await fetch(`/api/addresses/${addressId}/default`, { 
+            method: 'PUT' 
+        });
+        if(res.ok) {
+            // Instantly reload the page to snap the new default to the top!
+            location.reload(); 
+        } else {
+            alert("Failed to update default address.");
+        }
+    } catch(e) {
+        console.error("Default Address Error:", e);
+    }
+};
 
-      const data = await response.json();
+async function loadOrderHistory() {
+  const orderList = document.getElementById("order-history-list");
+  if (!orderList) return;
 
-      if (response.ok) {
-        alert("Profile updated successfully!");
-
-        // Update localStorage with new address
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
-      } else {
-        alert(data.error || "Failed to update profile.");
-      }
-    } catch (err) {
-      console.error("Profile Update Error:", err);
-      alert("An error occurred while updating your profile. Please try again later.");
+  try {
+    orderList.innerHTML = "<p>Loading your past orders...</p>";
+    
+    const response = await fetch('/api/orders/me');
+    
+    if (!response.ok) {
+       orderList.innerHTML = "<p style='color:red;'>Failed to load orders.</p>";
+       return;
     }
 
-    
+    const orders = await response.json();
+    orderList.innerHTML = ""; 
+
+    if (orders.length === 0) {
+      orderList.innerHTML = "<p>You haven't added any tees to your fleet yet. Time to hit the shop!</p>";
+      return;
+    }
+
+    orders.forEach(order => {
+      const date = new Date(order.createdAt).toLocaleDateString();
+      const orderDiv = document.createElement("div");
+      
+      orderDiv.style.border = "1px solid #ccc";
+      orderDiv.style.borderRadius = "8px";
+      orderDiv.style.padding = "15px";
+      orderDiv.style.marginBottom = "15px";
+      orderDiv.style.background = "#fafafa";
+
+      orderDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+          <strong>Order #${order.id}</strong>
+          <span style="color: #666;">${date}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <p style="margin: 0; font-size: 14px;">Status: <strong style="color: #145214;">${order.status || 'Processing'}</strong></p>
+          <p style="margin: 0; font-weight: bold;">Total: LE ${parseFloat(order.totalAmount || order.total).toFixed(2)}</p>
+        </div>
+      `;
+      orderList.appendChild(orderDiv);
     });
+
+  } catch (err) {
+    console.error("Order Load Error:", err);
+    orderList.innerHTML = "<p style='color:red;'>Could not connect to the database.</p>";
   }
 }
-function handleLogout() {
+
+async function handleLogout() {
   if (confirm("Are you sure you want to cut the engine and log out?")) {
-    localStorage.removeItem("currentUser");
-    window.location.href = "index.html"; // Redirect to storefront
+  try {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = "index.html"; 
+    } catch (err) {
+      console.error("Logout Error:", err);
+    }
   }
 }
 
 // =====================
-// 5.6 DYNAMIC SHOWROOM (Loading from Database)
+// 5.6 DYNAMIC SHOWROOM
 // =====================
 async function loadShowroom() {
   const showroom = document.getElementById("dynamic-showroom");
-
   if(!showroom) return;
 
   try {
     const response = await fetch('/api/products');
     const products = await response.json();
-
     showroom.innerHTML = "";
-
     const bestSellers = products.filter(product => product.isBestSeller === true).slice(0,4);
 
     bestSellers.forEach(product => {
       const card = document.createElement("article");
       card.className = "product-card";
-      
       card.innerHTML = `
         <a href="product_detail.html?id=${product.id}">
           <img src="${product.image}" alt="${product.name}">
         </a>
         <h3>${product.name}</h3>
-        <p class="price">
-          <span class="new-price">LE ${parseFloat(product.price).toFixed(2)}</span>
-        </p>
+        <p class="price"><span class="new-price">LE ${parseFloat(product.price).toFixed(2)}</span></p>
         <button onclick="window.location.href='product_detail.html?id=${product.id}'">View</button>
       `;
-
       showroom.appendChild(card);
     });
   } catch (err) {
@@ -607,30 +841,21 @@ async function loadShowroom() {
 }
 
 // =====================
-// 5.7 DYNAMIC BRANDS (Homepage)
+// 5.7 DYNAMIC BRANDS
 // =====================
 async function loadBrands() {
   const brandGrid = document.getElementById("dynamic-brands");
-
   if (!brandGrid) return;
 
   try {
     const response = await fetch('/api/brands');
     const brands = await response.json();
-
     brandGrid.innerHTML = "";
-
     brands.forEach(brand => {
       const article = document.createElement("article");
       article.className = "brand-card";
-     
       article.onclick = () => window.location.href = `shop.html?brand=${brand.filterValue}`;
-
-      article.innerHTML = `
-      <img src="${brand.logo}" alt="${brand.name} Logo">
-        <h3>${brand.name}</h3>
-      `;
-
+      article.innerHTML = `<img src="${brand.logo}" alt="${brand.name} Logo"><h3>${brand.name}</h3>`;
       brandGrid.appendChild(article);
     });
   } catch (err) {
@@ -639,7 +864,7 @@ async function loadBrands() {
 }
 
 // =====================
-//5.8 DYNAMIC SITE REVIEWS
+// 5.8 DYNAMIC SITE REVIEWS
 // =====================
 async function loadSiteReviews() {
   const reviewGrid = document.getElementById("dynamic-reviews");
@@ -648,26 +873,51 @@ async function loadSiteReviews() {
   try {
     const response = await fetch('/api/site-reviews');
     const reviews = await response.json();
-
     reviewGrid.innerHTML = "";
 
-    const topReviews = reviews
-      .sort((a, b) => b.rating - a.rating) // Sort descending by rating
-      .slice(0, 4);                        // Take only the first 4
+    const sortedReviews = reviews.sort((a, b) => b.rating - a.rating); 
+    
+    const renderSiteReviews = (reviewsToRender) => {
+        reviewsToRender.forEach(review => {
+          const stars = "⭐".repeat(review.rating); 
+          const article = document.createElement("article");
+          article.className = "review-card"; 
+          article.innerHTML = `
+            <h4>${stars}</h4>
+            <p class="review-comment">"${review.comment}"</p>
+            <p><strong>- ${review.reviewerName}</strong></p>
+          `;
+          reviewGrid.appendChild(article);
+        });
+    };
 
-    topReviews.forEach(review => {
-      const stars = "⭐".repeat(review.rating); 
-      
-      const article = document.createElement("article");
-      article.className = "review-card"; 
-      
-      article.innerHTML = `
-        <h4>${stars}</h4>
-        <p class="review-comment">"${review.comment}"</p>
-        <p><strong>- ${review.reviewerName}</strong></p>
-      `;
-      reviewGrid.appendChild(article);
-    });
+    const initialSiteReviews = sortedReviews.slice(0, 4);
+    renderSiteReviews(initialSiteReviews);
+
+    if (sortedReviews.length > 4) {
+        const btnWrapper = document.createElement("div");
+        btnWrapper.style.gridColumn = "1 / -1"; 
+        btnWrapper.style.textAlign = "center";
+        btnWrapper.style.marginTop = "20px";
+
+        const showAllBtn = document.createElement("button");
+        showAllBtn.innerText = `Read All ${sortedReviews.length} Reviews`;
+        showAllBtn.style.padding = "10px 20px";
+        showAllBtn.style.background = "#333";
+        showAllBtn.style.color = "#fff";
+        showAllBtn.style.border = "none";
+        showAllBtn.style.cursor = "pointer";
+        showAllBtn.style.borderRadius = "4px";
+        
+        showAllBtn.onclick = () => {
+            const remainingSiteReviews = sortedReviews.slice(4);
+            renderSiteReviews(remainingSiteReviews);
+            btnWrapper.style.display = "none"; 
+        };
+
+        btnWrapper.appendChild(showAllBtn);
+        reviewGrid.appendChild(btnWrapper);
+    }
   } catch (err) {
     console.error("Reviews Load Error:", err);
     reviewGrid.innerHTML = "<p>Could not load reviews at this time.</p>";
@@ -680,7 +930,6 @@ function initSiteReviewForm() {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const name = document.getElementById("reviewerName").value;
     const rating = document.getElementById("reviewRating").value;
     const comment = document.getElementById("reviewComment").value;
@@ -691,7 +940,6 @@ function initSiteReviewForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
       });
-
       if (response.ok) {
         alert("Thank you for your review!");
         form.reset();
@@ -704,7 +952,7 @@ function initSiteReviewForm() {
 }
 
 // =====================
-// 5.9 DYNAMIC PRODUCT REVIEWS (Product Detail Page)
+// 5.9 DYNAMIC PRODUCT REVIEWS
 // =====================
 async function loadProductReviews(productId) {
   const reviewGrid = document.getElementById("dynamic-product-reviews");
@@ -713,7 +961,6 @@ async function loadProductReviews(productId) {
   try {
     const response = await fetch(`/api/products/${productId}/reviews`);
     const reviews = await response.json();
-    
     reviewGrid.innerHTML = ""; 
 
     if (reviews.length === 0) {
@@ -721,25 +968,52 @@ async function loadProductReviews(productId) {
       return;
     }
 
-    reviews.forEach(review => {
-      const stars = "⭐".repeat(review.rating); 
-      
-      const article = document.createElement("article");
-      article.className = "detailed-review-row"; 
-      
-      article.innerHTML = `
-        <div class="reviewer-profile">
-          <div class="avatar">👤</div>
-          <span class="reviewer-name">${review.reviewerName}</span>
-        </div>
-        <div class="review-rating-row">
-          <span class="review-stars">${stars}</span>
-          <span class="verified-purchase">Verified Purchase</span>
-        </div>
-        <p class="review-text">"${review.comment}"</p>
-      `;
-      reviewGrid.appendChild(article);
-    });
+    const renderProductReviews = (reviewsToRender) => {
+        reviewsToRender.forEach(review => {
+          const stars = "⭐".repeat(review.rating); 
+          const article = document.createElement("article");
+          article.className = "detailed-review-row"; 
+          article.innerHTML = `
+            <div class="reviewer-profile">
+              <div class="avatar">👤</div>
+              <span class="reviewer-name">${review.reviewerName}</span>
+            </div>
+            <div class="review-rating-row">
+              <span class="review-stars">${stars}</span>
+              <span class="verified-purchase">Verified Purchase</span>
+            </div>
+            <p class="review-text">"${review.comment}"</p>
+          `;
+          reviewGrid.appendChild(article);
+        });
+    };
+
+    const initialReviews = reviews.slice(0, 3);
+    renderProductReviews(initialReviews);
+
+    if (reviews.length > 3) {
+        const btnWrapper = document.createElement("div");
+        btnWrapper.style.textAlign = "center";
+        btnWrapper.style.marginTop = "20px";
+
+        const showAllBtn = document.createElement("button");
+        showAllBtn.innerText = `Show All ${reviews.length} Reviews`;
+        showAllBtn.style.padding = "10px 20px";
+        showAllBtn.style.background = "#145214"; 
+        showAllBtn.style.color = "#fff";
+        showAllBtn.style.border = "none";
+        showAllBtn.style.cursor = "pointer";
+        showAllBtn.style.borderRadius = "4px";
+        
+        showAllBtn.onclick = () => {
+            const remainingReviews = reviews.slice(3);
+            renderProductReviews(remainingReviews);
+            btnWrapper.style.display = "none"; 
+        };
+
+        btnWrapper.appendChild(showAllBtn);
+        reviewGrid.appendChild(btnWrapper);
+    }
   } catch (err) {
     console.error("Product Reviews Load Error:", err);
   }
@@ -751,10 +1025,6 @@ function initProductReviewForm(productId) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault(); 
-    
-    // 1. Tell us the button actually fired
-    console.log("🚀 Submit clicked! Sending review to server...");
-    
     const name = document.getElementById("prodReviewerName").value;
     const rating = document.getElementById("prodReviewRating").value;
     const comment = document.getElementById("prodReviewComment").value;
@@ -765,31 +1035,27 @@ function initProductReviewForm(productId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
       });
-
       if (response.ok) {
         alert("Thanks for your review!");
         form.reset(); 
         loadProductReviews(productId); 
       } else {
-        // 2. LOUD BACKEND ERROR
-        alert("Server Error: The backend refused to save the review. Check console!");
-        console.error("Backend Status:", response.status);
+        alert("Server Error: The backend refused to save the review.");
       }
     } catch (err) {
-      // 3. LOUD NETWORK ERROR
       alert("Network Error: Could not reach the Node server!");
-      console.error("Failed to post product review:", err);
     }
   });
 }
 
+// =====================
+// 6. INITIALIZATION & EVENT DELEGATION
+// =====================
 
-// =====================
-// 6. INITIALIZATION
-// =====================
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize Page Specifics
   displayCart(); 
+  displayCheckoutSummary(); 
+  autofillCheckout(); 
   initSearchFilter(); 
   updateCartIndicator(); 
   initAuth(); 
@@ -797,23 +1063,18 @@ document.addEventListener("DOMContentLoaded", () => {
   loadShowroom();
   loadBrands();
 
-
-  // Smart Check: Only load Site Reviews if we are on the Homepage
   if (document.getElementById("dynamic-reviews")) {
     loadSiteReviews();
     initSiteReviewForm();
   }
 
-  // Smart Check: Only load Product Reviews if we are on a Product Page
   const urlParams = new URLSearchParams(window.location.search);
   const currentProductId = urlParams.get('id');
-  
   if (currentProductId && document.getElementById("dynamic-product-reviews")) {
       loadProductReviews(currentProductId);
       initProductReviewForm(currentProductId);
   }
 
-  // Initialize Hamburger
   const hamburger = document.querySelector(".hamburger");
   const navLinks = document.querySelector(".nav-links");
   if (hamburger && navLinks) {
@@ -823,13 +1084,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Initialize Checkout Form
   const checkoutForm = document.getElementById("checkoutForm");
   if (checkoutForm) {
       checkoutForm.addEventListener("submit", handlePlaceOrder);
   }
   
-  // Payment method toggle (Instapay)
   const paymentSelect = document.getElementById("payment");
   const instapayInfo = document.getElementById("instapayInfo");
   if (paymentSelect && instapayInfo) {
@@ -837,12 +1096,69 @@ document.addEventListener("DOMContentLoaded", () => {
         instapayInfo.style.display = paymentSelect.value === "instapay" ? "block" : "none";
       });
   }
+});
 
-  // Close auth modal when clicking outside of it
-  window.addEventListener("click", (e) => {
-    const authModal = document.getElementById("authModal");
-    if (e.target === authModal) {
-      authModal.style.display = "none";
+// 🚀 THE BULLETPROOF INTERACTION CATCHER
+document.addEventListener("click", function(e) {
+    
+    // 1. CATCH: "BUY NOW" BUTTON
+    const buyNowBtn = e.target.closest("#buyNowBtn") || e.target.closest(".buy-now");
+    if (buyNowBtn) {
+        e.preventDefault(); 
+
+        const sizeInput = document.getElementById("size");
+        const size = sizeInput ? sizeInput.value.trim() : "";
+        const errorMsg = document.getElementById("size-error");
+
+        if (size === "" || size === "Default") {
+            if (errorMsg) errorMsg.style.display = "block";
+            return; 
+        }
+
+        const titleElement = document.querySelector("h1") || document.getElementById("productTitle");
+        const name = titleElement ? titleElement.innerText.trim() : "CarTees Product";
+        
+        const imageElement = document.getElementById("mainImage") || document.querySelector("img");
+        const image = imageElement ? imageElement.getAttribute("src") : "images/default.jpg";
+
+        let price = 0;
+        const priceElement = document.querySelector(".price .new-price") || document.querySelector(".price");
+        if (priceElement) {
+            const numbers = priceElement.innerText.match(/\d+(\.\d+)?/g);
+            if (numbers) {
+                price = Math.min(...numbers.map(n => parseFloat(n)));
+            }
+        }
+
+        const success = addToCart(name, price, image, false);
+        
+        if (success) {
+            window.location.href = "checkout.html";
+        }
     }
-  });
+
+    // 2. CATCH: SIZE SELECTOR CIRCLES
+    const sizeBtn = e.target.closest(".size-btn");
+    if (sizeBtn) {
+        e.preventDefault();
+
+        document.querySelectorAll(".size-btn").forEach(b => b.classList.remove("selected"));
+        sizeBtn.classList.add("selected");
+        
+        const hiddenSizeInput = document.getElementById("size");
+        if (hiddenSizeInput) {
+            hiddenSizeInput.value = sizeBtn.innerText.trim();
+        }
+        
+        const sizeErrorText = document.getElementById("size-error");
+        if (sizeErrorText) {
+            sizeErrorText.style.display = "none";
+        }
+    }
+
+    // 3. CATCH: OUTSIDE CLICKS (Auth Modal)
+    const authModal = document.getElementById("authModal");
+    if (authModal && e.target === authModal) {
+        authModal.style.display = "none";
+    }
 });

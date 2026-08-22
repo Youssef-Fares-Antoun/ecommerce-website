@@ -94,15 +94,20 @@
                     Fetching product details from the fleet...
                 </p>
 
-                <div class="option-group">
-                    <label for="size">Size:</label>
-                    <select id="size" name="size">
-                        <option>Small</option>
-                        <option>Medium</option>
-                        <option>Large</option>
-                        <option>X-Large</option>
-                    </select>
+            <div class="option-group">
+                <div style="font-weight: bold; margin-bottom: 10px; font-size: 14px;">Size:</div>
+
+                <input type="hidden" id="size" value="">
+
+                <div class="size-selector-group">
+                    <button type="button" class="size-btn">S</button>
+                    <button type="button" class="size-btn">M</button>
+                    <button type="button" class="size-btn">L</button>
+                    <button type="button" class="size-btn">XL</button>
                 </div>
+
+                <p id="size-error" style="color: #d0021b; font-size: 13px; font-weight: bold; margin-top: 8px; display: none;">Select Size</p>
+            </div>
 
                 <div class="option-group">
                     <label for="quantity">Quantity:</label>
@@ -113,7 +118,7 @@
                     <button class="btn add-to-cart" id="addToCartBtn">
                         🛒 Add to Cart
                     </button>
-                    <button class="btn buy-now" id="buyNowBtn">
+                    <button type="button" class="btn buy-now" id="secureBuyBtn" onclick="executeSecureBuyNow(event)">
                         ⚡ Buy Now
                     </button>
                 </div>

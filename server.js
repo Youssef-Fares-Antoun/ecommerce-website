@@ -3,6 +3,9 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const { Sequelize, DataTypes } = require('sequelize');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 // --- ZONE 1: MIDDLEWARE ---
 // CRITICAL: This allows your server to read JSON data sent from Postman
 app.use(express.json()); 
+app.use(cookieParser()); // For parsing cookies
 // Serves your frontend files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'docs')));
 
@@ -46,7 +50,22 @@ const User = sequelize.define('User', {
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
   password: { type: DataTypes.STRING, allowNull: false },
   address: { type: DataTypes.STRING, allowNull: true  },
+  phone: { type: DataTypes.STRING, allowNull: true },
 });
+
+const Address = sequelize.define('Address', {
+  firstName: { type: DataTypes.STRING, allowNull: false },
+  lastName: { type: DataTypes.STRING, allowNull: false },
+  phone: { type: DataTypes.STRING, allowNull: false },
+  street: { type: DataTypes.STRING, allowNull: false },
+  city: { type: DataTypes.STRING, allowNull: false },
+  governorate: { type: DataTypes.STRING, allowNull: false },
+  isDefault: { type: DataTypes.BOOLEAN, defaultValue: false }
+});
+
+// A User can have many saved Addresses
+User.hasMany(Address);
+Address.belongsTo(User);
 
 const SiteReview = sequelize.define('SiteReview', {
   reviewerName: { type: DataTypes.STRING, allowNull: false },
@@ -60,8 +79,30 @@ const ProductReview = sequelize.define('ProductReview', {
   comment: { type: DataTypes.TEXT, allowNull: false }
 });
 
+// ... existing ProductReview models ...
 Product.hasMany(ProductReview);
 ProductReview.belongsTo(Product);
+
+// --- NEW: ORDER & ORDER ITEM MODELS ---
+const Order = sequelize.define('Order', {
+  totalAmount: { type: DataTypes.FLOAT, allowNull: false },
+  status: { type: DataTypes.STRING, defaultValue: 'Processing' }
+});
+
+const OrderItem = sequelize.define('OrderItem', {
+  name: { type: DataTypes.STRING, allowNull: false },
+  size: { type: DataTypes.STRING, allowNull: false },
+  price: { type: DataTypes.FLOAT, allowNull: false },
+  quantity: { type: DataTypes.INTEGER, allowNull: false }
+});
+
+// Link Orders to Users (A user can have many orders)
+User.hasMany(Order);
+Order.belongsTo(User);
+
+// Link Items to Orders (An order can have many items)
+Order.hasMany(OrderItem);
+OrderItem.belongsTo(Order);
 
 // --- ZONE 4: DB INITIALIZATION ---
 async function initDb() {
@@ -234,6 +275,20 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password. Please try again." });
     }
 
+    // Creating security token (json web token)
+    const token = jwt.sign(
+      { id: user.id, email: user.email }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
+
+    //putting the key inside an http-only cookie so that hackers can't access it via JavaScript
+    res.cookie('token', token, {
+      httpOnly: true,  
+      secure: process.env.NODE_ENV === 'production', // True if hosted online with HTTPS
+      maxAge: 24 * 60 * 60 * 1000 // Lasts 24 hours
+    });
+
     res.json({
       message: "Login successful! Welcome back to the REVVO family.",
       user: { id: user.id, name: user.name, email: user.email }
@@ -242,6 +297,36 @@ app.post('/api/login', async (req, res) => {
     console.error("Login Error:", err.message);
     res.status(500).send("Server Error");
   }
+});
+
+//4.1 Check current user 
+app.get('/api/users/me', async (req, res) => {
+  try {
+    // Check if the browser sent the secure cookie
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+
+    // Verify the cookie hasn't been tampered with
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Fetch the user data (excluding password)
+    const user = await User.findByPk(verified.id, {
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ user });
+  } catch (err) {
+    res.status(401).json({ message: "Invalid or expired token" });
+  }
+});
+
+// 4.2 LOGOUT
+app.post('/api/logout', (req, res) => {
+  // Destroys the cookie
+  res.clearCookie('token');
+  res.json({ message: "Logged out successfully" });
 });
 
 //5. GET ALL USERS
@@ -262,10 +347,10 @@ app.get('/api/users', async (req, res) =>{
   }
 });
 
-//6. Update User Profile (Saving the shipping address)
+//6. Update User Profile (Saving the shipping address and phone)
 app.put('/api/users/:id', async (req, res) => {
   const userId = req.params.id;
-  const { name, email, address } = req.body;
+  const { name, email, address, phone } = req.body;
 
   try {
     const user = await User.findByPk(userId);
@@ -274,12 +359,13 @@ app.put('/api/users/:id', async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-   
-    user.address = address 
+    if (address) user.address = address; 
+    if (phone) user.phone = phone;
+    
     await user.save();
 
     res.json({ message: "Profile updated successfully!", 
-      user: { id: user.id, name: user.name, email: user.email, address: user.address } });
+      user: { id: user.id, name: user.name, email: user.email, address: user.address, phone: user.phone } });
   } catch (err) {
     console.error("Profile Update Error:", err.message);
     res.status(500).json({ error: "Failed to update profile. Please try again later." });
@@ -341,6 +427,163 @@ app.post('/api/products/:id/reviews', async (req, res) => {
     res.status(201).json(newReview);
   } catch (err) {
     res.status(400).json({ error: "Failed to add product review" });
+  }
+});
+
+// 11. GET USER'S ORDER HISTORY (For the Garage Dashboard)
+app.get('/api/orders/me', async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+
+    // Verify who is asking for the orders
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Fetch all orders for this specific user, including the shirts inside them
+    const orders = await Order.findAll({
+      where: { UserId: verified.id },
+      include: [OrderItem],
+      order: [['createdAt', 'DESC']] // Newest orders first
+    });
+    
+    res.json(orders);
+  } catch (err) {
+    console.error("Order Fetch Error:", err);
+    res.status(500).json({ error: "Failed to fetch order history." });
+  }
+});
+
+// 13. ADDRESS BOOK ROUTES
+app.get('/api/addresses/me', async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Fetches all addresses, putting the default one at the top
+    const addresses = await Address.findAll({ 
+        where: { UserId: verified.id },
+        order: [['isDefault', 'DESC'], ['createdAt', 'DESC']]
+    });
+    res.json(addresses);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch addresses" });
+  }
+});
+
+app.post('/api/addresses/me', async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if this is their first address
+    const count = await Address.count({ where: { UserId: verified.id } });
+    
+    const newAddress = await Address.create({
+      ...req.body,
+      UserId: verified.id,
+      isDefault: count === 0 // Automatically make it the default if it's their first
+    });
+    res.status(201).json(newAddress);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save address" });
+  }
+});
+
+app.put('/api/addresses/:id/default', async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const addressId = req.params.id;
+    
+    // 1. Verify the address actually belongs to this user
+    const address = await Address.findOne({ where: { id: addressId, UserId: verified.id } });
+    if (!address) return res.status(404).json({ message: "Address not found" });
+
+    // 2. Remove 'default' status from all of this user's addresses
+    await Address.update({ isDefault: false }, { where: { UserId: verified.id } });
+
+    // 3. Set the chosen one to default
+    address.isDefault = true;
+    await address.save();
+
+    res.json({ message: "Default address updated successfully!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to set default address" });
+  }
+});
+
+// 12. STRIPE CHECKOUT SESSION (UPDATED)
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const { cart } = req.body;
+
+    // 1. Check who is buying this by reading their secure cookie
+    const token = req.cookies.token;
+    let userId = null;
+    
+    if (token) {
+      try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        userId = verified.id;
+      } catch (err) {
+        console.log("Guest checkout or invalid token");
+      }
+    }
+
+    // 2. Calculate the total price of the cart
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // 3. If they are logged in, save the order to their Garage!
+    if (userId) {
+      const newOrder = await Order.create({
+        totalAmount: total,
+        status: 'Processing',
+        UserId: userId
+      });
+
+      // Save each individual shirt inside the order
+      for (let item of cart) {
+        await OrderItem.create({
+          name: item.name,
+          size: item.size,
+          price: item.price,
+          quantity: item.quantity,
+          OrderId: newOrder.id
+        });
+      }
+    }
+
+    // 4. Convert your CarTees cart into the exact format Stripe requires
+    const lineItems = cart.map(item => {
+      return {
+        price_data: {
+          currency: 'egp',
+          product_data: {
+            name: `${item.name} (Size: ${item.size})`,
+          },
+          unit_amount: Math.round(item.price * 100), 
+        },
+        quantity: item.quantity,
+      };
+    });
+
+    // 5. Ask Stripe to create a secure checkout page
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `http://localhost:3000/index.html?payment=success`,
+      cancel_url: `http://localhost:3000/checkout.html`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Stripe Error:", err);
+    res.status(500).json({ error: "Failed to create checkout session" });
   }
 });
 
