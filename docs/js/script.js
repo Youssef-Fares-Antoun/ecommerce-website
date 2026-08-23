@@ -615,13 +615,12 @@ async function initProfile() {
               div.style.background = addr.isDefault ? "#f4fff4" : "#ffffff";
               div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)";
               
-              // 🚀 RESTORED: The Beautiful Green Pill Button!
               const badgeOrButton = addr.isDefault 
-                ? '<span style="background: #e8f5e9; color:#145214; padding: 4px 12px; border-radius: 20px; font-size:0.8em; font-weight:bold; border: 1px solid #c8e6c9; white-space: nowrap; flex-shrink: 0;">★ Default</span>'
-                : `<button type="button" onclick="setDefaultAddress(${addr.id})" style="background: #fff; color: #145214; border: 1px solid #145214; padding: 6px 14px !important; border-radius: 20px !important; font-size: 0.85em !important; font-weight: bold !important; cursor: pointer; transition: all 0.2s ease; width: auto !important; min-width: 0 !important; white-space: nowrap; flex-shrink: 0; box-shadow: none !important;" onmouseover="this.style.background='#145214'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#145214';">Set as Default</button>`;
+                ? '<span style="background: #e8f5e9; color:#145214; padding: 4px 10px; border-radius: 4px; font-size:0.75em; font-weight:bold; border: 1px solid #c8e6c9; white-space: nowrap; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;">Default</span>'
+                : `<button type="button" onclick="setDefaultAddress(${addr.id})" style="background: transparent !important; color: #007bff !important; border: none !important; padding: 0 !important; font-size: 0.9em; font-weight: bold; cursor: pointer; width: auto !important; min-width: 0 !important; white-space: nowrap; flex-shrink: 0; text-decoration: none;" onmouseover="this.style.textDecoration='underline'; this.style.color='#0056b3';" onmouseout="this.style.textDecoration='none'; this.style.color='#007bff';">Set as Default</button>`;
 
               div.innerHTML = `
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 15px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 15px;">
                       <strong style="font-size:1.1em; color: #222; flex-grow: 1; word-break: break-word;">${addr.firstName} ${addr.lastName}</strong>
                       ${badgeOrButton}
                   </div>
@@ -646,7 +645,7 @@ async function initProfile() {
   if(showFormBtn && newAddressWrapper) {
       showFormBtn.addEventListener("click", () => {
           newAddressWrapper.style.display = "block";
-          showFormBtn.style.display = "none"; // Hides the "+ Add New Address" button while form is open
+          showFormBtn.style.display = "none"; // Hides the "+ Add New" button while form is open
       });
   }
 
@@ -695,7 +694,7 @@ async function initProfile() {
       });
   }
 
-  // Profile Tab Switching (Updated for My Details vs My Addresses)
+  // Profile Tab Switching
   const menuItems = document.querySelectorAll(".sidebar-menu .menu-item:not(.logout)");
   const detailsCard = document.getElementById("details-card");
   const addressesCard = document.getElementById("addresses-card");
@@ -727,6 +726,15 @@ async function initProfile() {
       }
     });
   });
+
+  // 🚀 MAGIC FIX: Check URL on load and open the right tab!
+  const urlHash = window.location.hash;
+  if (urlHash) {
+      const targetTab = document.querySelector(`.sidebar-menu a[href="${urlHash}"]`);
+      if (targetTab) {
+          targetTab.click(); 
+      }
+  }
 }
 
 // 🚀 NEW: Global function so the generated buttons can trigger the API
