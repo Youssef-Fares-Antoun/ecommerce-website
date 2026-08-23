@@ -11,10 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- ZONE 1: MIDDLEWARE ---
-// CRITICAL: This allows your server to read JSON data sent from Postman
 app.use(express.json()); 
-app.use(cookieParser()); // For parsing cookies
-// Serves your frontend files (HTML, CSS, JS)
+app.use(cookieParser()); 
 app.use(express.static(path.join(__dirname, 'docs')));
 
 app.get('/', (req, res) => {
@@ -22,7 +20,6 @@ app.get('/', (req, res) => {
 });
 
 // --- ZONE 2: DATABASE CONNECTION ---
-// Updated with your specific password: 'password'
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: 'localhost',
   dialect: 'postgres',
@@ -51,6 +48,7 @@ const User = sequelize.define('User', {
   password: { type: DataTypes.STRING, allowNull: false },
   address: { type: DataTypes.STRING, allowNull: true  },
   phone: { type: DataTypes.STRING, allowNull: true },
+  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false } // 🚀 NEW: Identifies store owners!
 });
 
 const Address = sequelize.define('Address', {
@@ -63,13 +61,12 @@ const Address = sequelize.define('Address', {
   isDefault: { type: DataTypes.BOOLEAN, defaultValue: false }
 });
 
-// A User can have many saved Addresses
 User.hasMany(Address);
 Address.belongsTo(User);
 
 const SiteReview = sequelize.define('SiteReview', {
   reviewerName: { type: DataTypes.STRING, allowNull: false },
-  rating: { type: DataTypes.INTEGER, allowNull: false }, // 1 to 5 stars
+  rating: { type: DataTypes.INTEGER, allowNull: false }, 
   comment: { type: DataTypes.TEXT, allowNull: false }
 });
 
@@ -79,14 +76,14 @@ const ProductReview = sequelize.define('ProductReview', {
   comment: { type: DataTypes.TEXT, allowNull: false }
 });
 
-// ... existing ProductReview models ...
 Product.hasMany(ProductReview);
 ProductReview.belongsTo(Product);
 
-// --- NEW: ORDER & ORDER ITEM MODELS ---
+// --- UPDATED: ORDER & ORDER ITEM MODELS ---
 const Order = sequelize.define('Order', {
   totalAmount: { type: DataTypes.FLOAT, allowNull: false },
-  status: { type: DataTypes.STRING, defaultValue: 'Processing' }
+  status: { type: DataTypes.STRING, defaultValue: 'Processing' },
+  paymentMethod: { type: DataTypes.STRING, defaultValue: 'card' } // 🚀 NEW: Tracks COD, InstaPay, or Card
 });
 
 const OrderItem = sequelize.define('OrderItem', {
@@ -96,24 +93,18 @@ const OrderItem = sequelize.define('OrderItem', {
   quantity: { type: DataTypes.INTEGER, allowNull: false }
 });
 
-// Link Orders to Users (A user can have many orders)
 User.hasMany(Order);
 Order.belongsTo(User);
-
-// Link Items to Orders (An order can have many items)
 Order.hasMany(OrderItem);
 OrderItem.belongsTo(Order);
 
 // --- ZONE 4: DB INITIALIZATION ---
 async function initDb() {
   try {
-    // force: true resets the database every time you restart
     await sequelize.sync({ alter: true }); 
     console.log("✅ Database Synced (Persistence Mode On)");
 
-    // Check if we already have products before seeding
     const count = await Product.count();
-    
     if (count === 0) {
       console.log("🚚 Warehouse empty. Seeding starter fleet...");
       await Product.bulkCreate([
@@ -129,7 +120,6 @@ async function initDb() {
     }
 
     const brandCount = await Brand.count();
-
     if (brandCount === 0) {
       console.log("🏷️ Printing brand labels...");
       await Brand.bulkCreate([
@@ -144,7 +134,6 @@ async function initDb() {
     }
 
     const siteReviewCount = await SiteReview.count();
-
     if (siteReviewCount === 0) {
       console.log("⭐ Writing starter site reviews...");
       await SiteReview.bulkCreate([
@@ -164,7 +153,7 @@ initDb();
 
 // --- ZONE 5: API ROUTES ---
 
-// 1. GET ALL PRODUCTS (For your Website)
+// 1. GET ALL PRODUCTS
 app.get('/api/products', async (req, res) => {
   try {
     const allProducts = await Product.findAll();
@@ -187,7 +176,7 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// 2. ADD NEW PRODUCT (For Postman Testing)
+// 2. ADD NEW PRODUCT
 app.post('/api/products', async (req, res) => {
   try {
     const newProduct = await Product.create(req.body);
@@ -200,15 +189,11 @@ app.post('/api/products', async (req, res) => {
 app.put('/api/products/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const [updated] = await Product.update(req.body, {
-      where: { id: id }
-    });
-
+    const [updated] = await Product.update(req.body, { where: { id: id } });
     if (updated) {
       const updatedProduct = await Product.findByPk(id);
       return res.status(200).json({ message: "Product updated successfully!", product: updatedProduct });
     }
-    
     throw new Error('Product not found');
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -217,40 +202,28 @@ app.put('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    const id = req.params.id; // Grabs the ID from the URL (e.g., /api/products/4)
+    const id = req.params.id; 
     const deletedCount = await Product.destroy({ where: { id: id } });
-
-    if (deletedCount === 0) {
-      return res.status(404).json({ error: "Product not found. Maybe it already hit the scrap yard?" });
-    }
-
+    if (deletedCount === 0) return res.status(404).json({ error: "Product not found." });
     res.json({ message: `Success! Product #${id} has been removed from the fleet.` });
   } catch (err) {
     res.status(500).json({ error: "Server error during deletion." });
   }
 });
 
-//3. REGISTER NEW USER
+// 3. REGISTER NEW USER
 app.post('/api/register', async (req, res) => {
   const { name, email, password } = req.body;
-
   try {
     const userExits = await User.findOne({ where: { email: email } });
-    if (userExits) {
-      return res.status(400).json({ message: "This email is already registered. Try logging in or use a different email." });
-    }
+    if (userExits) return res.status(400).json({ message: "This email is already registered." });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await User.create({
-      name: name,
-      email: email,
-      password: hashedPassword
-    });
-
+    const newUser = await User.create({ name, email, password: hashedPassword });
     res.status(201).json({ 
-      message: "Registration successful! Welcome to the REVVO family.", 
+      message: "Registration successful!", 
       user: { id: newUser.id, name: newUser.name, email: newUser.email } 
     });
   } catch (err) {
@@ -259,39 +232,32 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-//4. LOGIN USER
+// 4. LOGIN USER
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const user = await User.findOne({ where: { email: email } });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password. Please try again." });
-    }
+    if (!user) return res.status(401).json({ message: "Invalid email or password." });
 
-    // Cleaned up user.rows[0].password -> user.password
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ message: "Invalid email or password. Please try again." });
-    }
+    if (!validPassword) return res.status(401).json({ message: "Invalid email or password." });
 
-    // Creating security token (json web token)
     const token = jwt.sign(
       { id: user.id, email: user.email }, 
       process.env.JWT_SECRET, 
       { expiresIn: '24h' }
     );
 
-    //putting the key inside an http-only cookie so that hackers can't access it via JavaScript
     res.cookie('token', token, {
       httpOnly: true,  
-      secure: process.env.NODE_ENV === 'production', // True if hosted online with HTTPS
-      maxAge: 24 * 60 * 60 * 1000 // Lasts 24 hours
+      secure: process.env.NODE_ENV === 'production', 
+      maxAge: 24 * 60 * 60 * 1000 
     });
 
     res.json({
-      message: "Login successful! Welcome back to the REVVO family.",
-      user: { id: user.id, name: user.name, email: user.email }
+      message: "Login successful!",
+      // Pass the isAdmin flag to the frontend!
+      user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin }
     });
   } catch (err) {
     console.error("Login Error:", err.message);
@@ -299,17 +265,13 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-//4.1 Check current user 
+// 4.1 Check current user 
 app.get('/api/users/me', async (req, res) => {
   try {
-    // Check if the browser sent the secure cookie
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Not logged in" });
 
-    // Verify the cookie hasn't been tampered with
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Fetch the user data (excluding password)
     const user = await User.findByPk(verified.id, {
       attributes: { exclude: ['password'] }
     });
@@ -324,51 +286,37 @@ app.get('/api/users/me', async (req, res) => {
 
 // 4.2 LOGOUT
 app.post('/api/logout', (req, res) => {
-  // Destroys the cookie
   res.clearCookie('token');
   res.json({ message: "Logged out successfully" });
 });
 
-//5. GET ALL USERS
+// 5. GET ALL USERS
 app.get('/api/users', async (req, res) =>{
   try{
-    const allUsers = await User.findAll({
-      attributes: { exclude: ['password'] }
-    });
-
-    if(allUsers.length === 0){
-      return res.json({ message: "The database is connected, but there are no registered users yet."});
-    }
-
+    const allUsers = await User.findAll({ attributes: { exclude: ['password'] } });
+    if(allUsers.length === 0) return res.json({ message: "No registered users yet."});
     res.json(allUsers);
   } catch(err) {
-    console.error("Diagnostic Error:", err.message);
-    res.status(500).json({ error: "Failed to fetch users from the database." });
+    res.status(500).json({ error: "Failed to fetch users." });
   }
 });
 
-//6. Update User Profile (Saving the shipping address and phone)
+// 6. Update User Profile
 app.put('/api/users/:id', async (req, res) => {
   const userId = req.params.id;
   const { name, email, address, phone } = req.body;
 
   try {
     const user = await User.findByPk(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     if (address) user.address = address; 
     if (phone) user.phone = phone;
-    
     await user.save();
 
-    res.json({ message: "Profile updated successfully!", 
-      user: { id: user.id, name: user.name, email: user.email, address: user.address, phone: user.phone } });
+    res.json({ message: "Profile updated!", user: { id: user.id, name: user.name, email: user.email, address: user.address, phone: user.phone } });
   } catch (err) {
-    console.error("Profile Update Error:", err.message);
-    res.status(500).json({ error: "Failed to update profile. Please try again later." });
+    res.status(500).json({ error: "Failed to update profile." });
   }
 });
 
@@ -381,7 +329,7 @@ app.get('/api/brands', async (req, res) => {
   }
 });
 
-//7. GET ALL SITE REVIEWS
+// 7. GET ALL SITE REVIEWS
 app.get('/api/site-reviews', async (req, res) => {
   try {
     const reviews = await SiteReview.findAll({ order: [['createdAt', 'DESC']] });
@@ -391,7 +339,7 @@ app.get('/api/site-reviews', async (req, res) => {
   }
 });
 
-//8. POST A NEW SITE REVIEW
+// 8. POST A NEW SITE REVIEW
 app.post('/api/site-reviews', async (req, res) => {
   try {
     const newReview = await SiteReview.create(req.body);
@@ -401,7 +349,7 @@ app.post('/api/site-reviews', async (req, res) => {
   }
 });
 
-//9. GET REVIEWS FOR A SPECIFIC PRODUCT
+// 9. GET REVIEWS FOR A SPECIFIC PRODUCT
 app.get('/api/products/:id/reviews', async (req, res) => {
   try {
     const reviews = await ProductReview.findAll({ 
@@ -414,7 +362,7 @@ app.get('/api/products/:id/reviews', async (req, res) => {
   }
 });
 
-//10. POST A NEW PRODUCT REVIEW
+// 10. POST A NEW PRODUCT REVIEW
 app.post('/api/products/:id/reviews', async (req, res) => {
   try {
     const { reviewerName, rating, comment } = req.body;
@@ -430,37 +378,33 @@ app.post('/api/products/:id/reviews', async (req, res) => {
   }
 });
 
-// 11. GET USER'S ORDER HISTORY (For the Garage Dashboard)
+// 11. GET USER'S ORDER HISTORY
 app.get('/api/orders/me', async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Not logged in" });
 
-    // Verify who is asking for the orders
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Fetch all orders for this specific user, including the shirts inside them
     const orders = await Order.findAll({
       where: { UserId: verified.id },
       include: [OrderItem],
-      order: [['createdAt', 'DESC']] // Newest orders first
+      order: [['createdAt', 'DESC']]
     });
     
     res.json(orders);
   } catch (err) {
-    console.error("Order Fetch Error:", err);
     res.status(500).json({ error: "Failed to fetch order history." });
   }
 });
 
-// 13. ADDRESS BOOK ROUTES
+// 12. ADDRESS BOOK ROUTES
 app.get('/api/addresses/me', async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Not logged in" });
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Fetches all addresses, putting the default one at the top
     const addresses = await Address.findAll({ 
         where: { UserId: verified.id },
         order: [['isDefault', 'DESC'], ['createdAt', 'DESC']]
@@ -477,13 +421,12 @@ app.post('/api/addresses/me', async (req, res) => {
     if (!token) return res.status(401).json({ message: "Not logged in" });
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Check if this is their first address
     const count = await Address.count({ where: { UserId: verified.id } });
     
     const newAddress = await Address.create({
       ...req.body,
       UserId: verified.id,
-      isDefault: count === 0 // Automatically make it the default if it's their first
+      isDefault: count === 0 
     });
     res.status(201).json(newAddress);
   } catch (err) {
@@ -498,15 +441,11 @@ app.put('/api/addresses/:id/default', async (req, res) => {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     
     const addressId = req.params.id;
-    
-    // 1. Verify the address actually belongs to this user
     const address = await Address.findOne({ where: { id: addressId, UserId: verified.id } });
     if (!address) return res.status(404).json({ message: "Address not found" });
 
-    // 2. Remove 'default' status from all of this user's addresses
     await Address.update({ isDefault: false }, { where: { UserId: verified.id } });
 
-    // 3. Set the chosen one to default
     address.isDefault = true;
     await address.save();
 
@@ -516,36 +455,35 @@ app.put('/api/addresses/:id/default', async (req, res) => {
   }
 });
 
-// 12. STRIPE CHECKOUT SESSION (UPDATED)
+// 13. STRIPE CHECKOUT SESSION (🚀 UPGRADED FOR COD & INSTAPAY)
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
-    const { cart } = req.body;
+    const { cart, payment } = req.body; 
 
-    // 1. Check who is buying this by reading their secure cookie
+    // 1. Check who is buying
     const token = req.cookies.token;
     let userId = null;
-    
     if (token) {
       try {
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         userId = verified.id;
       } catch (err) {
-        console.log("Guest checkout or invalid token");
+        console.log("Guest checkout");
       }
     }
 
-    // 2. Calculate the total price of the cart
+    // 2. Calculate the total
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // 3. If they are logged in, save the order to their Garage!
+    // 3. Save Order into Database
     if (userId) {
       const newOrder = await Order.create({
         totalAmount: total,
         status: 'Processing',
+        paymentMethod: payment || 'card',
         UserId: userId
       });
 
-      // Save each individual shirt inside the order
       for (let item of cart) {
         await OrderItem.create({
           name: item.name,
@@ -557,38 +495,95 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     }
 
-    // 4. Convert your CarTees cart into the exact format Stripe requires
+    // 4. SMART ROUTING: If NOT using card, bypass Stripe and return success URL instantly!
+    if (payment === 'cod' || payment === 'instapay') {
+        return res.json({ url: 'profile.html#orders' });
+    }
+
+    // 5. Card handling (Stripe)
     const lineItems = cart.map(item => {
       return {
         price_data: {
           currency: 'egp',
-          product_data: {
-            name: `${item.name} (Size: ${item.size})`,
-          },
+          product_data: { name: `${item.name} (Size: ${item.size})` },
           unit_amount: Math.round(item.price * 100), 
         },
         quantity: item.quantity,
       };
     });
 
-    // 5. Ask Stripe to create a secure checkout page
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `http://localhost:3000/index.html?payment=success`,
+      success_url: `http://localhost:3000/profile.html#orders`, 
       cancel_url: `http://localhost:3000/checkout.html`,
     });
 
     res.json({ url: session.url });
   } catch (err) {
-    console.error("Stripe Error:", err);
+    console.error("Checkout Error:", err);
     res.status(500).json({ error: "Failed to create checkout session" });
   }
 });
 
+// ==========================================
+// 🚀 ZONE 6: ADMIN SUPERPOWERS
+// ==========================================
 
-// --- ZONE 6: START THE ENGINE ---
+// Middleware: Bouncer at the door (Checks if user is Admin)
+const verifyAdmin = async (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findByPk(verified.id);
+        
+        if (!user || !user.isAdmin) {
+            return res.status(403).json({ message: "Access Denied: Admins Only!" });
+        }
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+};
+
+// Admin Route: Get ALL orders from ALL users
+app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
+    try {
+        const orders = await Order.findAll({
+            include: [
+                { model: User, attributes: ['name', 'email', 'phone'] }, 
+                { model: OrderItem }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch admin orders" });
+    }
+});
+
+// Admin Route: Change Order Status (e.g. Processing -> Shipped)
+app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const { status } = req.body;
+        
+        const order = await Order.findByPk(orderId);
+        if (!order) return res.status(404).json({ message: "Order not found" });
+
+        order.status = status;
+        await order.save();
+
+        res.json({ message: "Order status updated successfully!", order });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update order status" });
+    }
+});
+
+
+// --- ZONE 7: START THE ENGINE ---
 app.listen(PORT, () => {
   console.log(`🚀 REVVO Server flying at http://localhost:${PORT}`);
 });
