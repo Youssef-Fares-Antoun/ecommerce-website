@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Garage | CarTees</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/profile.css"> <!-- Reusing profile styles for the layout -->
+  
+  <!-- Notice we are loading a NEW script file here -->
+  <script src="js/admin.js" defer></script>
+</head>
+<body style="background: #f4f7f6;">
+
+  <header class="navbar" style="background: #111; border-bottom: 3px solid #145214;">
+    <div class="logo"><a href="index.html" style="color: #fff;">Car<span style="color: #4CAF50;">Tees</span> <small style="font-size: 0.5em; color: #aaa;">ADMIN</small></a></div>
+    <nav class="nav-links">
+      <a href="index.html" style="color: #ccc;">Back to Store</a>
+    </nav>
+  </header>
+
+  <main class="profile-container" style="max-width: 1400px;">
+    <!-- DARK ADMIN SIDEBAR -->
+    <aside class="profile-sidebar" style="background: #222; color: #fff; border: none;">
+      <div class="user-info" style="border-bottom: 1px solid #444;">
+        <div class="profile-pic" style="background: #145214;">👑</div>
+        <h3 id="adminNameDisplay" style="color: #fff;">Admin Loading...</h3>
+        <p style="color: #aaa;">Superuser</p>
+      </div>
+      <nav class="sidebar-menu">
+        <a href="#orders" class="menu-item active" style="color: #fff;">Manage Orders</a>
+        <a href="javascript:void(0)" onclick="handleAdminLogout()" class="menu-item logout" style="color: #ff4d4d;">Logout</a>      
+      </nav>
+    </aside>
+
+    <!-- ADMIN CONTENT -->
+    <section class="profile-content">
+      <div class="content-card" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <h2 style="color: #111; border-bottom: 2px solid #eee; padding-bottom: 15px;">Incoming Fleet (Orders)</h2>
+        
+        <div style="overflow-x: auto; margin-top: 20px;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
+            <thead>
+              <tr style="background: #145214; color: #fff;">
+                <th style="padding: 12px; border-radius: 6px 0 0 0;">Order #</th>
+                <th style="padding: 12px;">Date</th>
+                <th style="padding: 12px;">Customer</th>
+                <th style="padding: 12px;">Items</th>
+                <th style="padding: 12px;">Total & Payment</th>
+                <th style="padding: 12px;">Status</th>
+                <th style="padding: 12px; border-radius: 0 6px 0 0;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-order-list">
+              <tr>
+                <td colspan="7" style="padding: 20px; text-align: center;">Loading orders securely...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>
