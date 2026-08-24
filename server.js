@@ -48,7 +48,7 @@ const User = sequelize.define('User', {
   password: { type: DataTypes.STRING, allowNull: false },
   address: { type: DataTypes.STRING, allowNull: true  },
   phone: { type: DataTypes.STRING, allowNull: true },
-  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false } // 🚀 NEW: Identifies store owners!
+  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false }
 });
 
 const Address = sequelize.define('Address', {
@@ -79,11 +79,10 @@ const ProductReview = sequelize.define('ProductReview', {
 Product.hasMany(ProductReview);
 ProductReview.belongsTo(Product);
 
-// --- UPDATED: ORDER & ORDER ITEM MODELS ---
 const Order = sequelize.define('Order', {
   totalAmount: { type: DataTypes.FLOAT, allowNull: false },
   status: { type: DataTypes.STRING, defaultValue: 'Processing' },
-  paymentMethod: { type: DataTypes.STRING, defaultValue: 'card' } // 🚀 NEW: Tracks COD, InstaPay, or Card
+  paymentMethod: { type: DataTypes.STRING, defaultValue: 'card' } 
 });
 
 const OrderItem = sequelize.define('OrderItem', {
@@ -153,7 +152,24 @@ initDb();
 
 // --- ZONE 5: API ROUTES ---
 
-// 1. GET ALL PRODUCTS
+// 🚀 MOVED BOUNCER HERE: Now it can protect the Product routes!
+const verifyAdmin = async (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findByPk(verified.id);
+        
+        if (!user || !user.isAdmin) {
+            return res.status(403).json({ message: "Access Denied: Admins Only!" });
+        }
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+};
+
+// 1. GET ALL PRODUCTS (Public)
 app.get('/api/products', async (req, res) => {
   try {
     const allProducts = await Product.findAll();
@@ -176,8 +192,8 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// 2. ADD NEW PRODUCT
-app.post('/api/products', async (req, res) => {
+// 2. ADD NEW PRODUCT (SECURED: Admin Only)
+app.post('/api/products', verifyAdmin, async (req, res) => {
   try {
     const newProduct = await Product.create(req.body);
     res.status(201).json({ message: "Success! New car added.", product: newProduct });
@@ -186,7 +202,8 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-app.put('/api/products/:id', async (req, res) => {
+// SECURED: Admin Only
+app.put('/api/products/:id', verifyAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     const [updated] = await Product.update(req.body, { where: { id: id } });
@@ -200,7 +217,8 @@ app.put('/api/products/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/products/:id', async (req, res) => {
+// SECURED: Admin Only
+app.delete('/api/products/:id', verifyAdmin, async (req, res) => {
   try {
     const id = req.params.id; 
     const deletedCount = await Product.destroy({ where: { id: id } });
@@ -256,7 +274,6 @@ app.post('/api/login', async (req, res) => {
 
     res.json({
       message: "Login successful!",
-      // Pass the isAdmin flag to the frontend!
       user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin }
     });
   } catch (err) {
@@ -455,12 +472,11 @@ app.put('/api/addresses/:id/default', async (req, res) => {
   }
 });
 
-// 13. STRIPE CHECKOUT SESSION (🚀 UPGRADED FOR COD & INSTAPAY)
+// 13. STRIPE CHECKOUT SESSION
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const { cart, payment } = req.body; 
 
-    // 1. Check who is buying
     const token = req.cookies.token;
     let userId = null;
     if (token) {
@@ -472,10 +488,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     }
 
-    // 2. Calculate the total
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // 3. Save Order into Database
     if (userId) {
       const newOrder = await Order.create({
         totalAmount: total,
@@ -495,12 +509,10 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     }
 
-    // 4. SMART ROUTING: If NOT using card, bypass Stripe and return success URL instantly!
     if (payment === 'cod' || payment === 'instapay') {
         return res.json({ url: 'profile.html#orders' });
     }
 
-    // 5. Card handling (Stripe)
     const lineItems = cart.map(item => {
       return {
         price_data: {
@@ -531,23 +543,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
 // 🚀 ZONE 6: ADMIN SUPERPOWERS
 // ==========================================
 
-// Middleware: Bouncer at the door (Checks if user is Admin)
-const verifyAdmin = async (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Not logged in" });
-    try {
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findByPk(verified.id);
-        
-        if (!user || !user.isAdmin) {
-            return res.status(403).json({ message: "Access Denied: Admins Only!" });
-        }
-        next();
-    } catch (err) {
-        return res.status(401).json({ message: "Invalid token" });
-    }
-};
-
 // Admin Route: Get ALL orders from ALL users
 app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
     try {
@@ -564,7 +559,7 @@ app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
     }
 });
 
-// Admin Route: Change Order Status (e.g. Processing -> Shipped)
+// Admin Route: Change Order Status
 app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -581,7 +576,6 @@ app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
         res.status(500).json({ error: "Failed to update order status" });
     }
 });
-
 
 // --- ZONE 7: START THE ENGINE ---
 app.listen(PORT, () => {

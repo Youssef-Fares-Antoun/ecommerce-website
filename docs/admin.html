@@ -6,9 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/profile.css"> <!-- Reusing profile styles for the layout -->
+  <link rel="stylesheet" href="css/profile.css"> 
   
-  <!-- Notice we are loading a NEW script file here -->
   <script src="js/admin.js" defer></script>
 </head>
 <body style="background: #f4f7f6;">
@@ -30,13 +29,16 @@
       </div>
       <nav class="sidebar-menu">
         <a href="#orders" class="menu-item active" style="color: #fff;">Manage Orders</a>
+        <a href="#inventory" class="menu-item" style="color: #fff;">Manage Inventory</a>
         <a href="javascript:void(0)" onclick="handleAdminLogout()" class="menu-item logout" style="color: #ff4d4d;">Logout</a>      
       </nav>
     </aside>
 
-    <!-- ADMIN CONTENT -->
     <section class="profile-content">
-      <div class="content-card" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+      <!-- ========================================== -->
+      <!-- TAB 1: MANAGE ORDERS                       -->
+      <!-- ========================================== -->
+      <div class="content-card" id="orders-card" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
         <h2 style="color: #111; border-bottom: 2px solid #eee; padding-bottom: 15px;">Incoming Fleet (Orders)</h2>
         
         <div style="overflow-x: auto; margin-top: 20px;">
@@ -59,10 +61,90 @@
             </tbody>
           </table>
         </div>
-
       </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: MANAGE INVENTORY                    -->
+      <!-- ========================================== -->
+      <div class="content-card" id="inventory-card" style="display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+            <h2 style="color: #111; margin: 0;">Garage Inventory</h2>
+            <button onclick="openProductModal()" style="background: #145214; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">+ Add New CarTee</button>
+        </div>
+        
+        <div style="overflow-x: auto; margin-top: 20px;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
+            <thead>
+              <tr style="background: #333; color: #fff;">
+                <th style="padding: 12px; border-radius: 6px 0 0 0;">ID</th>
+                <th style="padding: 12px;">Image</th>
+                <th style="padding: 12px;">Name</th>
+                <th style="padding: 12px;">Price (LE)</th>
+                <th style="padding: 12px;">Category</th>
+                <th style="padding: 12px;">Badges</th>
+                <th style="padding: 12px; border-radius: 0 6px 0 0; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-inventory-list">
+              <tr>
+                <td colspan="7" style="padding: 20px; text-align: center;">Loading inventory...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </section>
   </main>
+
+  <!-- ========================================== -->
+  <!-- ADD / EDIT PRODUCT MODAL                   -->
+  <!-- ========================================== -->
+  <div id="productModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; position: relative;">
+      <span onclick="document.getElementById('productModal').style.display='none'" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999;">&times;</span>
+      
+      <h2 id="modalTitle" style="margin-bottom: 20px; color: #145214;">Add New Product</h2>
+      
+      <form id="productForm">
+        <input type="hidden" id="prodId"> <!-- Hidden ID used when updating existing products -->
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Product Name</label>
+          <input type="text" id="prodName" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div class="form-group" style="flex: 1;">
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Price (LE)</label>
+              <input type="number" id="prodPrice" required min="1" step="0.01" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Category</label>
+              <input type="text" id="prodCategory" required placeholder="e.g., porsche" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Image Filename / URL</label>
+          <input type="text" id="prodImage" required placeholder="e.g., 911Back.png" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="prodFeatured" style="width: 18px; height: 18px;">
+                Is Featured?
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="prodBestSeller" style="width: 18px; height: 18px;">
+                Is Best Seller?
+            </label>
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 12px; background: #145214; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1em; cursor: pointer;">Save Product</button>
+      </form>
+    </div>
+  </div>
 
 </body>
 </html>
