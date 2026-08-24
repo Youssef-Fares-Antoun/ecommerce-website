@@ -6,10 +6,20 @@ const { Sequelize, DataTypes } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const multer = require('multer'); // 🚀 NEW: Import Multer!
+const multer = require('multer'); 
+const nodemailer = require('nodemailer'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// 🚀 EMAIL TRANSPORTER SETUP
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // --- ZONE 1: MIDDLEWARE ---
 app.use(express.json()); 
@@ -20,14 +30,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'docs', 'home.html'));
 });
 
-// 🚀 NEW: CONFIGURE MULTER STORAGE
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Tell Multer to save uploaded images straight into your docs/images folder!
     cb(null, path.join(__dirname, 'docs', 'images')); 
   },
   filename: function (req, file, cb) {
-    // Generate a unique filename so images don't overwrite each other
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'upload-' + uniqueSuffix + path.extname(file.originalname)); 
   }
@@ -41,7 +48,7 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
   logging: false 
 });
 
-// --- ZONE 3: DATA MODEL (The Blueprint) ---
+// --- ZONE 3: DATA MODEL ---
 const Product = sequelize.define('Product', {
   name: { type: DataTypes.STRING, allowNull: false }, 
   price: { type: DataTypes.FLOAT, allowNull: false },
@@ -112,36 +119,10 @@ Order.belongsTo(User);
 Order.hasMany(OrderItem);
 OrderItem.belongsTo(Order);
 
-// --- ZONE 4: DB INITIALIZATION ---
 async function initDb() {
   try {
     await sequelize.sync({ alter: true }); 
     console.log("✅ Database Synced (Persistence Mode On)");
-
-    const count = await Product.count();
-    if (count === 0) {
-      console.log("🚚 Warehouse empty. Seeding starter fleet...");
-      await Product.bulkCreate([
-        { name: "Porsche 911 Tee", price: 500, image: "911Back.png", category: "porsche" },
-        { name: "Ferrari SF90 Tee", price: 500, image: "SF90Back.png", category: "ferrari" },
-        { name: "McLaren P1 Tee", price: 500, image: "P1Back.png", category: "mclaren" },
-        { name: "McLaren Senna Tee", price: 700, image: "SennaBack.png", category: "mclaren" },
-        { name: "AMG GT Black Tee", price: 600, image: "GtBlackBack.png", category: "amg" },
-        { name: "M4 Competition Tee", price: 500, image: "M4 CompetitionBack.png", category: "bmw" }
-      ]);
-    }
-
-    const brandCount = await Brand.count();
-    if (brandCount === 0) {
-      console.log("🏷️ Printing brand labels...");
-      await Brand.bulkCreate([
-        { name: "Porsche", logo: "images/Porsche Logo.png", filterValue: "porsche" },
-        { name: "Ferrari", logo: "images/Ferrari Logo.png", filterValue: "ferrari" },
-        { name: "McLaren", logo: "images/McLaren Logo.png", filterValue: "mclaren" },
-        { name: "AMG", logo: "images/AMG Logo.png", filterValue: "amg" },
-        { name: "BMW", logo: "images/BMW M Logo.png", filterValue: "bmw" }
-      ]);
-    }
   } catch (error) {
     console.error("❌ DB Error:", error);
   }
@@ -160,7 +141,6 @@ const verifyAdmin = async (req, res, next) => {
     } catch (err) { return res.status(401).json({ message: "Invalid token" }); }
 };
 
-// 1. GET ALL PRODUCTS
 app.get('/api/products', async (req, res) => {
   try { res.json(await Product.findAll()); } 
   catch (err) { res.status(500).json({ error: "Failed to fetch products" }); }
@@ -173,49 +153,33 @@ app.get('/api/products/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Server error" }); }
 });
 
-// 2. ADD NEW PRODUCT (🚀 UPGRADED: Handles Image Uploads)
 app.post('/api/products', verifyAdmin, upload.single('imageFile'), async (req, res) => {
   try {
     const productData = { ...req.body };
-    
-    // Convert text booleans from FormData into actual booleans
     productData.isFeatured = productData.isFeatured === 'true';
     productData.isBestSeller = productData.isBestSeller === 'true';
-
-    // If an image was uploaded, save its new path to the database
-    if (req.file) {
-      productData.image = 'images/' + req.file.filename;
-    }
-
+    if (req.file) productData.image = 'images/' + req.file.filename;
+    
     const newProduct = await Product.create(productData);
     res.status(201).json({ message: "Success! New car added.", product: newProduct });
-  } catch (err) {
-    res.status(400).json({ error: "Failed to save product." });
-  }
+  } catch (err) { res.status(400).json({ error: "Failed to save product." }); }
 });
 
-// 3. EDIT PRODUCT (🚀 UPGRADED: Handles Image Uploads)
 app.put('/api/products/:id', verifyAdmin, upload.single('imageFile'), async (req, res) => {
   try {
     const id = req.params.id;
     const productData = { ...req.body };
-
     productData.isFeatured = productData.isFeatured === 'true';
     productData.isBestSeller = productData.isBestSeller === 'true';
-
-    if (req.file) {
-      productData.image = 'images/' + req.file.filename;
-    }
-
+    if (req.file) productData.image = 'images/' + req.file.filename;
+    
     const [updated] = await Product.update(productData, { where: { id: id } });
     if (updated) {
       const updatedProduct = await Product.findByPk(id);
       return res.status(200).json({ message: "Product updated successfully!", product: updatedProduct });
     }
     throw new Error('Product not found');
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.delete('/api/products/:id', verifyAdmin, async (req, res) => {
@@ -227,8 +191,18 @@ app.delete('/api/products/:id', verifyAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Server error during deletion." }); }
 });
 
-// (The rest of your routes remain perfectly intact below)
-app.post('/api/register', async (req, res) => { /* ... */ });
+app.post('/api/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const userExits = await User.findOne({ where: { email: email } });
+    if (userExits) return res.status(400).json({ message: "This email is already registered." });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const newUser = await User.create({ name, email, password: hashedPassword });
+    res.status(201).json({ message: "Registration successful!", user: { id: newUser.id, name: newUser.name, email: newUser.email } });
+  } catch (err) { res.status(500).send("Server Error"); }
+});
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -241,6 +215,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ message: "Login successful!", user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin }});
   } catch (err) { res.status(500).send("Server Error"); }
 });
+
 app.get('/api/users/me', async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -251,23 +226,48 @@ app.get('/api/users/me', async (req, res) => {
     res.json({ user });
   } catch (err) { res.status(401).json({ message: "Invalid or expired token" }); }
 });
+
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: "Logged out successfully" });
 });
+
 app.get('/api/brands', async (req, res) => {
   try { res.json(await Brand.findAll()); } 
   catch (err) { res.status(500).json({ error: "Failed to fetch brands" }); }
 });
+
+app.get('/api/site-reviews', async (req, res) => {
+  try { res.json(await SiteReview.findAll({ order: [['createdAt', 'DESC']] })); } 
+  catch (err) { res.status(500).json({ error: "Failed to fetch site reviews" }); }
+});
+
+app.post('/api/site-reviews', async (req, res) => {
+  try { res.status(201).json(await SiteReview.create(req.body)); } 
+  catch (err) { res.status(400).json({ error: "Failed to add site review" }); }
+});
+
+app.get('/api/products/:id/reviews', async (req, res) => {
+  try { res.json(await ProductReview.findAll({ where: { ProductId: req.params.id }, order: [['createdAt', 'DESC']] })); } 
+  catch (err) { res.status(500).json({ error: "Failed to fetch product reviews" }); }
+});
+
+app.post('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const { reviewerName, rating, comment } = req.body;
+    res.status(201).json(await ProductReview.create({ ProductId: req.params.id, reviewerName, rating, comment }));
+  } catch (err) { res.status(400).json({ error: "Failed to add product review" }); }
+});
+
 app.get('/api/orders/me', async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Not logged in" });
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    const orders = await Order.findAll({ where: { UserId: verified.id }, include: [OrderItem], order: [['createdAt', 'DESC']] });
-    res.json(orders);
+    res.json(await Order.findAll({ where: { UserId: verified.id }, include: [OrderItem], order: [['createdAt', 'DESC']] }));
   } catch (err) { res.status(500).json({ error: "Failed to fetch order history." }); }
 });
+
 app.get('/api/addresses/me', async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -276,6 +276,7 @@ app.get('/api/addresses/me', async (req, res) => {
     res.json(await Address.findAll({ where: { UserId: verified.id }, order: [['isDefault', 'DESC'], ['createdAt', 'DESC']] }));
   } catch (err) { res.status(500).json({ error: "Failed to fetch addresses" }); }
 });
+
 app.post('/api/addresses/me', async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -285,13 +286,13 @@ app.post('/api/addresses/me', async (req, res) => {
     res.status(201).json(await Address.create({ ...req.body, UserId: verified.id, isDefault: count === 0 }));
   } catch (err) { res.status(500).json({ error: "Failed to save address" }); }
 });
+
 app.put('/api/addresses/:id/default', async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Not logged in" });
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    const addressId = req.params.id;
-    const address = await Address.findOne({ where: { id: addressId, UserId: verified.id } });
+    const address = await Address.findOne({ where: { id: req.params.id, UserId: verified.id } });
     if (!address) return res.status(404).json({ message: "Address not found" });
     await Address.update({ isDefault: false }, { where: { UserId: verified.id } });
     address.isDefault = true;
@@ -299,26 +300,122 @@ app.put('/api/addresses/:id/default', async (req, res) => {
     res.json({ message: "Default address updated successfully!" });
   } catch (err) { res.status(500).json({ error: "Failed to set default address" }); }
 });
+
+
+// 🚀 UPGRADED CHECKOUT SESSION: Beautiful HTML & Admin Notification!
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const { cart, payment } = req.body; 
     const token = req.cookies.token;
     let userId = null;
+    let user = null;
+
     if (token) {
-      try { userId = jwt.verify(token, process.env.JWT_SECRET).id; } catch (err) { }
+      try { 
+        userId = jwt.verify(token, process.env.JWT_SECRET).id; 
+        user = await User.findByPk(userId);
+      } catch (err) { }
     }
+
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    if (userId) {
+
+    if (userId && user) {
       const newOrder = await Order.create({ totalAmount: total, status: 'Processing', paymentMethod: payment || 'card', UserId: userId });
+      
+      let emailItemsHtml = ''; 
+      let adminItemsHtml = '';
+
       for (let item of cart) {
         await OrderItem.create({ name: item.name, size: item.size, price: item.price, quantity: item.quantity, OrderId: newOrder.id });
+        
+        // Build table rows for the fancy customer email
+        emailItemsHtml += `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 15px 0; color: #555;"><strong>${item.name}</strong><br><small style="color: #888;">Size: ${item.size}</small></td>
+            <td style="padding: 15px 0; color: #555; text-align: center;">${item.quantity}</td>
+            <td style="padding: 15px 0; color: #555; text-align: right;">LE ${(item.price * item.quantity).toFixed(2)}</td>
+          </tr>
+        `;
+        // Build a simple list for the admin email
+        adminItemsHtml += `<li>${item.quantity}x ${item.name} (Size: ${item.size})</li>`;
+      }
+
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        
+        // 1. SEND CUSTOMER EMAIL (Beautiful Layout + Spam Safe)
+        const customerMailOptions = {
+          from: `"CarTees Store" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: `Order Confirmed! #${newOrder.id} - CarTees`,
+          text: `Hi ${user.name}, your order #${newOrder.id} for LE ${total.toFixed(2)} is confirmed!`, // Hidden text lowers spam score
+          html: `
+            <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f7f6; padding: 20px;">
+              <div style="background-color: #111; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 4px solid #145214;">
+                <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Car<span style="color: #4CAF50;">Tees</span></h1>
+              </div>
+              <div style="background-color: #fff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <h2 style="color: #111; margin-top: 0; font-size: 22px;">Order Confirmed! 🏁</h2>
+                <p style="color: #555; font-size: 16px;">Hi ${user.name},</p>
+                <p style="color: #555; font-size: 16px;">Your order <strong>#${newOrder.id}</strong> is locked in. Our pit crew is getting it ready for the track.</p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 25px; margin-bottom: 25px;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid #111; text-align: left;">
+                      <th style="padding: 10px 0; color: #111; text-transform: uppercase; font-size: 0.9em;">Item</th>
+                      <th style="padding: 10px 0; color: #111; text-transform: uppercase; font-size: 0.9em; text-align: center;">Qty</th>
+                      <th style="padding: 10px 0; color: #111; text-transform: uppercase; font-size: 0.9em; text-align: right;">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${emailItemsHtml}
+                  </tbody>
+                </table>
+                
+                <div style="text-align: right; font-size: 18px; color: #111; padding-top: 15px; border-top: 2px solid #eee;">
+                  <strong>Grand Total: <span style="color: #145214;">LE ${total.toFixed(2)}</span></strong>
+                </div>
+                <p style="color: #888; font-size: 14px; text-align: right; margin-top: 5px; text-transform: uppercase;">Payment: ${payment || 'Card'}</p>
+                
+                <p style="color: #555; font-size: 16px; margin-top: 40px;">See you on the track,<br><strong style="color: #111;">The CarTees Team</strong></p>
+              </div>
+            </div>
+          `
+        };
+
+        // 2. SEND ADMIN EMAIL (Internal Notification)
+        const adminMailOptions = {
+          from: `"CarTees System" <${process.env.EMAIL_USER}>`,
+          to: process.env.EMAIL_USER, // Sends TO the store owner
+          subject: `🚨 NEW ORDER #${newOrder.id} - LE ${total.toFixed(2)}`,
+          text: `New order from ${user.name}. Total: LE ${total.toFixed(2)}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fff; border: 2px solid #e74c3c; border-radius: 8px;">
+              <h2 style="color: #e74c3c; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">🚨 New Order Received! (#${newOrder.id})</h2>
+              <p><strong>Customer:</strong> ${user.name} (${user.email})</p>
+              <p><strong>Total:</strong> LE ${total.toFixed(2)}</p>
+              <p><strong>Payment Method:</strong> <span style="text-transform: uppercase;">${payment || 'Card'}</span></p>
+              <h3 style="margin-bottom: 5px;">Items Ordered:</h3>
+              <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 4px; border: 1px solid #ddd;">
+                ${adminItemsHtml}
+              </ul>
+              <p style="margin-top: 20px;"><a href="http://localhost:3000/admin.html" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
+            </div>
+          `
+        };
+
+        // Fire both emails off!
+        transporter.sendMail(customerMailOptions).catch(err => console.error("Customer Email Error:", err));
+        transporter.sendMail(adminMailOptions).catch(err => console.error("Admin Email Error:", err));
       }
     }
+
     if (payment === 'cod' || payment === 'instapay') { return res.json({ url: 'profile.html#orders' }); }
+    
     const lineItems = cart.map(item => ({
       price_data: { currency: 'egp', product_data: { name: `${item.name} (Size: ${item.size})` }, unit_amount: Math.round(item.price * 100) },
       quantity: item.quantity,
     }));
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'], line_items: lineItems, mode: 'payment',
       success_url: `http://localhost:3000/profile.html#orders`, cancel_url: `http://localhost:3000/checkout.html`,
@@ -326,45 +423,27 @@ app.post('/api/create-checkout-session', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) { res.status(500).json({ error: "Failed to create checkout session" }); }
 });
+
+
 // ==========================================
 // 🚀 ZONE 6: ADMIN SUPERPOWERS & STATS
 // ==========================================
-
-// Admin Route: Get Analytics (Revenue, Orders, Best Seller)
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
     try {
         const totalOrders = await Order.count();
         const totalRevenue = await Order.sum('totalAmount');
-        
-        // Calculate the best-selling shirt
         const allItems = await OrderItem.findAll();
         const salesCount = {};
-        
-        allItems.forEach(item => {
-            salesCount[item.name] = (salesCount[item.name] || 0) + item.quantity;
-        });
-        
+        allItems.forEach(item => { salesCount[item.name] = (salesCount[item.name] || 0) + item.quantity; });
         let topSeller = 'N/A';
         let maxQty = 0;
         for (const [name, qty] of Object.entries(salesCount)) {
-            if (qty > maxQty) {
-                maxQty = qty;
-                topSeller = name;
-            }
+            if (qty > maxQty) { maxQty = qty; topSeller = name; }
         }
-
-        res.json({ 
-            totalOrders, 
-            totalRevenue: totalRevenue || 0, 
-            topSeller 
-        });
-    } catch (err) {
-        console.error("Stats Error:", err);
-        res.status(500).json({ error: "Failed to fetch admin stats" });
-    }
+        res.json({ totalOrders, totalRevenue: totalRevenue || 0, topSeller });
+    } catch (err) { res.status(500).json({ error: "Failed to fetch admin stats" }); }
 });
 
-// Admin Route: Get ALL orders from ALL users
 app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
     try {
         res.json(await Order.findAll({ include: [{ model: User, attributes: ['name', 'email', 'phone'] }, { model: OrderItem }], order: [['createdAt', 'DESC']] }));
