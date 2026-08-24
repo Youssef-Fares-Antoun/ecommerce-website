@@ -27,6 +27,7 @@ async function verifyAdminAndLoad() {
         document.getElementById("adminNameDisplay").textContent = data.user.name;
         
         loadAllOrders();
+        loadAdminStats();
         loadInventory();
 
     } catch (err) {
@@ -155,6 +156,24 @@ async function updateOrderStatus(orderId, newStatus) {
             alert("Failed to update status.");
         }
     } catch (err) { alert("Network error."); }
+}
+// ==========================================
+// ANALYTICS LOGIC
+// ==========================================
+async function loadAdminStats() {
+    try {
+        const response = await fetch('/api/admin/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            
+            // Animate or display the stats!
+            document.getElementById('stat-orders').textContent = stats.totalOrders || 0;
+            document.getElementById('stat-revenue').textContent = `LE ${(stats.totalRevenue || 0).toFixed(2)}`;
+            document.getElementById('stat-topseller').textContent = stats.topSeller || 'N/A';
+        }
+    } catch (err) {
+        console.error("Failed to load admin stats:", err);
+    }
 }
 
 // ==========================================

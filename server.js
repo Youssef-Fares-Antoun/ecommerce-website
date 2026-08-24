@@ -326,12 +326,51 @@ app.post('/api/create-checkout-session', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) { res.status(500).json({ error: "Failed to create checkout session" }); }
 });
+// ==========================================
+// 🚀 ZONE 6: ADMIN SUPERPOWERS & STATS
+// ==========================================
 
+// Admin Route: Get Analytics (Revenue, Orders, Best Seller)
+app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
+    try {
+        const totalOrders = await Order.count();
+        const totalRevenue = await Order.sum('totalAmount');
+        
+        // Calculate the best-selling shirt
+        const allItems = await OrderItem.findAll();
+        const salesCount = {};
+        
+        allItems.forEach(item => {
+            salesCount[item.name] = (salesCount[item.name] || 0) + item.quantity;
+        });
+        
+        let topSeller = 'N/A';
+        let maxQty = 0;
+        for (const [name, qty] of Object.entries(salesCount)) {
+            if (qty > maxQty) {
+                maxQty = qty;
+                topSeller = name;
+            }
+        }
+
+        res.json({ 
+            totalOrders, 
+            totalRevenue: totalRevenue || 0, 
+            topSeller 
+        });
+    } catch (err) {
+        console.error("Stats Error:", err);
+        res.status(500).json({ error: "Failed to fetch admin stats" });
+    }
+});
+
+// Admin Route: Get ALL orders from ALL users
 app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
     try {
         res.json(await Order.findAll({ include: [{ model: User, attributes: ['name', 'email', 'phone'] }, { model: OrderItem }], order: [['createdAt', 'DESC']] }));
     } catch (err) { res.status(500).json({ error: "Failed to fetch admin orders" }); }
 });
+
 app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
     try {
         const order = await Order.findByPk(req.params.id);
