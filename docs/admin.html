@@ -69,7 +69,7 @@
       <div class="content-card" id="inventory-card" style="display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">
             <h2 style="color: #111; margin: 0;">Garage Inventory</h2>
-            <button onclick="openProductModal()" style="background: #145214; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">+ Add New CarTee</button>
+            <button type="button" onclick="openProductModal()" style="background: #145214; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">+ Add New CarTee</button>
         </div>
         
         <div style="overflow-x: auto; margin-top: 20px;">
@@ -107,7 +107,7 @@
       <h2 id="modalTitle" style="margin-bottom: 20px; color: #145214;">Add New Product</h2>
       
       <form id="productForm">
-        <input type="hidden" id="prodId"> <!-- Hidden ID used when updating existing products -->
+        <input type="hidden" id="prodId">
         
         <div class="form-group" style="margin-bottom: 15px;">
           <label style="display: block; margin-bottom: 5px; font-weight: bold;">Product Name</label>
@@ -125,9 +125,13 @@
             </div>
         </div>
 
+        <!-- 🚀 File Upload Input -->
         <div class="form-group" style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Image Filename / URL</label>
-          <input type="text" id="prodImage" required placeholder="e.g., 911Back.png" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Upload Product Image</label>
+          <input type="file" id="prodImageFile" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff;">
+          
+          <input type="hidden" id="existingImage">
+          <small id="currentImageText" style="display:none; color: #666; margin-top: 5px;">Leave blank to keep the current image.</small>
         </div>
 
         <div style="display: flex; gap: 15px; margin-bottom: 25px;">

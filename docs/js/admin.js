@@ -2,8 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
     verifyAdminAndLoad();
     setupAdminTabs();
 
-    // Attach submit listener to the product modal
-    document.getElementById("productForm").addEventListener("submit", saveProduct);
+    const form = document.getElementById("productForm");
+    if (form) {
+        form.addEventListener("submit", saveProduct);
+    }
 });
 
 async function verifyAdminAndLoad() {
@@ -24,7 +26,6 @@ async function verifyAdminAndLoad() {
 
         document.getElementById("adminNameDisplay").textContent = data.user.name;
         
-        // Load data for both tabs!
         loadAllOrders();
         loadInventory();
 
@@ -48,13 +49,13 @@ function setupAdminTabs() {
             menuItems.forEach(m => m.classList.remove("active"));
             item.classList.add("active");
 
-            ordersCard.style.display = "none";
-            inventoryCard.style.display = "none";
+            if (ordersCard) ordersCard.style.display = "none";
+            if (inventoryCard) inventoryCard.style.display = "none";
 
             const target = item.getAttribute("href");
-            if (target === "#orders") {
+            if (target === "#orders" && ordersCard) {
                 ordersCard.style.display = "block";
-            } else if (target === "#inventory") {
+            } else if (target === "#inventory" && inventoryCard) {
                 inventoryCard.style.display = "block";
             }
         });
@@ -66,6 +67,7 @@ function setupAdminTabs() {
 // ==========================================
 async function loadAllOrders() {
     const tableBody = document.getElementById("admin-order-list");
+    if (!tableBody) return;
     
     try {
         const response = await fetch('/api/admin/orders');
@@ -86,9 +88,11 @@ async function loadAllOrders() {
             const date = new Date(order.createdAt).toLocaleString();
             
             let itemsHtml = `<ul style="margin:0; padding-left: 15px; font-size: 0.9em;">`;
-            order.OrderItems.forEach(item => {
-                itemsHtml += `<li>${item.quantity}x ${item.name} (${item.size})</li>`;
-            });
+            if (order.OrderItems) {
+                order.OrderItems.forEach(item => {
+                    itemsHtml += `<li>${item.quantity}x ${item.name} (${item.size})</li>`;
+                });
+            }
             itemsHtml += `</ul>`;
 
             let statusColor = "#f39c12"; 
@@ -103,9 +107,8 @@ async function loadAllOrders() {
                 <td style="padding: 12px; font-weight: bold;">#${order.id}</td>
                 <td style="padding: 12px; font-size: 0.9em; color: #555;">${date}</td>
                 <td style="padding: 12px; font-size: 0.9em;">
-                    <strong>${order.User.name}</strong><br>
-                    <span style="color:#666;">${order.User.email}</span><br>
-                    <span style="color:#666;">${order.User.phone || 'No phone'}</span>
+                    <strong>${order.User ? order.User.name : 'Unknown'}</strong><br>
+                    <span style="color:#666;">${order.User ? order.User.email : ''}</span>
                 </td>
                 <td style="padding: 12px;">${itemsHtml}</td>
                 <td style="padding: 12px; font-size: 0.9em;">
@@ -149,7 +152,7 @@ async function updateOrderStatus(orderId, newStatus) {
         if (response.ok) {
             loadAllOrders(); 
         } else {
-            alert("Failed to update status. Server rejected the request.");
+            alert("Failed to update status.");
         }
     } catch (err) { alert("Network error."); }
 }
@@ -159,21 +162,19 @@ async function updateOrderStatus(orderId, newStatus) {
 // ==========================================
 async function loadInventory() {
     const tableBody = document.getElementById("admin-inventory-list");
-    
+    if (!tableBody) return;
+
     try {
         const response = await fetch('/api/products');
         const products = await response.json();
         tableBody.innerHTML = "";
 
-        // Sort by ID to keep it neat
         products.sort((a, b) => a.id - b.id);
 
         products.forEach(product => {
-            // Handle image pathing safely
-            let imgSrc = product.image.replace(/^\//, "");
+            let imgSrc = product.image ? product.image.replace(/^\//, "") : "images/default.jpg";
             if (!imgSrc.startsWith("images/")) imgSrc = "images/" + imgSrc.split('/').pop();
 
-            // Render visual badges
             let badges = "";
             if (product.isFeatured) badges += `<span style="background: #8e44ad; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-right: 4px;">Featured</span>`;
             if (product.isBestSeller) badges += `<span style="background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em;">Best Seller</span>`;
@@ -181,7 +182,7 @@ async function loadInventory() {
             const tr = document.createElement("tr");
             tr.style.borderBottom = "1px solid #eee";
             
-            // We store the raw product object as a string inside a hidden data attribute so the Edit button can access it easily!
+            // Format object securely for the onclick string
             const productString = JSON.stringify(product).replace(/"/g, '&quot;');
 
             tr.innerHTML = `
@@ -206,46 +207,58 @@ async function loadInventory() {
     }
 }
 
-// Opens the modal for BOTH Adding and Editing
+// 🚀 Modal Controls
 function openProductModal(product = null) {
     const modal = document.getElementById("productModal");
     const form = document.getElementById("productForm");
     
-    form.reset(); // Clear old data
+    if (form) form.reset(); 
 
-    if (product) {
-        // Editing an existing product
+    // Important: We must handle if this is triggered as an Event by accident (e.g., button click without args)
+    if (product && typeof product === 'object' && !product.target) {
         document.getElementById("modalTitle").textContent = "Edit Product #" + product.id;
         document.getElementById("prodId").value = product.id;
         document.getElementById("prodName").value = product.name;
         document.getElementById("prodPrice").value = product.price;
         document.getElementById("prodCategory").value = product.category || '';
-        document.getElementById("prodImage").value = product.image || '';
         document.getElementById("prodFeatured").checked = product.isFeatured;
         document.getElementById("prodBestSeller").checked = product.isBestSeller;
+        
+        document.getElementById("existingImage").value = product.image || '';
+        document.getElementById("currentImageText").style.display = 'block';
+        document.getElementById("prodImageFile").required = false; 
     } else {
-        // Adding a new product
         document.getElementById("modalTitle").textContent = "Add New Product";
         document.getElementById("prodId").value = "";
+        
+        document.getElementById("existingImage").value = "";
+        document.getElementById("currentImageText").style.display = 'none';
+        document.getElementById("prodImageFile").required = true; 
     }
     
-    modal.style.display = "flex";
+    if (modal) modal.style.display = "flex";
 }
 
 async function saveProduct(e) {
     e.preventDefault();
 
     const productId = document.getElementById("prodId").value;
-    const isEditing = productId !== ""; // If we have an ID, we are updating.
+    const isEditing = productId !== "";
 
-    const productData = {
-        name: document.getElementById("prodName").value,
-        price: parseFloat(document.getElementById("prodPrice").value),
-        category: document.getElementById("prodCategory").value.toLowerCase(),
-        image: document.getElementById("prodImage").value,
-        isFeatured: document.getElementById("prodFeatured").checked,
-        isBestSeller: document.getElementById("prodBestSeller").checked
-    };
+    const formData = new FormData();
+    formData.append("name", document.getElementById("prodName").value);
+    formData.append("price", document.getElementById("prodPrice").value);
+    formData.append("category", document.getElementById("prodCategory").value.toLowerCase());
+    formData.append("isFeatured", document.getElementById("prodFeatured").checked);
+    formData.append("isBestSeller", document.getElementById("prodBestSeller").checked);
+
+    const fileInput = document.getElementById("prodImageFile");
+    
+    if (fileInput.files.length > 0) {
+        formData.append("imageFile", fileInput.files[0]);
+    } else if (isEditing) {
+        formData.append("image", document.getElementById("existingImage").value);
+    }
 
     try {
         const url = isEditing ? `/api/products/${productId}` : `/api/products`;
@@ -253,13 +266,12 @@ async function saveProduct(e) {
 
         const response = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
+            body: formData 
         });
 
         if (response.ok) {
             document.getElementById("productModal").style.display = "none";
-            loadInventory(); // Refresh the table instantly
+            loadInventory(); 
             alert(isEditing ? "Product updated successfully!" : "New product added to the garage!");
         } else {
             alert("Server failed to save the product.");
@@ -270,23 +282,13 @@ async function saveProduct(e) {
 }
 
 async function deleteProduct(productId) {
-    if (!confirm(`Are you absolutely sure you want to delete Product #${productId}? This cannot be undone.`)) {
-        return;
-    }
+    if (!confirm(`Are you absolutely sure you want to delete Product #${productId}?`)) return;
 
     try {
-        const response = await fetch(`/api/products/${productId}`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            loadInventory(); // Refresh the table instantly
-        } else {
-            alert("Failed to delete product.");
-        }
-    } catch (err) {
-        alert("Network error.");
-    }
+        const response = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+        if (response.ok) loadInventory(); 
+        else alert("Failed to delete product.");
+    } catch (err) { alert("Network error."); }
 }
 
 async function handleAdminLogout() {
