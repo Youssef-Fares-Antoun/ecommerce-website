@@ -232,6 +232,16 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
+// GET ALL USERS (For Admin/Postman testing)
+app.get('/api/users', async (req, res) => {
+  try{
+    const allUsers = await User.findAll({ attributes: { exclude: ['password'] } });
+    res.json(allUsers);
+  } catch(err) {
+    res.status(500).json({ error: "Failed to fetch users." });
+  }
+});
+
 app.get('/api/brands', async (req, res) => {
   try { res.json(await Brand.findAll()); } 
   catch (err) { res.status(500).json({ error: "Failed to fetch brands" }); }
@@ -453,7 +463,7 @@ app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
 app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
     try {
         const order = await Order.findByPk(req.params.id);
-        if (!order) return res.status(404).json({ message: "Order not found" });
+        if (!order) return res.status(404).json({ messageqqs: "Order not found" });
         order.status = req.body.status;
         await order.save();
         res.json({ message: "Order status updated successfully!", order });
