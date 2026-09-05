@@ -1170,3 +1170,36 @@ document.addEventListener("click", function(e) {
         authModal.style.display = "none";
     }
 });
+// ==========================================
+// ACCOUNT SETTINGS LOGIC
+// ==========================================
+const settingsForm = document.getElementById('accountSettingsForm');
+if (settingsForm) {
+    settingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('updateEmail').value;
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+
+        try {
+            const res = await fetch('/api/users/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, currentPassword, newPassword })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert("Account updated securely!");
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+            } else {
+                alert(data.message || "Failed to update account.");
+            }
+        } catch (err) {
+            alert("Network error.");
+        }
+    });
+}

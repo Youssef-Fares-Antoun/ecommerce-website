@@ -29,7 +29,7 @@
       </div>
       <nav class="sidebar-menu">
         <a href="#details" class="menu-item active">My Details</a>
-        <a href="#addresses" class="menu-item">My Addresses</a> <!-- NEW TAB -->
+        <a href="#addresses" class="menu-item">My Addresses</a>
         <a href="#orders" class="menu-item">Order History</a>
         <a href="#settings" class="menu-item">Account Settings</a>
         <a href="javascript:void(0)" onclick="handleLogout()" class="menu-item logout">Logout</a>      
@@ -50,7 +50,7 @@
         <p style="color: #666; margin-top: 20px;">Need to change your password or email? Check the Account Settings tab.</p>
       </div>
 
-      <!-- 2. ADDRESS BOOK CARD (NEW!) -->
+      <!-- 2. ADDRESS BOOK CARD -->
       <div class="content-card" id="addresses-card" style="display: none;">
         <!-- ADDRESS BOOK HEADER & TOGGLE BUTTON -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -58,12 +58,12 @@
             <button type="button" id="showFormBtn" style="background: #145214 !important; color: #fff !important; border: none !important; padding: 10px 20px !important; border-radius: 8px !important; font-weight: bold !important; cursor: pointer; transition: 0.2s; width: fit-content !important; min-width: 0 !important; box-shadow: 0 4px 10px rgba(20,82,20,0.15);">+ Add New Address</button>
         </div>
         
-        <!-- SAVED ADDRESSES (Scrollable if list gets too long!) -->
+        <!-- SAVED ADDRESSES -->
         <div id="saved-addresses-list" style="display: grid; gap: 15px; margin-bottom: 40px; max-height: 420px; overflow-y: auto; padding-right: 5px;">
            <p style="color: #666;">Loading addresses...</p>
         </div>
 
-        <!-- ADD NEW ADDRESS FORM (Hidden by default) -->
+        <!-- ADD NEW ADDRESS FORM -->
         <div id="newAddressWrapper" style="display: none; background: #f9f9f9; padding: 25px; border-radius: 8px; border: 1px solid #eee;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #eaeaea; padding-bottom: 15px;">
                 <h3 style="color: #145214; font-size: 1.3em; margin: 0; white-space: nowrap;">Add New Address</h3>
@@ -126,10 +126,29 @@
       </div>
 
       <!-- 4. SETTINGS CARD -->
-      <div class="content-card" id="settings-card" style="display: none;">
-        <h2>Account Settings</h2>
-        <p style="color: #666; margin-top: 20px;">Security and password settings coming soon.</p>
+      <div class="content-card" id="settings-card" style="display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <h2 style="color: #111; border-bottom: 2px solid #eee; padding-bottom: 15px;">Account Settings</h2>
+        
+        <form id="accountSettingsForm" style="margin-top: 20px; max-width: 500px;">
+          <div class="form-group" style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email Address</label>
+            <input type="email" id="updateEmail" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Required to change password" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
+            <input type="password" id="newPassword" placeholder="Leave blank to keep current password" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          
+          <button type="submit" style="background: #145214; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">Save Changes</button>
+        </form>
       </div>
+      
     </section>
   </main>
 

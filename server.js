@@ -227,6 +227,36 @@ app.get('/api/users/me', async (req, res) => {
   } catch (err) { res.status(401).json({ message: "Invalid or expired token" }); }
 });
 
+app.put('/api/users/me', async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(verified.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const { email, currentPassword, newPassword } = req.body;
+
+    // Update email if provided
+    if (email) user.email = email;
+
+    // Securely verify and update password
+    if (currentPassword && newPassword) {
+        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!validPassword) return res.status(401).json({ message: "Incorrect current password." });
+        
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await user.save();
+    res.json({ message: "Account updated successfully!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update account" });
+  }
+});
+
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: "Logged out successfully" });
