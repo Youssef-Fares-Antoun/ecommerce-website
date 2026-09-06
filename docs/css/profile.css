@@ -5,39 +5,43 @@
     max-width: 1200px;
     margin: 40px auto;
     padding: 0 20px;
-    align-items: flex-start; /* Prevents the sidebar from stretching vertically */
+    align-items: flex-start;
 }
 
 /* Sidebar Styling */
 .profile-sidebar {
     flex: 0 0 300px; 
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 30px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); /* Soft shadow */
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
 
 .profile-pic {
     font-size: 50px;
-    background: #f4f4f4;
+    background: var(--bg-hover);
     width: 90px;
     height: 90px;
     line-height: 90px;
     border-radius: 50%;
     margin: 0 auto 15px auto;
-    color: #888;
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
 }
 
 .user-info h3 { 
     margin: 0 0 5px 0; 
-    color: #222; 
+    color: var(--text-main); 
     font-size: 1.3em;
+    font-family: 'Syncopate', sans-serif;
+    text-transform: uppercase;
 }
 
 .user-info p { 
     margin: 0 0 25px 0; 
-    color: #666; 
+    color: var(--text-muted); 
     font-size: 0.9em; 
 }
 
@@ -50,58 +54,66 @@
 
 .menu-item {
     text-decoration: none;
-    color: #555;
+    color: var(--text-muted);
     padding: 14px 20px;
-    border-radius: 8px;
-    font-weight: 600;
+    border-radius: 4px;
+    font-weight: 700;
     font-size: 0.95em;
-    transition: all 0.2s ease;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
     text-align: left;
+    border: 1px solid transparent;
 }
 
 .menu-item:hover {
-    background: #f8f9fa;
-    color: #145214;
+    background: var(--bg-hover);
+    color: var(--text-main);
+    border-color: var(--border-subtle);
 }
 
 /* Active State */
 .menu-item.active {
-    background: #145214; /* CarTees Green */
-    color: #ffffff;
-    box-shadow: 0 4px 10px rgba(20, 82, 20, 0.2);
+    background: var(--accent);
+    color: var(--bg-deep);
+    box-shadow: 0 0 15px rgba(204, 255, 0, 0.1);
 }
 
 /* Special styling for Logout */
 .menu-item.logout {
-    color: #d9534f;
+    color: #e74c3c;
     margin-top: 15px;
-    border: 1px solid #fce8e8;
+    border: 1px solid #e74c3c;
 }
 
 .menu-item.logout:hover {
-    background: #d9534f;
+    background: #e74c3c;
     color: #ffffff;
-    border-color: #d9534f;
+    border-color: #e74c3c;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.2);
 }
 
 /* Main Content Area */
 .profile-content {
-    flex: 1; /* Takes up the remaining width */
+    flex: 1; 
 }
 
 .content-card {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .content-card h2 {
     margin-top: 0;
     margin-bottom: 30px;
-    color: #145214;
-    border-bottom: 2px solid #f4f4f4;
-    padding-bottom: 12px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 15px;
+    font-family: 'Syncopate', sans-serif;
+    text-transform: uppercase;
 }
 
 /* Beautiful Form Styling */
@@ -124,7 +136,7 @@
 .form-group label {
     margin-bottom: 8px;
     font-weight: 600;
-    color: #444;
+    color: var(--text-main);
     font-size: 0.9em;
 }
 
@@ -133,33 +145,34 @@
 .form-group textarea {
     width: 100%;
     padding: 14px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
     font-size: 1em;
-    font-family: inherit;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Rajdhani', sans-serif;
+    transition: all 0.2s ease;
     box-sizing: border-box; 
-    background-color: #fff;
+    background-color: var(--bg-hover);
+    color: var(--text-main);
 }
 
 /* What happens when a user clicks the input */
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #145214;
-    box-shadow: 0 0 0 4px rgba(20, 82, 20, 0.1); /* Soft green glow */
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.2);
 }
 
 /* The disabled email box */
 .form-group input:disabled {
-    background-color: #f9fafb;
-    color: #9ca3af;
+    background-color: var(--bg-deep);
+    color: var(--text-muted);
     cursor: not-allowed;
-    border-color: #e5e7eb;
+    border-color: var(--border-subtle);
 }
 
 .form-group textarea {
-    resize: vertical; /* Let them drag it taller, but not wider */
+    resize: vertical; 
     min-height: 120px;
 }
 
@@ -167,21 +180,25 @@
 #save-profile-btn {
     width: 100%;
     padding: 16px;
-    font-size: 1.1em;
-    font-weight: bold;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Syncopate', sans-serif;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-radius: 8px;
+    border-radius: 0;
     margin-top: 10px;
-    background: #145214;
-    color: white;
-    border: none;
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(204, 255, 0, 0.05);
 }
 
 #save-profile-btn:hover {
-    background: #0f3d0f;
+    background: var(--accent);
+    color: var(--bg-deep);
+    box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
 }
 
 /* Responsive fix for Mobile */

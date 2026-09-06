@@ -5,6 +5,11 @@
   <title>CarTees | Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <!-- Telemetry Fonts: Syncopate (Headers) & Rajdhani (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="css/style.css"> 
   <link rel="stylesheet" href="css/home.css"> 
   
@@ -12,27 +17,33 @@
   <script src="js/cart.js" defer></script>
 
   <style>
-    /* ✅ ADDED: Price styles to match Shop page */
+    /* Dark Mode Pricing Styles */
     .price {
-      margin-top: 8px;
-      font-size: 1em;
+      margin-top: 10px;
+      font-size: 1.1em;
+      font-family: 'Syncopate', sans-serif;
+      letter-spacing: 0.5px;
     }
     .price .old-price {
       text-decoration: line-through;
-      color: #999;
-      margin-right: 6px;
+      color: #666;
+      margin-right: 8px;
+      font-size: 0.8em;
     }
     .price .new-price {
-      color: green;
-      font-weight: bold;
-      margin-right: 6px;
+      color: #ccff00; /* Acid Green */
+      font-weight: 700;
+      margin-right: 8px;
     }
     .price .save-price {
-      color: red;
-      font-size: 0.9em;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      background: #e74c3c;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
     }
-    
-    /* Ensure grid layout handles the taller price block */
     .product-card {
       display: flex;
       flex-direction: column;
@@ -42,7 +53,7 @@
 </head>
 <body>
 
-  <header class="navbar">
+  <header class="navbar glass-nav">
     <div class="logo"><a href="index.html">Car<span>Tees</span></a></div>
 
     <nav class="nav-links">
@@ -54,72 +65,68 @@
     </nav>
 
     <div class="icons">
-      <a href="javascript:void(0)" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 16px; color: #333; font-weight: bold;">Login / Register</a>
-      <div class="cart-icon" onclick="window.location.href='cart.html'">
+      <a href="javascript:void(0)" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 16px; color: #fff; font-weight: 600; font-family: 'Rajdhani', sans-serif; text-transform: uppercase;">Login</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: #ccff00;">
         🛒
         <span id="cart-indicator"></span>
       </div>
-      
       <div class="hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
       </div>
     </div>
   </header>
+
   <section class="hero" style="background-image: url('images/GT3 TRACK HOMEPAGE.png');">
     <div class="hero-content">
-      <h1>Wear Your Passion</h1>
-      <p>Premium car-inspired tees for true automotive enthusiasts.</p>
-      <button onclick="window.location.href='shop.html'">Shop Now</button>
+      <h1>Wear Your <span class="neon-text">Passion</span></h1>
+      <p>Premium car-inspired tees engineered for true automotive enthusiasts.</p>
+      <button onclick="window.location.href='shop.html'" class="btn-neon">Enter Showroom</button>
     </div>
   </section>
 
   <section class="brands">
-    <h2>🏎️ Shop by Brand</h2>
+    <h2>Shop by Brand</h2>
     <div class="brand-grid" id="dynamic-brands">
-      
-      </div>
+      <!-- Injected by JS -->
+    </div>
   </section>
 
   <section class="featured">
-    <h2>🔥 Best Sellers</h2>
-    <div class="product-grid" id="dynamic-showroom"></div>
+    <h2>Best Sellers</h2>
+    <div class="product-grid" id="dynamic-showroom">
+      <!-- Injected by JS -->
+    </div>
   </section>
 
   <section class="reviews">
-    <h2>⭐ What Our Customers Say</h2>
-    
+    <h2>Telemetry & Feedback</h2>
     <div class="review-grid" id="dynamic-reviews">
-      <p>Loading reviews...</p>
+      <p style="color: #666; font-family: 'Syncopate', sans-serif;">Loading telemetry...</p>
     </div>
 
     <div class="leave-review-section">
       <h3>Leave a Review</h3>
       <form id="siteReviewForm">
-        <input type="text" id="reviewerName" placeholder="Your Name" required>
-        
+        <input type="text" id="reviewerName" placeholder="Driver Name" required>
         <select id="reviewRating">
-          <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
-          <option value="4">⭐⭐⭐⭐ (4/5)</option>
-          <option value="3">⭐⭐⭐ (3/5)</option>
-          <option value="2">⭐⭐ (2/5)</option>
-          <option value="1">⭐ (1/5)</option>
+          <option value="5">⭐⭐⭐⭐⭐ (Flawless)</option>
+          <option value="4">⭐⭐⭐⭐ (Great)</option>
+          <option value="3">⭐⭐⭐ (Good)</option>
+          <option value="2">⭐⭐ (Needs Work)</option>
+          <option value="1">⭐ (Pit Stop Required)</option>
         </select>
-
-        <textarea id="reviewComment" placeholder="Tell us what you think!" required rows="3"></textarea>
-        
-        <button type="submit">Submit Review</button>
+        <textarea id="reviewComment" placeholder="Tell us about the fit, feel, and performance..." required rows="3"></textarea>
+        <button type="submit" class="btn-neon">Submit Feedback</button>
       </form>
     </div>
   </section>
 
   <section class="newsletter">
-    <h2>Stay in the Fast Lane</h2>
-    <p>Subscribe for exclusive drops & offers</p>
-    <form onsubmit="event.preventDefault(); alert('✅ You’re subscribed!');">
+    <h2>Join the Paddock</h2>
+    <p>Subscribe for exclusive drops, track days, and vault access.</p>
+    <form onsubmit="event.preventDefault(); alert('✅ Welcome to the crew!');">
       <input type="email" placeholder="Enter your email" required>
-      <button type="submit">Subscribe</button>
+      <button type="submit" class="btn-solid">Subscribe</button>
     </form>
   </section>
 
@@ -129,13 +136,13 @@
       <a href="contact.html">Contact</a>
       <a href="faq.html">FAQ</a>
       <a href="shop.html">Shop</a>
-      <a href="terms.html">Terms & Conditions</a>
+      <a href="terms.html">Terms</a>
     </div>
     <div class="socials">
       <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
       <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
     </div>
-    <p>&copy; 2025 CarTees. All rights reserved.</p>
+    <p>&copy; 2026 CarTees. Engineered in Cairo.</p>
   </footer>
-  </body>
+</body>
 </html>

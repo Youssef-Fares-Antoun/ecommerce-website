@@ -436,30 +436,32 @@ function injectAuthModal() {
   if (document.getElementById("authModal")) return;
 
   const modalHTML = `
-  <div id="authModal" class="cart-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; position: relative;">
-      <span onclick="document.getElementById('authModal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer;">&times;</span>
+  <div id="authModal" class="cart-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
+    <div style="background: var(--bg-card); color: var(--text-main); padding: 30px; border-radius: 4px; border: 1px solid var(--border-subtle); width: 90%; max-width: 400px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+      <span onclick="document.getElementById('authModal').style.display='none'" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</span>
+      
       <div id="loginSection">
-        <h2 style="margin-bottom: 20px;">Garage Access</h2>
+        <h2 style="margin-bottom: 20px; font-family: 'Syncopate', sans-serif; text-transform: uppercase; font-size: 20px; color: var(--text-main);">Garage Access</h2>
         <form id="loginForm">
-          <input type="email" id="loginEmail" placeholder="Email" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
-          <input type="password" id="loginPassword" placeholder="Password" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
-          <button type="submit" class="btn-primary" style="width: 100%;">Ignition (Login)</button>
+          <input type="email" id="loginEmail" placeholder="Email" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <input type="password" id="loginPassword" placeholder="Password" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Ignition (Login)</button>
         </form>
-        <p style="margin-top: 15px; font-size: 0.9em; text-align: center;">
-          No keys? <a href="javascript:void(0)" onclick="document.getElementById('loginSection').style.display='none'; document.getElementById('registerSection').style.display='block';" style="color: red;">Register here</a>
+        <p style="margin-top: 15px; font-size: 0.9em; text-align: center; color: var(--text-muted);">
+          No keys? <a href="javascript:void(0)" onclick="document.getElementById('loginSection').style.display='none'; document.getElementById('registerSection').style.display='block';" style="color: var(--accent); text-decoration: none; font-weight: bold;">Register here</a>
         </p>
       </div>
+
       <div id="registerSection" style="display: none;">
-        <h2 style="margin-bottom: 20px;">Join the Crew</h2>
+        <h2 style="margin-bottom: 20px; font-family: 'Syncopate', sans-serif; text-transform: uppercase; font-size: 20px; color: var(--text-main);">Join the Crew</h2>
         <form id="registerForm">
-          <input type="text" id="regName" placeholder="Full Name" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
-          <input type="email" id="regEmail" placeholder="Email" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
-          <input type="password" id="regPassword" placeholder="Password" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
-          <button type="submit" class="btn-primary" style="width: 100%;">Create Profile</button>
+          <input type="text" id="regName" placeholder="Full Name" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <input type="email" id="regEmail" placeholder="Email" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <input type="password" id="regPassword" placeholder="Password" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Create Profile</button>
         </form>
-        <p style="margin-top: 15px; font-size: 0.9em; text-align: center;">
-          Already in the crew? <a href="javascript:void(0)" onclick="document.getElementById('registerSection').style.display='none'; document.getElementById('loginSection').style.display='block';" style="color: red;">Login here</a>
+        <p style="margin-top: 15px; font-size: 0.9em; text-align: center; color: var(--text-muted);">
+          Already in the crew? <a href="javascript:void(0)" onclick="document.getElementById('registerSection').style.display='none'; document.getElementById('loginSection').style.display='block';" style="color: var(--accent); text-decoration: none; font-weight: bold;">Login here</a>
         </p>
       </div>
     </div>

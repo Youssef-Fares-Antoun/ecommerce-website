@@ -2,30 +2,32 @@
 
 /* ===== Header (specific overrides) ===== */
 .logo span { 
-  color: #145214; 
+  color: var(--accent); 
 }
 
 .nav-links a.active,
 .nav-links a:hover { 
-  color: #145214; 
+  color: var(--accent); 
 }
-
 
 /* ===== Hero Section ===== */
 .contact-hero {
-  background: url("https://wallpaperaccess.com/full/298478.jpg") center/cover no-repeat;
-  color: black;
+  background: url("../images/contact.png") center/cover no-repeat;
+  color: #fff; /* Always keep hero text white over the image */
   text-align: center;
-  padding: 80px 20px;
+  padding: 100px 20px;
   position: relative;
 }
-/* Add overlay for readability */
+
+/* Add overlay for readability (Dark fade to blend with background) */
 .contact-hero::before {
     content: '';
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255, 255, 255, 0.3);
+    background: linear-gradient(to bottom, rgba(5,5,5,0.6) 0%, var(--bg-deep) 100%);
+    z-index: 1;
 }
+
 .contact-hero h1, .contact-hero p {
     position: relative;
     z-index: 2;
@@ -34,6 +36,13 @@
 .contact-hero h1 { 
   font-size: 40px; 
   margin-bottom: 10px; 
+  font-family: 'Syncopate', sans-serif;
+  text-transform: uppercase;
+}
+
+.contact-hero p {
+  font-size: 18px;
+  color: #ccc;
 }
 
 /* ===== Main Container ===== */
@@ -41,7 +50,7 @@
   display: flex;
   justify-content: space-between;
   gap: 40px;
-  padding: 50px 20px; /* Added horizontal padding */
+  padding: 50px 20px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -49,17 +58,23 @@
 .contact-form, 
 .contact-info {
   flex: 1;
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  background: var(--bg-card);
+  padding: 35px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   min-width: 300px;
 }
 
 .contact-form h2, 
 .contact-info h2 {
-  margin-bottom: 20px;
-  color: #145214;
+  margin-bottom: 25px;
+  color: var(--text-main);
+  font-family: 'Syncopate', sans-serif;
+  text-transform: uppercase;
+  font-size: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 15px;
 }
 
 .contact-form input, 
@@ -67,11 +82,22 @@
 .contact-form button {
   display: block;
   width: 100%;
-  margin-bottom: 15px; /* Use margin-bottom */
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 15px;
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: 'Rajdhani', sans-serif;
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.2);
 }
 
 .contact-form textarea {
@@ -80,20 +106,34 @@
 }
 
 .contact-form button {
-  background: #145214;
-  color: white;
-  border: none;
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: 0;
   cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s;
+  font-weight: 700;
+  font-family: 'Syncopate', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
   margin-top: 10px;
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.05);
 }
 
 .contact-form button:hover { 
-  background: #0e3e0e; 
+  background: var(--accent);
+  color: var(--bg-deep);
+  box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
 }
+
 .contact-info p {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.contact-info strong {
+    color: var(--text-main);
 }
 
 /* ===== Responsive Design ===== */

@@ -1,84 +1,71 @@
+/* ===== CUSTOM PERFORMANCE VARIABLES ===== */
+:root {
+  --bg-deep: #050505;
+  --bg-card: #111111;
+  --bg-hover: #1a1a1a;
+  --accent: #ccff00; /* Porsche Acid Green */
+  --text-main: #f4f4f4;
+  --text-muted: #888888;
+  --border-subtle: #222222;
+}
+
 /* ===== GENERAL RESET ===== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
   line-height: 1.6;
+  font-family: 'Rajdhani', sans-serif; /* Technical Body Font */
+  font-size: 18px;
 }
 
-/* ===== TOPBAR ===== */
-.topbar {
-  background-color: #111;
-  color: #fff;
-  text-align: center;
-  padding: 10px 0;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  font-size: 14px;
+h1, h2, h3, h4, .logo {
+  font-family: 'Syncopate', sans-serif; /* Aggressive Header Font */
+  text-transform: uppercase;
 }
 
-/* ===== NAVBAR ===== */
-/* NOTE: Most navbar styles are now in style.css */
-/* These are specific overrides for home.css */
-
-.navbar {
-  background-color: #000;
-  color: #fff;
-}
-.navbar a {
-  color: black;
-}
-.navbar a:hover,
-.navbar a.active {
-  color: #ffcc00;
-}
-.navbar a::after {
-  content: '';
-  display: block;
-  width: 0;
-  height: 2px;
-  background: #ffcc00;
-  transition: width .3s;
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-}
-.navbar a:hover::after {
+/* ===== GLASSMORPHISM NAVBAR ===== */
+.navbar.glass-nav {
+  background: rgba(5, 5, 5, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: fixed;
+  top: 0;
   width: 100%;
-}
-.logo span {
-  color: #ffcc00;
-}
-.hamburger span {
-  background-color: black; /* Make hamburger bars white on this page */
+  z-index: 1000;
+  transition: all 0.3s ease;
 }
 
+.navbar a { color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+.navbar a:hover, .navbar a.active { color: var(--accent); }
+.navbar a::after { background: var(--accent); }
+.logo span { color: var(--accent); }
+.hamburger span { background-color: var(--text-main); }
 
-/* ===== HERO SECTION ===== */
+/* ===== CINEMATIC HERO SECTION ===== */
 .hero {
   position: relative; 
-  background: url('../images/GT3 TRACK HOMEPAGE.png') center/cover no-repeat;
-  height: 500px;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed; /* Parallax effect */
+  height: 100vh; /* Full screen */
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 40px;
 }
 
 .hero::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4); 
+  top: 0; left: 0; width: 100%; height: 100%;
+  /* Dark fade from top to bottom */
+  background: linear-gradient(to bottom, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.8) 80%, var(--bg-deep) 100%);
   z-index: 1;
 }
 
@@ -86,152 +73,213 @@ body {
   position: relative; 
   z-index: 2;
   text-align: center;
-  color: #fff;
   padding: 0 20px;
+  transform: translateY(-50px);
 }
 
 .hero h1 {
-  font-size: 56px;
+  font-size: 5vw;
+  font-weight: 700;
+  letter-spacing: 2px;
   margin-bottom: 20px;
-  text-shadow: 2px 2px 12px rgba(0,0,0,0.7);
+  text-shadow: 0 10px 30px rgba(0,0,0,0.9);
+}
+
+.neon-text {
+  color: var(--accent);
 }
 
 .hero p {
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #ccc;
   max-width: 700px;
-  margin: 0 auto 30px auto;
-  line-height: 1.6;
-  text-shadow: 1px 1px 8px rgba(0,0,0,0.6);
+  margin: 0 auto 40px auto;
+  text-shadow: 0 5px 15px rgba(0,0,0,0.8);
 }
 
-/* ===== SHOP NOW BUTTON ===== */
-.hero button {
-  padding: 15px 35px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(90deg, #ffcc00, #ff9900);
-  border: none;
-  border-radius: 30px;
+/* ===== BUTTONS ===== */
+.btn-neon {
+  padding: 16px 40px;
+  font-size: 14px;
+  font-family: 'Syncopate', sans-serif;
+  font-weight: 700;
+  color: var(--accent);
+  background: transparent;
+  border: 2px solid var(--accent);
+  border-radius: 0; /* Boxy, aggressive edges */
   cursor: pointer;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
-  transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.1);
 }
 
-.hero button:hover {
-  background: linear-gradient(90deg, #ff9900, #ffcc00);
-  transform: scale(1.08);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+.btn-neon:hover {
+  background: var(--accent);
+  color: var(--bg-deep);
+  box-shadow: 0 0 25px rgba(204, 255, 0, 0.5);
+  transform: translateY(-2px);
 }
 
-/* ===== SHOP BY BRAND ===== */
+.btn-solid {
+  background: var(--text-main);
+  color: var(--bg-deep);
+  font-family: 'Syncopate', sans-serif;
+  font-weight: 700;
+  border: none;
+  padding: 15px 30px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-solid:hover { background: var(--accent); }
+
+/* ===== SECTION HEADERS ===== */
+h2 {
+  font-size: 28px;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+  color: var(--text-main);
+}
+h2::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: var(--accent);
+  margin: 15px auto 0;
+}
+
+/* ===== BENTO BOX BRANDS GRID ===== */
 .brands {
   max-width: 1200px;
-  margin: 0 auto 70px;
+  margin: 0 auto 100px;
   padding: 0 20px;
   text-align: center;
 }
-.brands h2 {
-  font-size: 32px;
-  margin-bottom: 30px;
-  color: #111;
-}
+
 .brand-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 180px;
+  gap: 15px;
 }
+
 .brand-card {
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
+
+/* Bento Box Sizing (First item large, rest adapt) */
+.brand-card:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+.brand-card:nth-child(2) { grid-column: span 2; }
+
 .brand-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  border-color: var(--accent);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(204, 255, 0, 0.05);
 }
+
 .brand-card img {
-  width: 100px;
+  max-width: 130px;
+  max-height: 90px;
+  width: auto;
   height: auto;
-  margin-bottom: 15px;
+  object-fit: contain;
+  filter: grayscale(100%) brightness(200%); /* Make logos white */
+  transition: filter 0.3s, transform 0.3s ease;
 }
+
+/* Scale up the logo inside the larger Porsche Bento box */
+.brand-card:nth-child(1) img {
+  max-width: 220px;
+  max-height: 150px;
+}
+
+.brand-card:hover img { 
+  filter: grayscale(0%) brightness(100%);
+  transform: scale(1.05);
+}
+
 .brand-card h3 {
-  font-size: 18px;
-  color: #000;
+  font-size: 14px;
+  margin-top: 15px;
+  letter-spacing: 1px;
 }
 
 /* ===== FEATURED PRODUCTS ===== */
 .featured {
   max-width: 1200px;
-  margin: 0 auto 70px;
+  margin: 0 auto 100px;
   padding: 0 20px;
   text-align: center;
 }
-.featured h2 {
-  font-size: 32px;
-  margin-bottom: 30px;
-  color: #111;
-}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 30px;
 }
+
 .product-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  padding: 20px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 25px;
+  transition: all 0.3s ease;
+  text-align: left;
 }
+
 .product-card:hover {
+  border-color: var(--accent);
   transform: translateY(-8px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
+
 .product-card img {
   width: 100%;
-  height: 220px;
+  height: 250px;
   object-fit: contain;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 15px 15px rgba(0,0,0,0.5));
+  transition: transform 0.5s ease;
 }
-.product-card h3 {
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-.product-card p {
-  font-weight: bold;
-  color: #ffcc00;
-  margin-bottom: 12px;
-}
+.product-card:hover img { transform: scale(1.05); }
+
+.product-card h3 { font-size: 16px; margin-bottom: 5px; color: var(--text-main); }
 .product-card button {
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 20px;
+  width: 100%;
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--text-muted);
+  padding: 12px;
+  margin-top: 15px;
+  font-family: 'Syncopate', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
 }
 .product-card button:hover {
-  background: #ffcc00;
-  color: #000;
+  background: var(--text-main);
+  color: var(--bg-deep);
+  border-color: var(--text-main);
 }
 
 /* ===== REVIEWS ===== */
-/* ===== DYNAMIC REVIEWS & FORM ===== */
 .reviews {
-  background: #111;
-  color: #fff;
-  padding: 60px 20px;
+  background: #090909;
+  border-top: 1px solid var(--border-subtle);
+  padding: 80px 20px;
   text-align: center;
-}
-
-.reviews h2 {
-  font-size: 32px;
-  margin-bottom: 30px;
 }
 
 .review-grid {
@@ -239,144 +287,71 @@ body {
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 50px;
+  margin-bottom: 60px;
 }
 
 .review-card {
-  background: #222;
-  padding: 25px;
-  border-radius: 12px;
-  width: 300px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  background: var(--bg-card);
+  padding: 30px;
+  width: 320px;
   text-align: left;
+  border-left: 3px solid var(--accent);
 }
 
-.review-card h4 {
-  margin-bottom: 12px;
-  color: #ffcc00; /* CarTees Yellow Stars */
-  font-size: 18px;
-}
+.review-card h4 { color: var(--accent); font-size: 14px; margin-bottom: 15px; }
+.review-card .review-comment { font-size: 16px; color: var(--text-muted); margin-bottom: 15px; }
+.review-card strong { color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 12px; }
 
-.review-card .review-comment {
-  font-style: italic;
-  margin-bottom: 15px;
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-.review-card strong {
-  color: #ffcc00;
-}
-
-/* --- Review Submission Form --- */
+/* --- Review Form --- */
 .leave-review-section {
   max-width: 500px;
   margin: 0 auto;
-  background: #000;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  border: 1px solid #333;
+  background: var(--bg-deep);
+  padding: 40px;
+  border: 1px solid var(--border-subtle);
 }
-
-.leave-review-section h3 {
-  font-size: 22px;
-  margin-bottom: 20px;
-  color: #fff;
-}
-
-#siteReviewForm {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  text-align: left;
-}
-
-#siteReviewForm input,
-#siteReviewForm select,
-#siteReviewForm textarea {
-  padding: 12px;
-  border-radius: 6px;
-  border: 1px solid #444;
-  background: #222;
-  color: #fff;
-  font-family: inherit;
-}
-
-#siteReviewForm input::placeholder,
-#siteReviewForm textarea::placeholder {
-  color: #888;
-}
-
-#siteReviewForm textarea {
-  resize: vertical;
-}
-
-#siteReviewForm button {
-  padding: 12px;
-  background: #ffcc00;
-  color: #000;
-  border: none;
-  border-radius: 30px;
-  font-weight: bold;
+.leave-review-section h3 { font-size: 18px; margin-bottom: 25px; }
+#siteReviewForm { display: flex; flex-direction: column; gap: 20px; }
+#siteReviewForm input, #siteReviewForm select, #siteReviewForm textarea {
+  padding: 15px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  font-family: 'Rajdhani', sans-serif;
   font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 5px;
+}
+#siteReviewForm input:focus, #siteReviewForm textarea:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
-#siteReviewForm button:hover {
-  background: #ff9900;
-  transform: scale(1.02);
+/* ===== NEWSLETTER & FOOTER ===== */
+.newsletter {
+  padding: 80px 20px;
+  text-align: center;
+  background: var(--bg-deep);
+}
+.newsletter input {
+  padding: 15px;
+  width: 300px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: white;
+  margin-right: 10px;
 }
 
-/* ===== NEWSLETTER ===== */
-/* Note: Newsletter styles are in style.css */
+footer { background: #000; border-top: 1px solid #111; }
+footer a { color: var(--text-muted); }
+footer a:hover { color: var(--accent); }
 
-/*==================================
- ✅ NEW: HOME PAGE RESPONSIVE
-==================================*/ 
+/* ===== RESPONSIVE ===== */ 
 @media (max-width: 900px) {
-  .hero h1 {
-    font-size: 40px;
-  }
-  .hero p {
-    font-size: 18px;
-  }
-  
-  .brand-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-  }
-
-  .product-grid {
-    grid-template-columns: 1fr 1fr; /* 2 columns on tablet */
-    gap: 15px;
-  }
-
-  .review-cards {
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
+  .hero h1 { font-size: 40px; }
+  .brand-grid { grid-template-columns: repeat(2, 1fr); }
+  .brand-card:nth-child(1) { grid-column: span 2; grid-row: span 1; }
+  .brand-card:nth-child(2) { grid-column: span 2; }
 }
-
 @media (max-width: 600px) {
-  .hero {
-    height: 400px;
-  }
-  .hero h1 {
-    font-size: 32px;
-  }
-  .hero p {
-    font-size: 16px;
-  }
-
-  .brand-grid {
-    grid-template-columns: 1fr 1fr; /* 2 columns on mobile */
-  }
-
-  .product-grid {
-    grid-template-columns: 1fr; /* 1 column on mobile */
-  }
+  .hero h1 { font-size: 32px; }
+  .product-grid { grid-template-columns: 1fr; }
 }

@@ -3,32 +3,35 @@
 
 /* Main Content */
 main {
-  padding: 30px 20px; /* Added horizontal padding */
+  padding: 30px 20px;
 }
 
 h1 {
   margin-bottom: 20px;
+  color: var(--text-main);
+  font-family: 'Syncopate', sans-serif;
+  text-transform: uppercase;
 }
 
 /* Cart Items */
 .cart-item {
   display: flex;
   align-items: flex-start;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-subtle);
   padding: 15px;
-  background: white;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border-radius: 4px;
   margin-bottom: 15px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   gap: 15px;
 }
 
 .cart-item img {
   width: 120px;
   height: 120px;
-  border-radius: 8px;
+  border-radius: 4px;
   object-fit: contain;
-  background: #f9f9f9;
+  background: var(--bg-hover);
   flex-shrink: 0;
 }
 
@@ -39,12 +42,13 @@ h1 {
 .cart-item-info h3 {
   margin: 0 0 5px;
   font-size: 16px;
+  color: var(--text-main);
 }
 
 .cart-item-info p {
   margin: 4px 0;
   font-size: 14px;
-  color: #444;
+  color: var(--text-muted);
 }
 
 /* Quantity Controls */
@@ -56,57 +60,64 @@ h1 {
 }
 
 .quantity-controls .qty-btn {
-  background: #145214;
-  color: white;
-  border: none;
+  background: var(--bg-hover);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
   padding: 5px 12px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
   transition: 0.2s;
-  width: auto; /* Override default button width */
+  width: auto;
   margin-top: 0;
 }
 
 .quantity-controls .qty-btn:hover {
-  background: #0f3d0f;
+  background: var(--text-main);
+  color: var(--bg-deep);
 }
 
 .quantity-controls span {
   font-weight: bold;
   font-size: 14px;
+  color: var(--text-main);
 }
 
 /* Remove Button */
 .remove-btn {
-  background: red;
-  color: white;
+  background: transparent;
+  color: #e74c3c;
   padding: 7px 14px;
-  border: none;
-  border-radius: 5px;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
   transition: 0.2s;
-  width: auto; /* Override default button width */
+  width: auto;
   margin-top: 0;
 }
 
 .remove-btn:hover {
-  background: darkred;
+  background: #e74c3c;
+  color: #fff;
 }
 
 /* Cart Summary */
 .cart-summary {
   margin-top: 20px;
   padding: 20px;
-  background: white;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border-radius: 4px;
   text-align: right;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border: 1px solid var(--border-subtle);
 }
 
 .cart-summary h2 {
   margin-bottom: 15px;
+  color: var(--text-main);
+  font-family: 'Syncopate', sans-serif;
+  text-transform: uppercase;
 }
 
 .cart-actions {
@@ -117,43 +128,51 @@ h1 {
 }
 
 .checkout-btn, .clear-btn, .continue-btn {
-  flex: 1; /* equal width on larger screens */
-  min-width: 200px; /* Ensure they don't get too small */
+  flex: 1;
+  min-width: 200px;
   padding: 12px 20px;
-  border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   font-size: 16px;
+  font-family: 'Syncopate', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
   text-align: center;
   margin-top: 0;
-  width: auto; /* Allow flex to control width */
+  width: auto;
 }
 
 .checkout-btn {
-  background-color: #28a745; /* green */
-  color: white;
+  background-color: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
 }
 .checkout-btn:hover {
-  background-color: #218838;
+  background-color: var(--accent);
+  color: var(--bg-deep);
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.2);
 }
 
 .clear-btn {
-  background-color: #dc3545; /* red */
-  color: white;
+  background-color: transparent;
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
 }
 .clear-btn:hover {
-  background-color: #c82333;
+  background-color: #e74c3c;
+  color: #fff;
 }
 
 .continue-btn {
-  background-color: #007bff; /* blue */
-  color: white;
+  background-color: transparent;
+  color: var(--text-main);
+  border: 2px solid var(--text-main);
 }
 .continue-btn:hover {
-  background-color: #0069d9;
+  background-color: var(--text-main);
+  color: var(--bg-deep);
 }
-
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -176,6 +195,6 @@ h1 {
     flex-direction: column;
   }
   .checkout-btn, .clear-btn, .continue-btn {
-    width: 100%; /* Stack buttons */
+    width: 100%;
   }
 }
