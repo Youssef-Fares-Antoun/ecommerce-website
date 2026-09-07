@@ -218,14 +218,14 @@ function displayCheckoutSummary() {
     itemDiv.style.display = "flex";
     itemDiv.style.justifyContent = "space-between";
     itemDiv.style.padding = "10px 0";
-    itemDiv.style.borderBottom = "1px solid #eee";
+    itemDiv.style.borderBottom = "1px solid var(--border-subtle)";
 
     itemDiv.innerHTML = `
-      <div style="font-size: 14px;">
+      <div style="font-size: 14px; color: var(--text-main);">
         <strong>${item.quantity}x</strong> ${item.name} <br>
-        <small style="color: #666;">Size: ${item.size}</small>
+        <small style="color: var(--text-muted);">Size: ${item.size}</small>
       </div>
-      <div style="font-weight: bold; font-size: 14px;">
+      <div style="font-weight: bold; font-size: 14px; color: var(--text-main);">
         LE ${itemTotal.toFixed(2)}
       </div>
     `;
@@ -263,10 +263,10 @@ async function autofillCheckout() {
                            style="margin-top: 5px; cursor: pointer; transform: scale(1.2);" 
                            onclick="document.querySelectorAll('.amazon-address-card').forEach(c => c.classList.remove('selected-address')); this.parentElement.classList.add('selected-address');">
                     <label for="addr_${addr.id}" style="cursor: pointer; width: 100%;">
-                        <strong style="display:block; font-size: 1.1em; color: #222;">${addr.firstName} ${addr.lastName}</strong>
-                        <span style="display:block; color: #555; margin-top: 4px;">${addr.street}</span>
-                        <span style="display:block; color: #555;">${addr.city}, ${addr.governorate}</span>
-                        <span style="display:block; color: #555; margin-top: 4px;">Phone: ${addr.phone}</span>
+                        <strong style="display:block; font-size: 1.1em; color: var(--text-main);">${addr.firstName} ${addr.lastName}</strong>
+                        <span style="display:block; color: var(--text-muted); margin-top: 4px;">${addr.street}</span>
+                        <span style="display:block; color: var(--text-muted);">${addr.city}, ${addr.governorate}</span>
+                        <span style="display:block; color: var(--text-muted); margin-top: 4px;">Phone: ${addr.phone}</span>
                     </label>
                 `;
                 addressList.appendChild(div);
@@ -291,7 +291,7 @@ async function handlePlaceOrder(e) {
   fieldsToValidate.forEach(id => {
     const el = document.getElementById(id);
     if(el) {
-        el.style.borderColor = "#ccc";
+        el.style.borderColor = "var(--border-subtle)";
         if (el.nextElementSibling && el.nextElementSibling.classList.contains("error-msg")) {
           el.nextElementSibling.remove();
         }
@@ -315,21 +315,45 @@ async function handlePlaceOrder(e) {
   if (!allValid) return;
 
   const cart = getCart();
+  
+  // 🚀 CRITICAL FIX: Extract the payment value from the form
+  const paymentSelect = document.getElementById("payment");
+  const selectedPayment = paymentSelect ? paymentSelect.value : "card";
+  
+  // Provide visual feedback
+  const submitBtn = document.querySelector(".checkout-btn");
+  const originalBtnText = submitBtn ? submitBtn.innerText : "PLACE YOUR ORDER";
+  if (submitBtn) {
+      submitBtn.innerText = "Processing...";
+      submitBtn.disabled = true;
+  }
+
   try {
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart: cart })
+      body: JSON.stringify({ 
+          cart: cart,
+          payment: selectedPayment // 🚀 Pass exact choice ('cod' or 'card') to the backend
+      })
     });
+    
     const data = await response.json();
+    
     if (data.url) {
+      // 🚀 Clear cart immediately for Cash On Delivery (since Stripe redirects bypass this)
+      if (selectedPayment === 'cod') {
+          localStorage.removeItem('cart');
+      }
       window.location.href = data.url;
     } else {
       alert("Error connecting to the payment gateway.");
+      if (submitBtn) { submitBtn.innerText = originalBtnText; submitBtn.disabled = false; }
     }
   } catch (err) {
     console.error("Checkout Error:", err);
     alert("Network error. Could not reach the server.");
+    if (submitBtn) { submitBtn.innerText = originalBtnText; submitBtn.disabled = false; }
   }
 }
 
@@ -793,6 +817,24 @@ window.setDefaultAddress = async function(addressId) {
     }
 };
 
+window.cancelOrder = async function(orderId) {
+    if (!confirm(`Are you absolutely sure you want to cancel Order #${orderId}?`)) return;
+    
+    try {
+        const res = await fetch(`/api/orders/me/${orderId}/cancel`, { method: 'PUT' });
+        const data = await res.json();
+        
+        if (res.ok) {
+            loadOrderHistory(); // Instantly refresh the UI to show "Cancelled"
+        } else {
+            alert(data.message || "Failed to cancel order.");
+        }
+    } catch(e) {
+        console.error("Cancel Order Error:", e);
+        alert("Network error. Could not reach the server.");
+    }
+};
+
 async function loadOrderHistory() {
   const orderList = document.getElementById("order-history-list");
   if (!orderList) return;
@@ -822,17 +864,45 @@ async function loadOrderHistory() {
       orderDiv.style.border = "1px solid var(--border-subtle)";
       orderDiv.style.borderRadius = "8px";
       orderDiv.style.padding = "15px";
-      orderDiv.style.marginBottom = "15px";
+      orderDiv.style.marginBottom = "20px";
       orderDiv.style.background = "var(--bg-hover)";
+
+      let itemsHtml = '<ul style="margin: 15px 0; padding-left: 20px; color: var(--text-muted); font-size: 0.9em;">';
+      if (order.OrderItems && order.OrderItems.length > 0) {
+          order.OrderItems.forEach(item => {
+              itemsHtml += `<li>${item.quantity}x ${item.name} (Size: ${item.size})</li>`;
+          });
+      } else {
+          itemsHtml += `<li>Items details unavailable</li>`;
+      }
+      itemsHtml += '</ul>';
+
+      let statusColor = "var(--accent)";
+      if (order.status === "Cancelled") statusColor = "#e74c3c";
+      if (order.status === "Shipped") statusColor = "#3498db";
+      if (order.status === "Delivered") statusColor = "#2ecc71";
+
+      // Only show the cancel button if the order is still "Processing"
+      let cancelBtnHtml = '';
+      if (order.status === 'Processing') {
+          cancelBtnHtml = `<button onclick="cancelOrder(${order.id})" style="background: transparent; color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; font-family: 'Syncopate', sans-serif; font-size: 0.7em; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c';">CANCEL ORDER</button>`;
+      }
 
       orderDiv.innerHTML = `
         <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 10px;">
-          <strong style="color: var(--text-main);">Order #${order.id}</strong>
+          <strong style="color: var(--text-main); font-family: 'Syncopate', sans-serif;">Order #${order.id}</strong>
           <span style="color: var(--text-muted);">${date}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <p style="margin: 0; font-size: 14px; color: var(--text-main);">Status: <strong style="color: var(--accent);">${order.status || 'Processing'}</strong></p>
-          <p style="margin: 0; font-weight: bold; color: var(--text-main);">Total: LE ${parseFloat(order.totalAmount || order.total).toFixed(2)}</p>
+        
+        ${itemsHtml}
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; border-top: 1px dashed var(--border-subtle); padding-top: 15px;">
+          <div>
+              <p style="margin: 0 0 5px 0; font-size: 14px; color: var(--text-main);">Status: <strong style="color: ${statusColor};">${order.status || 'Processing'}</strong></p>
+              <p style="margin: 0; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Payment: ${order.paymentMethod || 'Card'}</p>
+              ${cancelBtnHtml}
+          </div>
+          <p style="margin: 0; font-weight: bold; font-family: 'Syncopate', sans-serif; color: var(--text-main); font-size: 1.1em;">Total: LE ${parseFloat(order.totalAmount || order.total).toFixed(2)}</p>
         </div>
       `;
       orderList.appendChild(orderDiv);
@@ -1139,14 +1209,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (checkoutForm) {
       checkoutForm.addEventListener("submit", handlePlaceOrder);
   }
-  
-  const paymentSelect = document.getElementById("payment");
-  const instapayInfo = document.getElementById("instapayInfo");
-  if (paymentSelect && instapayInfo) {
-      paymentSelect.addEventListener("change", () => {
-        instapayInfo.style.display = paymentSelect.value === "instapay" ? "block" : "none";
-      });
-  }
 });
 
 // 🚀 THE BULLETPROOF INTERACTION CATCHER
@@ -1213,6 +1275,7 @@ document.addEventListener("click", function(e) {
         authModal.style.display = "none";
     }
 });
+
 // ==========================================
 // ACCOUNT SETTINGS LOGIC
 // ==========================================

@@ -115,17 +115,12 @@
         <!-- ALWAYS VISIBLE: PAYMENT -->
         <h3 style="margin-bottom: 20px; color: var(--text-main); font-size: 1.2em; font-family: 'Syncopate', sans-serif; text-transform: uppercase;">2. Payment method</h3>
         <div class="form-group">
+          <!-- Updated Payment Select Dropdown -->
           <select id="payment" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); font-family: 'Rajdhani', sans-serif; padding: 12px; width: 100%;">
-            <option value="">-- Select Payment Method --</option>
+            <option value="" disabled selected>-- Select Payment Method --</option>
+            <option value="card">Credit / Debit Card</option>
             <option value="cod">Cash on Delivery</option>
-            <option value="instapay">InstaPay</option>
           </select>
-        </div>
-
-        <div id="instapayInfo" class="instapay-details" style="display:none; background: var(--bg-deep); padding: 15px; border: 1px solid var(--accent); border-radius: 4px; color: var(--text-main); margin-bottom: 20px;">
-          💳 Send your payment to InstaPay account:  
-          <strong style="color: var(--accent);">cartees@instapay</strong>  
-          and include your Order ID in the transfer note.
         </div>
 
         <button type="submit" class="checkout-btn" style="background: transparent; color: var(--accent); border: 2px solid var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; padding: 15px; width: 100%; cursor: pointer; transition: 0.3s; margin-top: 10px;" onmouseover="this.style.background='var(--accent)'; this.style.color='var(--bg-deep)';" onmouseout="this.style.background='transparent'; this.style.color='var(--accent)';">Place Your Order</button>

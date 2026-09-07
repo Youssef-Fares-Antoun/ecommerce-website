@@ -322,6 +322,30 @@ app.get('/api/orders/me', async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to fetch order history." }); }
 });
 
+// 🚀 CUSTOMER ORDER CANCELLATION ENDPOINT
+app.put('/api/orders/me/:id/cancel', async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const order = await Order.findOne({ where: { id: req.params.id, UserId: verified.id } });
+    
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    
+    if (order.status !== 'Processing') {
+        return res.status(400).json({ message: "Only 'Processing' orders can be cancelled." });
+    }
+
+    order.status = 'Cancelled';
+    await order.save();
+    
+    res.json({ message: "Order cancelled successfully", order });
+  } catch (err) { 
+    res.status(500).json({ error: "Failed to cancel order" }); 
+  }
+});
+
 app.get('/api/addresses/me', async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -455,19 +479,29 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     }
 
-    if (payment === 'cod' || payment === 'instapay') { return res.json({ url: 'profile.html#orders' }); }
+    // 🚀 INTERCEPT CASH ON DELIVERY: Bypass Stripe entirely and return profile URL
+    if (payment === 'cod') { 
+        return res.json({ url: '/profile.html#orders' }); 
+    }
     
+    // 🚀 STRIPE FLOW: Only executes if payment is 'card'
     const lineItems = cart.map(item => ({
       price_data: { currency: 'egp', product_data: { name: `${item.name} (Size: ${item.size})` }, unit_amount: Math.round(item.price * 100) },
       quantity: item.quantity,
     }));
     
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'], line_items: lineItems, mode: 'payment',
-      success_url: `http://localhost:3000/profile.html#orders`, cancel_url: `http://localhost:3000/checkout.html`,
+      payment_method_types: ['card'], 
+      line_items: lineItems, 
+      mode: 'payment',
+      success_url: `http://localhost:3000/profile.html#orders`, 
+      cancel_url: `http://localhost:3000/checkout.html`,
     });
+    
     res.json({ url: session.url });
-  } catch (err) { res.status(500).json({ error: "Failed to create checkout session" }); }
+  } catch (err) { 
+      res.status(500).json({ error: "Failed to create checkout session" }); 
+  }
 });
 
 // ==========================================
