@@ -59,6 +59,10 @@ const upload = multer({ storage: storage });
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   dialectModule: pg,
+  schema: 'public',
+  define: {
+    schema: 'public'
+  },
   dialectOptions: {
     ssl: {
       require: true,
@@ -176,10 +180,8 @@ app.get('/api/products', async (req, res) => {
     res.json(products);
   } catch (err) {
     console.error('PRODUCTS ERROR:', err);
-
     res.status(500).json({
-      error: 'Failed to fetch products',
-      details: err.message
+      error: 'Failed to fetch products'
     });
   }
 });
