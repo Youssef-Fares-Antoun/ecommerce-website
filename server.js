@@ -423,6 +423,7 @@ app.post('/api/promo/validate', async (req, res) => {
 
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
+    const origin = req.headers.origin || `http://localhost:${PORT}`;
     const { cart, payment, promoCode } = req.body; 
     const token = req.cookies.token;
     let userId = null;
@@ -526,7 +527,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
               <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 4px; border: 1px solid #ddd;">
                 ${adminItemsHtml}
               </ul>
-              <p style="margin-top: 20px;"><a href="http://localhost:3000/admin" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
+              <p style="margin-top: 20px;"><a href="${origin}/admin" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
             </div>
           `
         };
@@ -561,8 +562,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
       payment_method_types: ['card'], 
       line_items: lineItems, 
       mode: 'payment',
-      success_url: `http://localhost:3000/profile.html#orders`, 
-      cancel_url: `http://localhost:3000/checkout.html`,
+      success_url: `${origin}/profile.html#orders`, 
+      cancel_url: `${origin}/checkout.html`,
     });
     
     res.json({ url: session.url });
@@ -629,4 +630,8 @@ app.delete('/api/admin/promos/:id', verifyAdmin, async (req, res) => {
 });
 
 // --- ZONE 7: START THE ENGINE ---
-app.listen(PORT, () => { console.log(`🚀 REVVO Server flying at http://localhost:${PORT}`); });
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => { console.log(`🚀 REVVO Server flying at http://localhost:${PORT}`); });
+}
+
+module.exports = app;
