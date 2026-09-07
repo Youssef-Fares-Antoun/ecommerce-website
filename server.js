@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const { Sequelize, DataTypes } = require('sequelize');
+const pg = require('pg');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -57,13 +58,14 @@ const upload = multer({ storage: storage });
 // 🚀 ZONE 3: NEON CLOUD DATABASE CONNECTION
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
+  dialectModule: pg,
   dialectOptions: {
     ssl: {
       require: true,
       rejectUnauthorized: false
     }
   },
-  logging: false 
+  logging: false
 });
 
 // --- ZONE 4: DATA MODEL ---
