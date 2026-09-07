@@ -151,7 +151,10 @@ async function initDb() {
     console.error("❌ DB Error:", error);
   }
 }
-initDb();
+
+if (process.env.NODE_ENV !== 'production') {
+    initDb();
+}
 
 // --- ZONE 5: API ROUTES ---
 const verifyAdmin = async (req, res, next) => {
