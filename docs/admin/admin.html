@@ -135,6 +135,7 @@
       <nav class="sidebar-menu" style="display: flex; flex-direction: column; gap: 10px;">
         <a href="#orders" class="menu-item active" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Orders</a>
         <a href="#inventory" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Inventory</a>
+        <a href="#promos" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Promo Codes</a>
         <a href="#reviews" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Reviews</a>
         <a href="javascript:void(0)" onclick="handleAdminLogout()" class="menu-item logout" style="padding: 12px; color: #e74c3c; text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; margin-top: 20px;">Logout</a>      
       </nav>
@@ -230,7 +231,48 @@
         </div>
       </div>
 
-      <!-- TAB 3: MANAGE REVIEWS -->
+      <!-- 🚀 NEW TAB 3: PROMO CODES -->
+      <div class="content-card" id="promos-card" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.3rem; margin: 0; text-transform: uppercase;">Promo Codes</h2>
+        </div>
+        
+        <!-- Add Promo Form -->
+        <div style="background: var(--bg-hover); padding: 20px; border-radius: 4px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+          <h3 style="font-size: 1.1em; margin-bottom: 15px; color: var(--accent); font-family: 'Syncopate', sans-serif;">Create Discount Code</h3>
+          <form id="adminPromoForm" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <label style="display: block; font-size: 0.85em; margin-bottom: 5px;">Promo Code (e.g. SUMMER20)</label>
+              <input type="text" id="newPromoCode" required style="width: 100%; padding: 10px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; text-transform: uppercase;">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <label style="display: block; font-size: 0.85em; margin-bottom: 5px;">Discount Percentage (%)</label>
+              <input type="number" id="newPromoDiscount" required min="1" max="100" style="width: 100%; padding: 10px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px;">
+            </div>
+            <button type="submit" style="padding: 10px 20px; height: 42px; background: transparent; color: var(--accent); border: 2px solid var(--accent); border-radius: 4px; font-weight: bold; cursor: pointer;">Add Code</button>
+          </form>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Discount (%)</th>
+                <th>Created</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-promo-list">
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 20px;">Loading promos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: MANAGE REVIEWS -->
       <div class="content-card" id="reviews-card" style="display: none;">
         <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.3rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; margin-bottom: 20px; text-transform: uppercase;">Telemetry Feedback Moderation</h2>
         

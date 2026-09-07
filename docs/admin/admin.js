@@ -12,6 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (adminLoginForm) {
         adminLoginForm.addEventListener("submit", handleAdminLogin);
     }
+
+    // 🚀 NEW: Hook up the Promo Code Form
+    const promoForm = document.getElementById("adminPromoForm");
+    if (promoForm) {
+        promoForm.addEventListener("submit", createPromoCode);
+    }
 });
 
 // ==========================================
@@ -48,6 +54,7 @@ async function verifyAdminAndLoad() {
         loadAdminStats();
         loadInventory();
         loadAdminReviews();
+        loadPromoCodes(); // 🚀 Load Promos
 
     } catch (err) {
         if (loginGate) loginGate.style.display = "flex";
@@ -84,6 +91,7 @@ function setupAdminTabs() {
     const menuItems = document.querySelectorAll(".sidebar-menu .menu-item:not(.logout)");
     const ordersCard = document.getElementById("orders-card");
     const inventoryCard = document.getElementById("inventory-card");
+    const promosCard = document.getElementById("promos-card"); // 🚀 Get Promo Card
     const reviewsCard = document.getElementById("reviews-card");
 
     menuItems.forEach(item => {
@@ -95,6 +103,7 @@ function setupAdminTabs() {
 
             if (ordersCard) ordersCard.style.display = "none";
             if (inventoryCard) inventoryCard.style.display = "none";
+            if (promosCard) promosCard.style.display = "none";
             if (reviewsCard) reviewsCard.style.display = "none";
 
             const target = item.getAttribute("href");
@@ -102,12 +111,89 @@ function setupAdminTabs() {
                 ordersCard.style.display = "block";
             } else if (target === "#inventory" && inventoryCard) {
                 inventoryCard.style.display = "block";
+            } else if (target === "#promos" && promosCard) {
+                promosCard.style.display = "block";
+                loadPromoCodes(); // 🚀 Reload promos when tab is opened
             } else if (target === "#reviews" && reviewsCard) {
                 reviewsCard.style.display = "block";
                 loadAdminReviews();
             }
         });
     });
+}
+
+// ==========================================
+// 🚀 PROMO CODES LOGIC
+// ==========================================
+async function loadPromoCodes() {
+    const tableBody = document.getElementById("admin-promo-list");
+    if (!tableBody) return;
+
+    try {
+        const response = await fetch('/api/admin/promos');
+        const promos = await response.json();
+        tableBody.innerHTML = "";
+
+        if (promos.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">No promo codes exist yet.</td></tr>`;
+            return;
+        }
+
+        promos.forEach(promo => {
+            const date = new Date(promo.createdAt).toLocaleDateString();
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td style="font-weight: bold; color: var(--accent); font-family: 'Syncopate', sans-serif;">${promo.code}</td>
+                <td><strong style="color: var(--text-main);">${promo.discountPercent}%</strong></td>
+                <td>${date}</td>
+                <td style="text-align: right;">
+                    <button onclick="deletePromoCode(${promo.id}, '${promo.code}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    } catch (err) {
+        tableBody.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Failed to load promos.</td></tr>`;
+    }
+}
+
+async function createPromoCode(e) {
+    e.preventDefault();
+    const code = document.getElementById("newPromoCode").value;
+    const discountPercent = document.getElementById("newPromoDiscount").value;
+
+    try {
+        const res = await fetch('/api/admin/promos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, discountPercent })
+        });
+
+        if (res.ok) {
+            document.getElementById("adminPromoForm").reset();
+            loadPromoCodes();
+        } else {
+            const data = await res.json();
+            alert(data.error || "Failed to create promo code.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
+}
+
+async function deletePromoCode(id, codeString) {
+    if (!confirm(`Are you sure you want to delete promo code ${codeString}?`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/promos/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadPromoCodes();
+        } else {
+            alert("Failed to delete promo code.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
 }
 
 // ==========================================
@@ -236,11 +322,14 @@ async function loadInventory() {
         products.sort((a, b) => a.id - b.id);
 
         products.forEach(product => {
+            // 🚀 MODIFIED: Securely handle Cloudinary URLs vs Legacy Local files
             let imgSrc = product.image ? product.image.replace(/^\//, "") : "images/default.jpg";
-            if (!imgSrc.startsWith("images/")) imgSrc = "images/" + imgSrc.split('/').pop();
-
-            // Absolute path
-            imgSrc = '/' + imgSrc;
+            if (!imgSrc.startsWith("http") && !imgSrc.startsWith("images/")) {
+                imgSrc = "images/" + imgSrc.split('/').pop();
+            }
+            if (!imgSrc.startsWith("http")) {
+                imgSrc = '/' + imgSrc;
+            }
 
             let badges = "";
             if (product.isFeatured) badges += `<span style="background: rgba(142, 68, 173, 0.2); color: #af7ac5; border: 1px solid #af7ac5; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-right: 4px; font-weight: bold;">Featured</span>`;

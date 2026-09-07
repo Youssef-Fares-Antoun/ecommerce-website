@@ -141,9 +141,9 @@ function displayCart() {
     total += itemTotal;
 
     let imgSrc = item.image.replace(/^\//, "");
-    if (!imgSrc.startsWith("images/")) {
-        imgSrc = "images/" + imgSrc.split('/').pop();
-    }
+if (!imgSrc.startsWith("http") && !imgSrc.startsWith("images/")) {
+    imgSrc = "images/" + imgSrc.split('/').pop();
+}
 
     const div = document.createElement("div");
     div.classList.add("cart-item");
@@ -191,8 +191,44 @@ function proceedToCheckout() {
 }
 
 // =====================
-// 3. CHECKOUT PAGE LOGIC
+// 3. CHECKOUT PAGE LOGIC & PROMO ENGINE
 // =====================
+
+let appliedDiscountPercent = 0;
+let appliedPromoString = null;
+
+// 🚀 NEW: Promo Code Validator
+window.applyPromoCode = async function() {
+    const input = document.getElementById("promoCodeInput");
+    const msg = document.getElementById("promoMessage");
+    const code = input.value.trim();
+
+    if (!code) return;
+
+    try {
+        const res = await fetch('/api/promo/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            appliedDiscountPercent = data.discountPercent;
+            appliedPromoString = data.code;
+            msg.style.color = "var(--accent)";
+            msg.textContent = `✔ ${data.discountPercent}% discount applied successfully!`;
+            input.disabled = true;
+            displayCheckoutSummary(); // Recalculate total visually
+        } else {
+            msg.style.color = "#e74c3c";
+            msg.textContent = data.message || "Invalid code.";
+        }
+    } catch (err) {
+        msg.style.color = "#e74c3c";
+        msg.textContent = "Network error validating code.";
+    }
+};
 
 function displayCheckoutSummary() {
   const orderSummaryContainer = document.getElementById("order-items"); 
@@ -231,6 +267,21 @@ function displayCheckoutSummary() {
     `;
     orderSummaryContainer.appendChild(itemDiv);
   });
+
+  // 🚀 Apply active percentage reduction to visual display
+  if (appliedDiscountPercent > 0) {
+    const discountAmount = (total * appliedDiscountPercent) / 100;
+    total = total - discountAmount;
+    
+    const discountDiv = document.createElement("div");
+    discountDiv.style.display = "flex";
+    discountDiv.style.justifyContent = "space-between";
+    discountDiv.style.padding = "10px 0";
+    discountDiv.style.color = "var(--accent)";
+    discountDiv.style.fontSize = "14px";
+    discountDiv.innerHTML = `<span>Discount (${appliedDiscountPercent}%)</span><span>-LE ${discountAmount.toFixed(2)}</span>`;
+    orderSummaryContainer.appendChild(discountDiv);
+  }
 
   orderTotalDisplay.textContent = total.toFixed(2);
 }
@@ -316,11 +367,9 @@ async function handlePlaceOrder(e) {
 
   const cart = getCart();
   
-  // 🚀 CRITICAL FIX: Extract the payment value from the form
   const paymentSelect = document.getElementById("payment");
   const selectedPayment = paymentSelect ? paymentSelect.value : "card";
   
-  // Provide visual feedback
   const submitBtn = document.querySelector(".checkout-btn");
   const originalBtnText = submitBtn ? submitBtn.innerText : "PLACE YOUR ORDER";
   if (submitBtn) {
@@ -334,14 +383,14 @@ async function handlePlaceOrder(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
           cart: cart,
-          payment: selectedPayment // 🚀 Pass exact choice ('cod' or 'card') to the backend
+          payment: selectedPayment,
+          promoCode: appliedPromoString // 🚀 Passes validated promo code to the backend
       })
     });
     
     const data = await response.json();
     
     if (data.url) {
-      // 🚀 Clear cart immediately for Cash On Delivery (since Stripe redirects bypass this)
       if (selectedPayment === 'cod') {
           localStorage.removeItem('cart');
       }

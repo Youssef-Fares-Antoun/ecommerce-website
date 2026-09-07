@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const multer = require('multer'); 
 const nodemailer = require('nodemailer'); 
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,12 +27,10 @@ const transporter = nodemailer.createTransport({
 app.use(express.json()); 
 app.use(cookieParser()); 
 
-// 🚀 EXPLICIT ADMIN ROUTING (Must be placed before express.static)
 app.get(['/admin', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'docs', 'admin', 'admin.html'));
 });
 
-// 🚀 SERVE STATIC FILES & ISOLATED ADMIN STATIC PATH
 app.use(express.static(path.join(__dirname, 'docs')));
 app.use('/admin', express.static(path.join(__dirname, 'docs', 'admin')));
 
@@ -38,25 +38,35 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'docs', 'home.html'));
 });
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'docs', 'images')); 
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'upload-' + uniqueSuffix + path.extname(file.originalname)); 
+// 🚀 ZONE 2: CLOUDINARY MEDIA STORAGE
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: { 
+      folder: 'cartees-showroom', 
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp'] 
   }
 });
 const upload = multer({ storage: storage });
 
-// --- ZONE 2: DATABASE CONNECTION ---
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-  host: 'localhost',
+// 🚀 ZONE 3: NEON CLOUD DATABASE CONNECTION
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
   logging: false 
 });
 
-// --- ZONE 3: DATA MODEL ---
+// --- ZONE 4: DATA MODEL ---
 const Product = sequelize.define('Product', {
   name: { type: DataTypes.STRING, allowNull: false }, 
   price: { type: DataTypes.FLOAT, allowNull: false },
@@ -127,6 +137,12 @@ Order.belongsTo(User);
 Order.hasMany(OrderItem);
 OrderItem.belongsTo(Order);
 
+const PromoCode = sequelize.define('PromoCode', {
+  code: { type: DataTypes.STRING, allowNull: false, unique: true },
+  discountPercent: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 10 },
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true }
+});
+
 async function initDb() {
   try {
     await sequelize.sync({ alter: true }); 
@@ -166,7 +182,9 @@ app.post('/api/products', verifyAdmin, upload.single('imageFile'), async (req, r
     const productData = { ...req.body };
     productData.isFeatured = productData.isFeatured === 'true';
     productData.isBestSeller = productData.isBestSeller === 'true';
-    if (req.file) productData.image = 'images/' + req.file.filename;
+    
+    // 🚀 SAVES SECURE CLOUDINARY URL INSTEAD OF LOCAL FILENAME
+    if (req.file) productData.image = req.file.path; 
     
     const newProduct = await Product.create(productData);
     res.status(201).json({ message: "Success! New car added.", product: newProduct });
@@ -179,7 +197,9 @@ app.put('/api/products/:id', verifyAdmin, upload.single('imageFile'), async (req
     const productData = { ...req.body };
     productData.isFeatured = productData.isFeatured === 'true';
     productData.isBestSeller = productData.isBestSeller === 'true';
-    if (req.file) productData.image = 'images/' + req.file.filename;
+    
+    // 🚀 SAVES SECURE CLOUDINARY URL INSTEAD OF LOCAL FILENAME
+    if (req.file) productData.image = req.file.path; 
     
     const [updated] = await Product.update(productData, { where: { id: id } });
     if (updated) {
@@ -322,7 +342,6 @@ app.get('/api/orders/me', async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to fetch order history." }); }
 });
 
-// 🚀 CUSTOMER ORDER CANCELLATION ENDPOINT
 app.put('/api/orders/me/:id/cancel', async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -379,9 +398,32 @@ app.put('/api/addresses/:id/default', async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to set default address" }); }
 });
 
+app.post('/api/promo/validate', async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ message: "Please enter a code." });
+
+    const promo = await PromoCode.findOne({ 
+      where: { code: code.trim().toUpperCase(), isActive: true } 
+    });
+
+    if (!promo) {
+      return res.status(404).json({ message: "Invalid or expired promo code." });
+    }
+
+    res.json({ 
+      message: "Promo applied successfully!", 
+      discountPercent: promo.discountPercent,
+      code: promo.code 
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to validate promo code." });
+  }
+});
+
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
-    const { cart, payment } = req.body; 
+    const { cart, payment, promoCode } = req.body; 
     const token = req.cookies.token;
     let userId = null;
     let user = null;
@@ -393,10 +435,23 @@ app.post('/api/create-checkout-session', async (req, res) => {
       } catch (err) { }
     }
 
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    if (promoCode) {
+      const promo = await PromoCode.findOne({ where: { code: promoCode.toUpperCase(), isActive: true } });
+      if (promo) {
+        const discountAmount = (total * promo.discountPercent) / 100;
+        total = total - discountAmount;
+      }
+    }
 
     if (userId && user) {
-      const newOrder = await Order.create({ totalAmount: total, status: 'Processing', paymentMethod: payment || 'card', UserId: userId });
+      const newOrder = await Order.create({ 
+          totalAmount: total, 
+          status: 'Processing', 
+          paymentMethod: payment || 'card', 
+          UserId: userId 
+      });
       
       let emailItemsHtml = ''; 
       let adminItemsHtml = '';
@@ -447,6 +502,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
                   <strong>Grand Total: <span style="color: #145214;">LE ${total.toFixed(2)}</span></strong>
                 </div>
                 <p style="color: #888; font-size: 14px; text-align: right; margin-top: 5px; text-transform: uppercase;">Payment: ${payment || 'Card'}</p>
+                ${promoCode ? `<p style="color: #e74c3c; font-size: 14px; text-align: right; margin-top: 5px; font-weight: bold;">Promo Code Applied: ${promoCode.toUpperCase()}</p>` : ''}
                 
                 <p style="color: #555; font-size: 16px; margin-top: 40px;">See you on the track,<br><strong style="color: #111;">The CarTees Team</strong></p>
               </div>
@@ -465,6 +521,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
               <p><strong>Customer:</strong> ${user.name} (${user.email})</p>
               <p><strong>Total:</strong> LE ${total.toFixed(2)}</p>
               <p><strong>Payment Method:</strong> <span style="text-transform: uppercase;">${payment || 'Card'}</span></p>
+              ${promoCode ? `<p><strong>Promo Code Used:</strong> <span style="color: #e74c3c;">${promoCode.toUpperCase()}</span></p>` : ''}
               <h3 style="margin-bottom: 5px;">Items Ordered:</h3>
               <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 4px; border: 1px solid #ddd;">
                 ${adminItemsHtml}
@@ -479,14 +536,24 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     }
 
-    // 🚀 INTERCEPT CASH ON DELIVERY: Bypass Stripe entirely and return profile URL
     if (payment === 'cod') { 
         return res.json({ url: '/profile.html#orders' }); 
     }
     
-    // 🚀 STRIPE FLOW: Only executes if payment is 'card'
+    let currentDiscountMultiplier = 1;
+    if (promoCode) {
+        const p = await PromoCode.findOne({ where: { code: promoCode.toUpperCase(), isActive: true } });
+        if (p) {
+            currentDiscountMultiplier = 1 - (p.discountPercent / 100);
+        }
+    }
+
     const lineItems = cart.map(item => ({
-      price_data: { currency: 'egp', product_data: { name: `${item.name} (Size: ${item.size})` }, unit_amount: Math.round(item.price * 100) },
+      price_data: { 
+          currency: 'egp', 
+          product_data: { name: `${item.name} (Size: ${item.size})` }, 
+          unit_amount: Math.round((item.price * currentDiscountMultiplier) * 100) 
+      },
       quantity: item.quantity,
     }));
     
@@ -504,9 +571,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
-// ==========================================
-// 🚀 ZONE 6: ADMIN SUPERPOWERS & STATS
-// ==========================================
+// --- ZONE 6: ADMIN SUPERPOWERS & STATS ---
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
     try {
         const totalOrders = await Order.count();
@@ -537,6 +602,30 @@ app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
         await order.save();
         res.json({ message: "Order status updated successfully!", order });
     } catch (err) { res.status(500).json({ error: "Failed to update order status" }); }
+});
+
+app.get('/api/admin/promos', verifyAdmin, async (req, res) => {
+    try {
+        res.json(await PromoCode.findAll({ order: [['createdAt', 'DESC']] }));
+    } catch (err) { res.status(500).json({ error: "Failed to fetch promo codes" }); }
+});
+
+app.post('/api/admin/promos', verifyAdmin, async (req, res) => {
+    try {
+        const { code, discountPercent } = req.body;
+        const newPromo = await PromoCode.create({ 
+            code: code.trim().toUpperCase(), 
+            discountPercent: parseFloat(discountPercent) 
+        });
+        res.status(201).json(newPromo);
+    } catch (err) { res.status(400).json({ error: "Failed to create promo code. It might already exist." }); }
+});
+
+app.delete('/api/admin/promos/:id', verifyAdmin, async (req, res) => {
+    try {
+        await PromoCode.destroy({ where: { id: req.params.id } });
+        res.json({ message: "Promo code deleted" });
+    } catch (err) { res.status(500).json({ error: "Failed to delete promo code" }); }
 });
 
 // --- ZONE 7: START THE ENGINE ---

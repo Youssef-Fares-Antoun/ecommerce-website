@@ -44,7 +44,7 @@
     </div>
   </header>
 
-  <!-- MAIN CHECKOUT AREA (Added top margin to clear the fixed glass-nav) -->
+  <!-- MAIN CHECKOUT AREA -->
   <main class="checkout-container" style="margin-top: 120px;">
     
     <!-- LEFT SIDE: FORM -->
@@ -118,7 +118,7 @@
           <!-- Updated Payment Select Dropdown -->
           <select id="payment" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); font-family: 'Rajdhani', sans-serif; padding: 12px; width: 100%;">
             <option value="" disabled selected>-- Select Payment Method --</option>
-            <option value="card">Credit / Debit Card</option>
+            <option value="card">Credit / Debit Card (Stripe)</option>
             <option value="cod">Cash on Delivery</option>
           </select>
         </div>
@@ -133,6 +133,16 @@
       <div id="order-items" class="order-items-wrapper">
         <!-- JS injects cart items here -->
       </div>
+      
+      <!-- 🚀 NEW PROMO CODE BOX -->
+      <div style="margin-bottom: 20px; margin-top: 20px;">
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="promoCodeInput" placeholder="Promo Code (e.g. GT3BOOST)" style="flex: 1; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; text-transform: uppercase;">
+          <button type="button" onclick="applyPromoCode()" style="padding: 10px 15px; background: transparent; color: var(--accent); border: 1px solid var(--accent); font-family: 'Syncopate', sans-serif; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.3s;" onmouseover="this.style.background='var(--accent)'; this.style.color='var(--bg-deep)';" onmouseout="this.style.background='transparent'; this.style.color='var(--accent)';">Apply</button>
+        </div>
+        <small id="promoMessage" style="display: block; margin-top: 5px; font-size: 0.85em; font-weight: bold;"></small>
+      </div>
+
       <div class="order-total-row" style="display: flex; justify-content: space-between; font-weight: 700; font-family: 'Syncopate', sans-serif; font-size: 1.2em; border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-top: 20px; color: var(--text-main);">
         <span>Grand Total</span>
         <span style="color: var(--accent);">LE <span id="order-total">0.00</span></span>
