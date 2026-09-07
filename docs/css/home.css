@@ -276,7 +276,8 @@ h2::after {
 
 /* ===== REVIEWS ===== */
 .reviews {
-  background: #090909;
+  background: var(--bg-deep); /* 🚀 Fixed dynamic variable */
+  color: var(--text-main); /* 🚀 Ensure text color updates */
   border-top: 1px solid var(--border-subtle);
   padding: 80px 20px;
   text-align: center;
@@ -336,11 +337,14 @@ h2::after {
   width: 300px;
   background: transparent;
   border: 1px solid var(--border-subtle);
-  color: white;
+  color: var(--text-main); /* 🚀 Fixed input text color */
   margin-right: 10px;
 }
 
-footer { background: #000; border-top: 1px solid #111; }
+footer { 
+  background: var(--bg-deep); /* 🚀 Fixed footer background */
+  border-top: 1px solid var(--border-subtle); /* 🚀 Fixed footer border */
+}
 footer a { color: var(--text-muted); }
 footer a:hover { color: var(--accent); }
 

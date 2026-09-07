@@ -910,3 +910,30 @@ button.size-btn.selected {
     height: 80px;
   }
 }
+
+/* =========================================
+   LIGHT MODE OVERRIDES
+========================================= */
+body.light-mode {
+  --bg-deep: #ffffff;
+  --bg-card: #f9f9f9;
+  --bg-hover: #f1f1f1;
+  --text-main: #111111;
+  --text-muted: #666666;
+  --border-subtle: #dddddd;
+  --accent: #145214; /* Using your dark green for better contrast on white */
+}
+
+/* Light Mode Navbar Glass */
+body.light-mode .navbar.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Make brand logos black in light mode */
+body.light-mode .brand-card img {
+  filter: grayscale(100%) brightness(0%); 
+}
+body.light-mode .brand-card:hover img {
+  filter: grayscale(0%) brightness(100%);
+}

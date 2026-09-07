@@ -430,6 +430,43 @@ function initSearchFilter() {
 }
 
 // =====================
+// 4.1 THEME TOGGLE LOGIC
+// =====================
+function initThemeToggle() {
+  const themeToggleBtns = document.querySelectorAll('#themeToggle');
+  const currentTheme = localStorage.getItem('theme');
+
+  // Apply the saved theme on load
+  if (currentTheme === 'light') {
+    document.body.classList.add('light-mode');
+    updateToggleIcons('🌒'); 
+  } else {
+    updateToggleIcons('🌗');
+  }
+
+  // Add click listener to all theme toggle buttons
+  themeToggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      
+      if (document.body.classList.contains('light-mode')) {
+        localStorage.setItem('theme', 'light');
+        updateToggleIcons('🌒');
+      } else {
+        localStorage.setItem('theme', 'dark');
+        updateToggleIcons('🌗');
+      }
+    });
+  });
+
+  function updateToggleIcons(icon) {
+    themeToggleBtns.forEach(btn => {
+      btn.textContent = icon;
+    });
+  }
+}
+
+// =====================
 // 4.5 COMPONENT INJECTION
 // =====================
 function injectAuthModal() {
@@ -612,23 +649,23 @@ async function initProfile() {
               div.style.padding = "20px";
               div.style.borderStyle = "solid";
               div.style.borderWidth = addr.isDefault ? "2px" : "1px";
-              div.style.borderColor = addr.isDefault ? "#145214" : "#e5e7eb";
+              div.style.borderColor = addr.isDefault ? "var(--accent)" : "var(--border-subtle)";
               div.style.borderRadius = "8px";
-              div.style.background = addr.isDefault ? "#f4fff4" : "#ffffff";
+              div.style.background = addr.isDefault ? "var(--bg-hover)" : "var(--bg-deep)";
               div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)";
               
               const badgeOrButton = addr.isDefault 
-                ? '<span style="background: #e8f5e9; color:#145214; padding: 4px 10px; border-radius: 4px; font-size:0.75em; font-weight:bold; border: 1px solid #c8e6c9; white-space: nowrap; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;">Default</span>'
+                ? '<span style="background: rgba(204, 255, 0, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 4px; font-size:0.75em; font-weight:bold; border: 1px solid var(--accent); white-space: nowrap; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;">Default</span>'
                 : `<button type="button" onclick="setDefaultAddress(${addr.id})" style="background: transparent !important; color: #007bff !important; border: none !important; padding: 0 !important; font-size: 0.9em; font-weight: bold; cursor: pointer; width: auto !important; min-width: 0 !important; white-space: nowrap; flex-shrink: 0; text-decoration: none;" onmouseover="this.style.textDecoration='underline'; this.style.color='#0056b3';" onmouseout="this.style.textDecoration='none'; this.style.color='#007bff';">Set as Default</button>`;
 
               div.innerHTML = `
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 15px;">
-                      <strong style="font-size:1.1em; color: #222; flex-grow: 1; word-break: break-word;">${addr.firstName} ${addr.lastName}</strong>
+                      <strong style="font-size:1.1em; color: var(--text-main); flex-grow: 1; word-break: break-word;">${addr.firstName} ${addr.lastName}</strong>
                       ${badgeOrButton}
                   </div>
-                  <span style="display:block; color:#444; margin-bottom: 4px;">${addr.street}</span>
-                  <span style="display:block; color:#444; margin-bottom: 4px;">${addr.city}, ${addr.governorate}</span>
-                  <span style="display:block; color:#444; margin-top: 8px;">Phone: ${addr.phone}</span>
+                  <span style="display:block; color: var(--text-muted); margin-bottom: 4px;">${addr.street}</span>
+                  <span style="display:block; color: var(--text-muted); margin-bottom: 4px;">${addr.city}, ${addr.governorate}</span>
+                  <span style="display:block; color: var(--text-muted); margin-top: 8px;">Phone: ${addr.phone}</span>
               `;
               addrList.appendChild(div);
           });
@@ -782,20 +819,20 @@ async function loadOrderHistory() {
       const date = new Date(order.createdAt).toLocaleDateString();
       const orderDiv = document.createElement("div");
       
-      orderDiv.style.border = "1px solid #ccc";
+      orderDiv.style.border = "1px solid var(--border-subtle)";
       orderDiv.style.borderRadius = "8px";
       orderDiv.style.padding = "15px";
       orderDiv.style.marginBottom = "15px";
-      orderDiv.style.background = "#fafafa";
+      orderDiv.style.background = "var(--bg-hover)";
 
       orderDiv.innerHTML = `
-        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
-          <strong>Order #${order.id}</strong>
-          <span style="color: #666;">${date}</span>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 10px;">
+          <strong style="color: var(--text-main);">Order #${order.id}</strong>
+          <span style="color: var(--text-muted);">${date}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <p style="margin: 0; font-size: 14px;">Status: <strong style="color: #145214;">${order.status || 'Processing'}</strong></p>
-          <p style="margin: 0; font-weight: bold;">Total: LE ${parseFloat(order.totalAmount || order.total).toFixed(2)}</p>
+          <p style="margin: 0; font-size: 14px; color: var(--text-main);">Status: <strong style="color: var(--accent);">${order.status || 'Processing'}</strong></p>
+          <p style="margin: 0; font-weight: bold; color: var(--text-main);">Total: LE ${parseFloat(order.totalAmount || order.total).toFixed(2)}</p>
         </div>
       `;
       orderList.appendChild(orderDiv);
@@ -974,7 +1011,7 @@ async function loadProductReviews(productId) {
     reviewGrid.innerHTML = ""; 
 
     if (reviews.length === 0) {
-      reviewGrid.innerHTML = "<p style='color: #fff;'>No reviews yet. Be the first to review this tee!</p>";
+      reviewGrid.innerHTML = "<p style='color: var(--text-muted);'>No reviews yet. Be the first to review this tee!</p>";
       return;
     }
 
@@ -1009,11 +1046,14 @@ async function loadProductReviews(productId) {
         const showAllBtn = document.createElement("button");
         showAllBtn.innerText = `Show All ${reviews.length} Reviews`;
         showAllBtn.style.padding = "10px 20px";
-        showAllBtn.style.background = "#145214"; 
-        showAllBtn.style.color = "#fff";
-        showAllBtn.style.border = "none";
+        showAllBtn.style.background = "transparent"; 
+        showAllBtn.style.color = "var(--text-main)";
+        showAllBtn.style.border = "2px solid var(--border-subtle)";
         showAllBtn.style.cursor = "pointer";
         showAllBtn.style.borderRadius = "4px";
+        showAllBtn.style.fontFamily = "'Syncopate', sans-serif";
+        showAllBtn.style.textTransform = "uppercase";
+        showAllBtn.style.fontWeight = "700";
         
         showAllBtn.onclick = () => {
             const remainingReviews = reviews.slice(3);
@@ -1063,6 +1103,7 @@ function initProductReviewForm(productId) {
 // =====================
 
 document.addEventListener("DOMContentLoaded", () => {
+  initThemeToggle(); // Initializes the Dark/Light Mode Engine
   displayCart(); 
   displayCheckoutSummary(); 
   autofillCheckout(); 

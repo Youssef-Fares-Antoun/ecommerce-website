@@ -8,6 +8,11 @@
   <meta name="author" content="CarTees" />
   <title>Shop | CarTees</title>
 
+  <!-- Telemetry Fonts: Syncopate (Headers) & Rajdhani (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/shop.css" />
 
@@ -21,32 +26,38 @@
       position: absolute;
       top: 8px;
       right: 8px;
-      background: black;
-      color: white;
+      background: var(--text-main);
+      color: var(--bg-deep);
       font-size: 0.8em;
-      font-weight: bold;
-      padding: 4px 8px;
+      font-family: 'Syncopate', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 6px 10px;
       border-radius: 4px;
     }
 
     /* Price styles */
     .price {
       margin-top: 8px;
-      font-size: 1em;
+      font-size: 1.1em;
+      font-family: 'Syncopate', sans-serif;
     }
     .price .old-price {
       text-decoration: line-through;
-      color: #999;
+      color: var(--text-muted);
       margin-right: 6px;
     }
     .price .new-price {
-      color: green;
+      color: var(--accent);
       font-weight: bold;
       margin-right: 6px;
     }
     .price .save-price {
-      color: red;
-      font-size: 0.9em;
+      color: #e74c3c;
+      font-size: 0.8em;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
     }
 
     /* Ensure card is positioned relative for badge */
@@ -57,7 +68,7 @@
 </head>
 <body>
 
-  <header class="navbar">
+  <header class="navbar glass-nav">
     <div class="logo"><a href="index.html">Car<span>Tees</span></a></div>
 
     <nav class="nav-links">
@@ -69,6 +80,9 @@
     </nav>
 
     <div class="icons">
+      <!-- THEME TOGGLE BUTTON -->
+      <button id="themeToggle" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 15px; color: var(--text-main); transition: 0.3s;">🌗</button>
+
       <div class="search-wrapper">
         <div class="search-bar" id="searchBar">
           <input 
@@ -80,12 +94,12 @@
           />
         </div>
           
-        <a href="javascript:void(0)" id="searchToggle" class="search-icon" aria-label="Toggle Search">🔍</a>
+        <a href="javascript:void(0)" id="searchToggle" class="search-icon" aria-label="Toggle Search" style="color: var(--text-main);">🔍</a>
       </div>
       
-      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
       
-      <div class="cart-icon" onclick="window.location.href='cart.html'">
+      <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: var(--text-main);">
         🛒
         <span id="cart-indicator"></span>
       </div>
@@ -97,6 +111,7 @@
       </div>
     </div>
   </header>
+  
   <section class="hero">
     <div class="hero-text">
       <h1>Discover Our Exclusive Collection</h1>
@@ -133,7 +148,7 @@
       <div class="sortbar">
         <!-- Search bar integrated here -->
         <p><strong>Showing All Products</strong></p>
-        <select id="sortSelect" aria-label="Sort Products" onchange="sortProducts()">
+        <select id="sortSelect" aria-label="Sort Products" onchange="sortProducts()" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px; font-family: 'Rajdhani', sans-serif;">
           <option value="default">Sort by</option>
           <option value="low-high">Price: Low to High</option>
           <option value="high-low">Price: High to Low</option>
@@ -144,14 +159,14 @@
 
       <div class="grid" id="productGrid">
         <!-- JavaScript will inject cards here from the database -->
-        <p>Loading the elite fleet...</p> 
+        <p style="color: var(--text-muted);">Loading the elite fleet...</p> 
       </div>
     </section>
   </main>
 
   <section class="newsletter">
     <h3>Join the CarTees Club</h3>
-    <p>Get exclusive offers, discounts, and early access to new drops.</p>
+    <p style="color: var(--text-muted);">Get exclusive offers, discounts, and early access to new drops.</p>
     <form id="newsletterForm" onsubmit="event.preventDefault(); alert('✅ You’re subscribed!');">
       <input type="email" placeholder="Enter your email" required />
       <button type="submit" class="btn-primary">Subscribe</button>
@@ -161,10 +176,10 @@
   <!-- SUCCESS MODAL: Shows when an item is added -->
 <div id="cartModal" class="cart-modal">
   <div class="cart-modal-content">
-    <p id="cartModalMessage"></p>
+    <p id="cartModalMessage" style="color: var(--text-main); font-family: 'Syncopate', sans-serif; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;"></p>
     <div class="cart-modal-buttons">
-      <button onclick="window.location.href='cart.html'">View Cart</button>
-      <button onclick="closeModal()">Continue Shopping</button>
+      <button id="viewCartBtn" onclick="window.location.href='cart.html'">View Cart</button>
+      <button id="continueShoppingBtn" onclick="closeModal()">Continue Shopping</button>
     </div>
   </div>
 </div>

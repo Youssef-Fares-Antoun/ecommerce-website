@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Garage | CarTees</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Telemetry Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Absolute paths matching the separated Express directory structure -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/profile.css"> 
+  
+  <script src="/admin/admin.js" defer></script>
+
+  <style>
+    /* Admin specific overrides matching the bento dark/light design system */
+    body {
+      background: var(--bg-deep);
+      font-family: 'Rajdhani', sans-serif;
+      color: var(--text-main);
+    }
+    .admin-container {
+      max-width: 1400px;
+      margin: 120px auto 40px auto;
+      display: flex;
+      gap: 30px;
+      padding: 0 20px;
+      align-items: flex-start;
+    }
+    .admin-sidebar {
+      width: 280px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 25px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .admin-content {
+      flex: 1;
+    }
+    .content-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat-box-admin {
+      flex: 1;
+      min-width: 220px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      padding: 25px;
+      border-radius: 4px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-left: 5px solid var(--accent);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: var(--text-main);
+    }
+    th {
+      font-family: 'Syncopate', sans-serif;
+      font-size: 0.8em;
+      text-transform: uppercase;
+      background: var(--bg-hover) !important;
+      color: var(--text-main) !important;
+      padding: 15px;
+    }
+    td {
+      padding: 15px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar glass-nav">
+    <div class="logo">
+      <a href="/index.html">Car<span>Tees</span></a> 
+      <span style="font-size: 0.55em; font-family: 'Syncopate', sans-serif; color: var(--accent); margin-left: 10px; border: 1px solid var(--accent); padding: 2px 6px; border-radius: 4px;">Paddock Admin</span>
+    </div>
+    
+    <nav class="nav-links">
+      <a href="/index.html">View Storefront</a>
+    </nav>
+
+    <div class="icons">
+      <button id="themeToggle" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 15px; color: var(--text-main); transition: 0.3s;">🌗</button>
+      <a href="/profile.html" class="user-icon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- ADMIN LOGIN GATE (Hidden if authenticated) -->
+  <!-- ========================================== -->
+  <div id="adminLoginGate" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-deep); z-index: 2000; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 40px; border-radius: 4px; width: 100%; max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+      <h2 style="font-family: 'Syncopate', sans-serif; font-size: 1.4rem; color: var(--text-main); margin-bottom: 10px; text-transform: uppercase;">Restricted Garage</h2>
+      <p style="color: var(--text-muted); margin-bottom: 25px;">Please log in with Paddock Administrator credentials.</p>
+      
+      <form id="adminLoginForm">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-family: 'Syncopate', sans-serif; font-size: 0.8em; margin-bottom: 8px; color: var(--text-main);">Admin Email</label>
+          <input type="email" id="adminEmailInput" required style="width: 100%; padding: 14px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 25px;">
+          <label style="display: block; font-family: 'Syncopate', sans-serif; font-size: 0.8em; margin-bottom: 8px; color: var(--text-main);">Password</label>
+          <input type="password" id="adminPasswordInput" required style="width: 100%; padding: 14px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; box-sizing: border-box;">
+        </div>
+        <button type="submit" style="width: 100%; padding: 15px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='var(--accent)'; this.style.color='var(--bg-deep)';" onmouseout="this.style.background='transparent'; this.style.color='var(--accent)';">Authenticate</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="admin-container" id="adminDashboardContent" style="display: none;">
+    
+    <!-- DARK ADMIN SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="user-info" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 20px; margin-bottom: 20px; text-align: center;">
+        <div class="profile-pic" style="background: var(--bg-hover); font-size: 32px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 10px auto; border: 2px solid var(--accent);">👑</div>
+        <h3 id="adminNameDisplay" style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1em; text-transform: uppercase;">Superuser</h3>
+        <p style="color: var(--text-muted); font-size: 0.9em;">Paddock Security Level 1</p>
+      </div>
+      
+      <nav class="sidebar-menu" style="display: flex; flex-direction: column; gap: 10px;">
+        <a href="#orders" class="menu-item active" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Orders</a>
+        <a href="#inventory" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Inventory</a>
+        <a href="#reviews" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Reviews</a>
+        <a href="javascript:void(0)" onclick="handleAdminLogout()" class="menu-item logout" style="padding: 12px; color: #e74c3c; text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; margin-top: 20px;">Logout</a>      
+      </nav>
+    </aside>
+
+    <section class="admin-content">
+      
+      <!-- ADMIN STATS BANNER -->
+      <div id="admin-stats-banner" style="display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+        <div class="stat-box-admin">
+          <h3 style="margin: 0; color: var(--text-muted); font-size: 0.85em; font-family: 'Syncopate', sans-serif; text-transform: uppercase;">Total Orders</h3>
+          <p id="stat-orders" style="margin: 10px 0 0 0; font-size: 2.2em; font-family: 'Syncopate', sans-serif; font-weight: bold; color: var(--text-main);">-</p>
+        </div>
+        
+        <div class="stat-box-admin" style="border-left-color: #f39c12;">
+          <h3 style="margin: 0; color: var(--text-muted); font-size: 0.85em; font-family: 'Syncopate', sans-serif; text-transform: uppercase;">Total Revenue</h3>
+          <p id="stat-revenue" style="margin: 10px 0 0 0; font-size: 2.2em; font-family: 'Syncopate', sans-serif; font-weight: bold; color: var(--text-main);">-</p>
+        </div>
+        
+        <div class="stat-box-admin" style="border-left-color: #3498db;">
+          <h3 style="margin: 0; color: var(--text-muted); font-size: 0.85em; font-family: 'Syncopate', sans-serif; text-transform: uppercase;">Best Selling Tee</h3>
+          <p id="stat-topseller" style="margin: 10px 0 0 0; font-size: 1.2em; font-family: 'Syncopate', sans-serif; font-weight: bold; color: var(--text-main); line-height: 1.3;">-</p>
+        </div>
+      </div>
+
+      <!-- TAB 1: MANAGE ORDERS -->
+      <div class="content-card" id="orders-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.3rem; margin: 0; text-transform: uppercase;">Incoming Fleet</h2>
+            
+            <div style="display: flex; gap: 15px;">
+                <select id="orderStatusFilter" onchange="filterOrders()" style="padding: 8px 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-weight: bold;">
+                    <option value="All">All Statuses</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <button onclick="exportOrdersCSV()" style="background: transparent; color: #3498db; border: 2px solid #3498db; padding: 8px 15px; border-radius: 4px; font-family: 'Syncopate', sans-serif; font-size: 0.8em; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#3498db';">
+                    💾 Export CSV
+                </button>
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total & Payment</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-order-list">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 20px;">Loading orders securely...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: MANAGE INVENTORY -->
+      <div class="content-card" id="inventory-card" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.3rem; margin: 0; text-transform: uppercase;">Garage Inventory</h2>
+            <button type="button" onclick="openProductModal()" style="background: transparent; color: var(--accent); border: 2px solid var(--accent); padding: 10px 20px; border-radius: 4px; font-family: 'Syncopate', sans-serif; font-size: 0.8em; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='var(--accent)'; this.style.color='var(--bg-deep)';" onmouseout="this.style.background='transparent'; this.style.color='var(--accent)';">+ Add New CarTee</button>
+        </div>
+        
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price (LE)</th>
+                <th>Category</th>
+                <th>Badges</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-inventory-list">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 20px;">Loading inventory...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: MANAGE REVIEWS -->
+      <div class="content-card" id="reviews-card" style="display: none;">
+        <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.3rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; margin-bottom: 20px; text-transform: uppercase;">Telemetry Feedback Moderation</h2>
+        
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Driver</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-review-list">
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 20px;">Loading telemetry feedback...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ADD / EDIT PRODUCT MODAL -->
+  <div id="productModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 30px; border-radius: 4px; width: 90%; max-width: 500px; position: relative;">
+      <span onclick="document.getElementById('productModal').style.display='none'" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</span>
+      
+      <h2 id="modalTitle" style="margin-bottom: 20px; font-family: 'Syncopate', sans-serif; font-size: 1.2rem; color: var(--text-main); text-transform: uppercase;">Add New Product</h2>
+      
+      <form id="productForm">
+        <input type="hidden" id="prodId">
+        
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 8px; font-family: 'Syncopate', sans-serif; font-size: 0.8em; color: var(--text-main);">Product Name</label>
+          <input type="text" id="prodName" required style="width: 100%; padding: 12px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; box-sizing: border-box;">
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+              <label style="display: block; margin-bottom: 8px; font-family: 'Syncopate', sans-serif; font-size: 0.8em; color: var(--text-main);">Price (LE)</label>
+              <input type="number" id="prodPrice" required min="1" step="0.01" style="width: 100%; padding: 12px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; box-sizing: border-box;">
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; margin-bottom: 8px; font-family: 'Syncopate', sans-serif; font-size: 0.8em; color: var(--text-main);">Category</label>
+              <input type="text" id="prodCategory" required placeholder="e.g., porsche" style="width: 100%; padding: 12px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; box-sizing: border-box;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-family: 'Syncopate', sans-serif; font-size: 0.8em; color: var(--text-main);">Upload Product Image</label>
+          <input type="file" id="prodImageFile" accept="image/*" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; box-sizing: border-box;">
+          <input type="hidden" id="existingImage">
+          <small id="currentImageText" style="display:none; color: var(--text-muted); margin-top: 5px;">Leave blank to keep the current image.</small>
+        </div>
+
+        <div style="display: flex; gap: 20px; margin-bottom: 25px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" id="prodFeatured" style="width: 18px; height: 18px;">
+                Is Featured?
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" id="prodBestSeller" style="width: 18px; height: 18px;">
+                Is Best Seller?
+            </label>
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='var(--accent)'; this.style.color='var(--bg-deep)';" onmouseout="this.style.background='transparent'; this.style.color='var(--accent)';">Save Product</button>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

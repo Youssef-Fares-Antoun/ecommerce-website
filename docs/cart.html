@@ -5,6 +5,11 @@
   <meta charset="UTF-8">
   <title>Shopping Cart | CarTees</title>
   
+  <!-- Telemetry Fonts: Syncopate (Headers) & Rajdhani (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/cart.css">
   
@@ -13,17 +18,18 @@
 </head>
 <body>
 
-  <div id="emptyCartModal" class="cart-modal" style="display: none;">
-    <div class="cart-modal-content">
-      <p style="font-size: 1.1rem; margin-bottom: 20px;">⚠️ Your cart is empty!<br>Please add items before checking out.</p>
+  <!-- EMPTY CART MODAL -->
+  <div id="emptyCartModal" class="cart-modal" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+    <div class="cart-modal-content" style="background: var(--bg-card); border: 1px solid var(--border-subtle); box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-radius: 4px;">
+      <p style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase;">⚠️ Your cart is empty!<br><br><span style="font-family: 'Rajdhani', sans-serif; font-size: 18px; color: var(--text-muted); text-transform: none;">Please add items before checking out.</span></p>
       <div class="cart-modal-buttons">
-        <button id="modalShopBtn" style="background: #145214; color: white;">Start Shopping</button>
-        <button id="modalCloseBtn" style="background: #ddd; color: #333;">Close</button>
+        <button id="modalShopBtn" onclick="window.location.href='shop.html'" style="background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer;">Start Shopping</button>
+        <button id="modalCloseBtn" onclick="document.getElementById('emptyCartModal').style.display='none'" style="background: transparent; border: 2px solid var(--text-main); color: var(--text-main); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer;">Close</button>
       </div>
     </div>
   </div>
 
-  <header class="navbar">
+  <header class="navbar glass-nav">
     <div class="logo"><a href="index.html">Car<span>Tees</span></a></div>
 
     <nav class="nav-links">
@@ -35,8 +41,11 @@
     </nav>
 
     <div class="icons">
-      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
-      <div class="cart-icon" onclick="window.location.href='cart.html'">
+      <!-- THEME TOGGLE BUTTON -->
+      <button id="themeToggle" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 15px; color: var(--text-main); transition: 0.3s;">🌗</button>
+
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: var(--text-main);">
         🛒
         <span id="cart-indicator"></span>
       </div>
@@ -48,17 +57,20 @@
     </div>
   </header>
   
-  <main style="display:block; max-width: 1000px; margin: auto;">
-    <h1>Your Cart</h1>
+  <!-- Added 120px top margin to push content below the new fixed glass-nav -->
+  <main style="display:block; max-width: 1000px; margin: 120px auto 40px auto; padding: 0 20px;">
+    <h1 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; text-transform: uppercase; margin-bottom: 30px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px;">Your Cart</h1>
+    
     <div id="cart-items">
-        </div>
+        <p style="color: var(--text-muted);">Loading cart items...</p>
+    </div>
 
-    <div class="cart-summary">
-      <h2>Total: <span id="cart-total">LE 0.00</span></h2>
+    <div class="cart-summary" style="background: var(--bg-hover); border: 1px solid var(--border-subtle); padding: 30px; border-radius: 4px;">
+      <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; margin-bottom: 20px;">Total: <span id="cart-total" style="color: var(--accent);">LE 0.00</span></h2>
       <div class="cart-actions">
-        <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
-        <button class="clear-btn" onclick="clearCart()">Clear Cart</button>
-        <button class="continue-btn" onclick="window.location.href='shop.html'">Continue Shopping</button>
+        <button class="checkout-btn" onclick="proceedToCheckout()" style="background: transparent; color: var(--accent); border: 2px solid var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer;">Proceed to Checkout</button>
+        <button class="clear-btn" onclick="clearCart()" style="background: transparent; color: #e74c3c; border: 2px solid #e74c3c; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer;">Clear Cart</button>
+        <button class="continue-btn" onclick="window.location.href='shop.html'" style="background: transparent; color: var(--text-main); border: 2px solid var(--text-main); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer;">Continue Shopping</button>
       </div>
     </div>
   </main>
@@ -76,7 +88,7 @@
       <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
       <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
     </div>
-    <p>&copy; 2025 CarTees. All rights reserved.</p>
+    <p>&copy; 2026 CarTees. All rights reserved.</p>
   </footer>
 </body>
 </html>

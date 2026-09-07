@@ -17,7 +17,7 @@
   <script src="js/cart.js" defer></script>
 
   <style>
-    /* Dark Mode Pricing Styles */
+    /* Dynamic Theme Pricing Styles */
     .price {
       margin-top: 10px;
       font-size: 1.1em;
@@ -26,12 +26,12 @@
     }
     .price .old-price {
       text-decoration: line-through;
-      color: #666;
+      color: var(--text-muted);
       margin-right: 8px;
       font-size: 0.8em;
     }
     .price .new-price {
-      color: #ccff00; /* Acid Green */
+      color: var(--accent); 
       font-weight: 700;
       margin-right: 8px;
     }
@@ -65,11 +65,16 @@
     </nav>
 
     <div class="icons">
-      <a href="javascript:void(0)" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 16px; color: #fff; font-weight: 600; font-family: 'Rajdhani', sans-serif; text-transform: uppercase;">Login</a>
-      <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: #ccff00;">
+      <!-- THEME TOGGLE BUTTON -->
+      <button id="themeToggle" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 15px; color: var(--text-main); transition: 0.3s;">🌗</button>
+
+      <a href="javascript:void(0)" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 16px; color: var(--text-main); font-weight: 700; font-family: 'Syncopate', sans-serif; text-transform: uppercase;">Login</a>
+      
+      <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: var(--text-main);">
         🛒
         <span id="cart-indicator"></span>
       </div>
+      
       <div class="hamburger">
         <span></span><span></span><span></span>
       </div>
@@ -99,9 +104,9 @@
   </section>
 
   <section class="reviews">
-    <h2>Telemetry & Feedback</h2>
+    <h2>Feedback & Reviews</h2>
     <div class="review-grid" id="dynamic-reviews">
-      <p style="color: #666; font-family: 'Syncopate', sans-serif;">Loading telemetry...</p>
+      <p style="color: var(--text-muted); font-family: 'Syncopate', sans-serif;">Loading reviews...</p>
     </div>
 
     <div class="leave-review-section">
@@ -123,7 +128,7 @@
 
   <section class="newsletter">
     <h2>Join the Paddock</h2>
-    <p>Subscribe for exclusive drops, track days, and vault access.</p>
+    <p style="color: var(--text-muted);">Subscribe for exclusive drops, track days, and vault access.</p>
     <form onsubmit="event.preventDefault(); alert('✅ Welcome to the crew!');">
       <input type="email" placeholder="Enter your email" required>
       <button type="submit" class="btn-solid">Subscribe</button>

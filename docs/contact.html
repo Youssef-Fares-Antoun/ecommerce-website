@@ -5,6 +5,11 @@
   <meta charset="UTF-8">
   <title>Contact | CarTees</title>
   
+  <!-- Telemetry Fonts: Syncopate (Headers) & Rajdhani (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/contact.css">
   
@@ -14,7 +19,7 @@
 </head>
 <body>
   
- <header class="navbar">
+ <header class="navbar glass-nav">
     <div class="logo"><a href="index.html">Car<span>Tees</span></a></div>
 
     <nav class="nav-links">
@@ -26,8 +31,11 @@
     </nav>
 
     <div class="icons">
-      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: #333;">👤</a>
-      <div class="cart-icon" onclick="window.location.href='cart.html'">
+      <!-- THEME TOGGLE BUTTON -->
+      <button id="themeToggle" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 15px; color: var(--text-main); transition: 0.3s;">🌗</button>
+
+      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
+      <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: var(--text-main);">
         🛒
         <span id="cart-indicator"></span>
       </div>
@@ -39,28 +47,36 @@
     </div>
   </header>
 
-  <section class="contact-hero">
-    <h1>Contact Us</h1>
-    <p>We’d love to hear from you. Get in touch!</p>
+  <!-- Added top padding to clear the fixed glass-nav -->
+  <section class="contact-hero" style="padding-top: 140px; text-align: center; margin-bottom: 40px;">
+    <h1 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; text-transform: uppercase;">Contact Us</h1>
+    <p style="color: var(--text-muted); font-size: 1.2em;">We’d love to hear from you. Get in touch!</p>
   </section>
 
-  <main class="contact-container" style="display:flex;">
-    <div class="contact-form">
-      <h2>Send us a message</h2>
-      <form>
-        <input type="text" placeholder="Your Name" required>
-        <input type="email" placeholder="Your Email" required>
-        <textarea placeholder="Your Message" required></textarea>
-        <button type="submit">Send Message</button>
+  <main class="contact-container" style="display:flex; max-width: 1200px; margin: 0 auto 80px auto; gap: 40px; padding: 0 20px; flex-wrap: wrap;">
+    
+    <div class="contact-form" style="flex: 1; min-width: 300px; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 40px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+      <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.5em; margin-bottom: 25px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px;">Send us a message</h2>
+      <form style="display: flex; flex-direction: column; gap: 20px;">
+        <input type="text" placeholder="Your Name" required style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); padding: 15px; font-family: 'Rajdhani', sans-serif; font-size: 16px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        
+        <input type="email" placeholder="Your Email" required style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); padding: 15px; font-family: 'Rajdhani', sans-serif; font-size: 16px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        
+        <textarea placeholder="Your Message" required style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); padding: 15px; font-family: 'Rajdhani', sans-serif; font-size: 16px; border-radius: 4px; min-height: 150px; resize: vertical; width: 100%; box-sizing: border-box;"></textarea>
+        
+        <button type="submit" style="background: transparent; color: var(--accent); border: 2px solid var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; padding: 15px; cursor: pointer; transition: 0.3s; margin-top: 10px;" onmouseover="this.style.background='var(--accent)'; this.style.color='var(--bg-deep)';" onmouseout="this.style.background='transparent'; this.style.color='var(--accent)';">Send Message</button>
       </form>
     </div>
 
-    <div class="contact-info">
-      <h2>Our Store</h2>
-      <p><strong>Address:</strong> 123 Car Street, Cairo, Egypt</p>
-      <p><strong>Email:</strong> support@cartees.com</p>
-      <p><strong>Phone:</strong> +20 123 456 789</p>
-      <p><strong>Hours:</strong> Sat–Thu, 9AM – 6PM</p>
+    <div class="contact-info" style="flex: 1; min-width: 300px; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 40px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+      <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.5em; margin-bottom: 25px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px;">Our Store</h2>
+      
+      <div style="color: var(--text-muted); font-size: 1.1em; line-height: 2;">
+        <p><strong style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 0.85em; text-transform: uppercase;">Address:</strong><br>123 Car Street, Cairo, Egypt</p>
+        <p style="margin-top: 15px;"><strong style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 0.85em; text-transform: uppercase;">Email:</strong><br>support@cartees.com</p>
+        <p style="margin-top: 15px;"><strong style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 0.85em; text-transform: uppercase;">Phone:</strong><br>+20 123 456 789</p>
+        <p style="margin-top: 15px;"><strong style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 0.85em; text-transform: uppercase;">Hours:</strong><br>Sat–Thu, 9AM – 6PM</p>
+      </div>
     </div>
   </main>
 
@@ -77,7 +93,7 @@
       <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
       <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
     </div>
-    <p>&copy; 2025 CarTees. All rights reserved.</p>
+    <p>&copy; 2026 CarTees. All rights reserved.</p>
   </footer>
   </body>
 </html>

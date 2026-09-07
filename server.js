@@ -24,7 +24,15 @@ const transporter = nodemailer.createTransport({
 // --- ZONE 1: MIDDLEWARE ---
 app.use(express.json()); 
 app.use(cookieParser()); 
+
+// 🚀 EXPLICIT ADMIN ROUTING (Must be placed before express.static)
+app.get(['/admin', '/admin/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'docs', 'admin', 'admin.html'));
+});
+
+// 🚀 SERVE STATIC FILES & ISOLATED ADMIN STATIC PATH
 app.use(express.static(path.join(__dirname, 'docs')));
+app.use('/admin', express.static(path.join(__dirname, 'docs', 'admin')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'docs', 'home.html'));
@@ -238,10 +246,8 @@ app.put('/api/users/me', async (req, res) => {
 
     const { email, currentPassword, newPassword } = req.body;
 
-    // Update email if provided
     if (email) user.email = email;
 
-    // Securely verify and update password
     if (currentPassword && newPassword) {
         const validPassword = await bcrypt.compare(currentPassword, user.password);
         if (!validPassword) return res.status(401).json({ message: "Incorrect current password." });
@@ -262,7 +268,6 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
-// GET ALL USERS (For Admin/Postman testing)
 app.get('/api/users', async (req, res) => {
   try{
     const allUsers = await User.findAll({ attributes: { exclude: ['password'] } });
@@ -285,6 +290,15 @@ app.get('/api/site-reviews', async (req, res) => {
 app.post('/api/site-reviews', async (req, res) => {
   try { res.status(201).json(await SiteReview.create(req.body)); } 
   catch (err) { res.status(400).json({ error: "Failed to add site review" }); }
+});
+
+app.delete('/api/site-reviews/:id', verifyAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deletedCount = await SiteReview.destroy({ where: { id: id } });
+    if (deletedCount === 0) return res.status(404).json({ error: "Review not found." });
+    res.json({ message: `Success! Review #${id} has been removed.` });
+  } catch (err) { res.status(500).json({ error: "Server error during review deletion." }); }
 });
 
 app.get('/api/products/:id/reviews', async (req, res) => {
@@ -341,8 +355,6 @@ app.put('/api/addresses/:id/default', async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to set default address" }); }
 });
 
-
-// 🚀 UPGRADED CHECKOUT SESSION: Beautiful HTML & Admin Notification!
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const { cart, payment } = req.body; 
@@ -368,7 +380,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
       for (let item of cart) {
         await OrderItem.create({ name: item.name, size: item.size, price: item.price, quantity: item.quantity, OrderId: newOrder.id });
         
-        // Build table rows for the fancy customer email
         emailItemsHtml += `
           <tr style="border-bottom: 1px solid #eee;">
             <td style="padding: 15px 0; color: #555;"><strong>${item.name}</strong><br><small style="color: #888;">Size: ${item.size}</small></td>
@@ -376,18 +387,15 @@ app.post('/api/create-checkout-session', async (req, res) => {
             <td style="padding: 15px 0; color: #555; text-align: right;">LE ${(item.price * item.quantity).toFixed(2)}</td>
           </tr>
         `;
-        // Build a simple list for the admin email
         adminItemsHtml += `<li>${item.quantity}x ${item.name} (Size: ${item.size})</li>`;
       }
 
       if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        
-        // 1. SEND CUSTOMER EMAIL (Beautiful Layout + Spam Safe)
         const customerMailOptions = {
           from: `"CarTees Store" <${process.env.EMAIL_USER}>`,
           to: user.email,
           subject: `Order Confirmed! #${newOrder.id} - CarTees`,
-          text: `Hi ${user.name}, your order #${newOrder.id} for LE ${total.toFixed(2)} is confirmed!`, // Hidden text lowers spam score
+          text: `Hi ${user.name}, your order #${newOrder.id} for LE ${total.toFixed(2)} is confirmed!`,
           html: `
             <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f7f6; padding: 20px;">
               <div style="background-color: #111; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 4px solid #145214;">
@@ -422,10 +430,9 @@ app.post('/api/create-checkout-session', async (req, res) => {
           `
         };
 
-        // 2. SEND ADMIN EMAIL (Internal Notification)
         const adminMailOptions = {
           from: `"CarTees System" <${process.env.EMAIL_USER}>`,
-          to: process.env.EMAIL_USER, // Sends TO the store owner
+          to: process.env.EMAIL_USER,
           subject: `🚨 NEW ORDER #${newOrder.id} - LE ${total.toFixed(2)}`,
           text: `New order from ${user.name}. Total: LE ${total.toFixed(2)}`,
           html: `
@@ -438,12 +445,11 @@ app.post('/api/create-checkout-session', async (req, res) => {
               <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 4px; border: 1px solid #ddd;">
                 ${adminItemsHtml}
               </ul>
-              <p style="margin-top: 20px;"><a href="http://localhost:3000/admin.html" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
+              <p style="margin-top: 20px;"><a href="http://localhost:3000/admin" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
             </div>
           `
         };
 
-        // Fire both emails off!
         transporter.sendMail(customerMailOptions).catch(err => console.error("Customer Email Error:", err));
         transporter.sendMail(adminMailOptions).catch(err => console.error("Admin Email Error:", err));
       }
@@ -463,7 +469,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) { res.status(500).json({ error: "Failed to create checkout session" }); }
 });
-
 
 // ==========================================
 // 🚀 ZONE 6: ADMIN SUPERPOWERS & STATS
@@ -493,7 +498,7 @@ app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
 app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
     try {
         const order = await Order.findByPk(req.params.id);
-        if (!order) return res.status(404).json({ messageqqs: "Order not found" });
+        if (!order) return res.status(404).json({ message: "Order not found" });
         order.status = req.body.status;
         await order.save();
         res.json({ message: "Order status updated successfully!", order });
