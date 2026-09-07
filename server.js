@@ -171,8 +171,17 @@ const verifyAdmin = async (req, res, next) => {
 };
 
 app.get('/api/products', async (req, res) => {
-  try { res.json(await Product.findAll()); } 
-  catch (err) { res.status(500).json({ error: "Failed to fetch products" }); }
+  try {
+    const products = await Product.findAll();
+    res.json(products);
+  } catch (err) {
+    console.error('PRODUCTS ERROR:', err);
+
+    res.status(500).json({
+      error: 'Failed to fetch products',
+      details: err.message
+    });
+  }
 });
 
 app.get('/api/products/:id', async (req, res) => {
