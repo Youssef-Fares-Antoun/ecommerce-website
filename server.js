@@ -170,6 +170,7 @@ const verifyAdmin = async (req, res, next) => {
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findByPk(verified.id);
         if (!user || !user.isAdmin) return res.status(403).json({ message: "Access Denied: Admins Only!" });
+        req.user = user; // 🚀 Added to allow the delete user route to check for self-deletion
         next();
     } catch (err) { return res.status(401).json({ message: "Invalid token" }); }
 };
@@ -304,6 +305,7 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
+// Legacy User fetching route (non-admin)
 app.get('/api/users', async (req, res) => {
   try{
     const allUsers = await User.findAll({ attributes: { exclude: ['password'] } });
@@ -619,6 +621,43 @@ app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
         await order.save();
         res.json({ message: "Order status updated successfully!", order });
     } catch (err) { res.status(500).json({ error: "Failed to update order status" }); }
+});
+
+// 🚀 NEW: GET ALL USERS FOR ADMIN DASHBOARD
+app.get('/api/admin/users', verifyAdmin, async (req, res) => {
+    try {
+        const users = await User.findAll({ 
+            attributes: { exclude: ['password'] },
+            order: [['createdAt', 'DESC']]
+        });
+        res.json(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ error: "Failed to fetch users" });
+    }
+});
+
+// 🚀 NEW: DELETE USER ROUTE
+app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
+    try {
+        const targetUserId = parseInt(req.params.id);
+
+        // Prevent admin from deleting their own account
+        if (targetUserId === req.user.id) {
+            return res.status(400).json({ error: "You cannot delete your own admin account." });
+        }
+
+        const deletedCount = await User.destroy({ where: { id: targetUserId } });
+        
+        if (deletedCount === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+
+        res.json({ message: "User deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ error: "Failed to delete user" });
+    }
 });
 
 app.get('/api/admin/promos', verifyAdmin, async (req, res) => {

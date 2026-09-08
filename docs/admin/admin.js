@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
         adminLoginForm.addEventListener("submit", handleAdminLogin);
     }
 
-    // 🚀 NEW: Hook up the Promo Code Form
     const promoForm = document.getElementById("adminPromoForm");
     if (promoForm) {
         promoForm.addEventListener("submit", createPromoCode);
@@ -54,7 +53,8 @@ async function verifyAdminAndLoad() {
         loadAdminStats();
         loadInventory();
         loadAdminReviews();
-        loadPromoCodes(); // 🚀 Load Promos
+        loadPromoCodes(); 
+        loadUsers(); // 🚀 Load Users
 
     } catch (err) {
         if (loginGate) loginGate.style.display = "flex";
@@ -91,8 +91,9 @@ function setupAdminTabs() {
     const menuItems = document.querySelectorAll(".sidebar-menu .menu-item:not(.logout)");
     const ordersCard = document.getElementById("orders-card");
     const inventoryCard = document.getElementById("inventory-card");
-    const promosCard = document.getElementById("promos-card"); // 🚀 Get Promo Card
+    const promosCard = document.getElementById("promos-card"); 
     const reviewsCard = document.getElementById("reviews-card");
+    const usersCard = document.getElementById("users-card"); // 🚀 Get Users Card
 
     menuItems.forEach(item => {
         item.addEventListener("click", (e) => {
@@ -105,6 +106,7 @@ function setupAdminTabs() {
             if (inventoryCard) inventoryCard.style.display = "none";
             if (promosCard) promosCard.style.display = "none";
             if (reviewsCard) reviewsCard.style.display = "none";
+            if (usersCard) usersCard.style.display = "none"; // 🚀 Hide Users Card
 
             const target = item.getAttribute("href");
             if (target === "#orders" && ordersCard) {
@@ -113,17 +115,89 @@ function setupAdminTabs() {
                 inventoryCard.style.display = "block";
             } else if (target === "#promos" && promosCard) {
                 promosCard.style.display = "block";
-                loadPromoCodes(); // 🚀 Reload promos when tab is opened
+                loadPromoCodes(); 
             } else if (target === "#reviews" && reviewsCard) {
                 reviewsCard.style.display = "block";
                 loadAdminReviews();
+            } else if (target === "#users" && usersCard) {
+                usersCard.style.display = "block";
+                loadUsers(); // 🚀 Reload users when tab is opened
             }
         });
     });
 }
 
 // ==========================================
-// 🚀 PROMO CODES LOGIC
+// 🚀 USER MANAGEMENT LOGIC
+// ==========================================
+async function loadUsers() {
+    const tableBody = document.getElementById("admin-user-list");
+    if (!tableBody) return;
+
+    try {
+        // Adjust this endpoint if your backend route is named differently (e.g., /api/users)
+        const response = await fetch('/api/admin/users'); 
+        if (!response.ok) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Failed to load users.</td></tr>`;
+            return;
+        }
+
+        const users = await response.json();
+        tableBody.innerHTML = "";
+
+        if (users.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No users found.</td></tr>`;
+            return;
+        }
+
+        users.forEach(user => {
+            const date = new Date(user.createdAt).toLocaleDateString();
+            
+            // Generate visual badge based on user role
+            const roleBadge = user.isAdmin 
+                ? `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #2ecc71;">Admin</span>`
+                : `<span style="background: rgba(149, 165, 166, 0.15); color: #95a5a6; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #95a5a6;">User</span>`;
+
+            // Prevent deleting other admins or yourself by disabling the button
+            const actionButton = user.isAdmin 
+                ? `<button disabled style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 6px 12px; border-radius: 4px; cursor: not-allowed; font-weight: bold;">Protected</button>`
+                : `<button onclick="deleteUser(${user.id}, '${user.name}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Delete</button>`;
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td style="font-weight: bold; color: var(--text-main);">#${user.id}</td>
+                <td style="font-weight: bold; color: var(--text-main);">${user.name}</td>
+                <td style="color: var(--text-muted);">${user.email}</td>
+                <td>${roleBadge}</td>
+                <td>${date}</td>
+                <td style="text-align: right;">${actionButton}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error("Admin Users Load Error:", err);
+        tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Network error loading users.</td></tr>`;
+    }
+}
+
+async function deleteUser(userId, userName) {
+    if (!confirm(`WARNING: Are you absolutely sure you want to delete user "${userName}"? This action cannot be undone.`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadUsers(); // Refresh the list
+        } else {
+            const data = await res.json();
+            alert(data.error || "Failed to delete user.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
+}
+
+// ==========================================
+// PROMO CODES LOGIC
 // ==========================================
 async function loadPromoCodes() {
     const tableBody = document.getElementById("admin-promo-list");
@@ -322,7 +396,6 @@ async function loadInventory() {
         products.sort((a, b) => a.id - b.id);
 
         products.forEach(product => {
-            // 🚀 MODIFIED: Securely handle Cloudinary URLs vs Legacy Local files
             let imgSrc = product.image ? product.image.replace(/^\//, "") : "images/default.jpg";
             if (!imgSrc.startsWith("http") && !imgSrc.startsWith("images/")) {
                 imgSrc = "images/" + imgSrc.split('/').pop();
