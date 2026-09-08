@@ -94,7 +94,8 @@ const User = sequelize.define('User', {
   password: { type: DataTypes.STRING, allowNull: false },
   address: { type: DataTypes.STRING, allowNull: true  },
   phone: { type: DataTypes.STRING, allowNull: true },
-  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false }
+  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false },
+  isBanned: { type: DataTypes.BOOLEAN, defaultValue: false } // 🚀 Added ban tracking
 });
 
 const Address = sequelize.define('Address', {
@@ -170,7 +171,7 @@ const verifyAdmin = async (req, res, next) => {
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findByPk(verified.id);
         if (!user || !user.isAdmin) return res.status(403).json({ message: "Access Denied: Admins Only!" });
-        req.user = user; // 🚀 Added to allow the delete user route to check for self-deletion
+        req.user = user; 
         next();
     } catch (err) { return res.status(401).json({ message: "Invalid token" }); }
 };
@@ -200,7 +201,6 @@ app.post('/api/products', verifyAdmin, upload.single('imageFile'), async (req, r
     productData.isFeatured = productData.isFeatured === 'true';
     productData.isBestSeller = productData.isBestSeller === 'true';
     
-    // 🚀 SAVES SECURE CLOUDINARY URL INSTEAD OF LOCAL FILENAME
     if (req.file) productData.image = req.file.path; 
     
     const newProduct = await Product.create(productData);
@@ -215,7 +215,6 @@ app.put('/api/products/:id', verifyAdmin, upload.single('imageFile'), async (req
     productData.isFeatured = productData.isFeatured === 'true';
     productData.isBestSeller = productData.isBestSeller === 'true';
     
-    // 🚀 SAVES SECURE CLOUDINARY URL INSTEAD OF LOCAL FILENAME
     if (req.file) productData.image = req.file.path; 
     
     const [updated] = await Product.update(productData, { where: { id: id } });
@@ -253,6 +252,10 @@ app.post('/api/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { email: email } });
     if (!user) return res.status(401).json({ message: "Invalid email or password." });
+    
+    // 🚀 Check if user is banned
+    if (user.isBanned) return res.status(403).json({ message: "Access Denied: This account has been banned." });
+
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(401).json({ message: "Invalid email or password." });
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -305,7 +308,6 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
-// Legacy User fetching route (non-admin)
 app.get('/api/users', async (req, res) => {
   try{
     const allUsers = await User.findAll({ attributes: { exclude: ['password'] } });
@@ -623,7 +625,6 @@ app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Failed to update order status" }); }
 });
 
-// 🚀 NEW: GET ALL USERS FOR ADMIN DASHBOARD
 app.get('/api/admin/users', verifyAdmin, async (req, res) => {
     try {
         const users = await User.findAll({ 
@@ -637,12 +638,10 @@ app.get('/api/admin/users', verifyAdmin, async (req, res) => {
     }
 });
 
-// 🚀 NEW: DELETE USER ROUTE
 app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
     try {
         const targetUserId = parseInt(req.params.id);
 
-        // Prevent admin from deleting their own account
         if (targetUserId === req.user.id) {
             return res.status(400).json({ error: "You cannot delete your own admin account." });
         }
@@ -657,6 +656,42 @@ app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
     } catch (error) {
         console.error("Error deleting user:", error);
         res.status(500).json({ error: "Failed to delete user" });
+    }
+});
+
+// 🚀 TOGGLE ADMIN STATUS
+app.put('/api/admin/users/:id/toggle-admin', verifyAdmin, async (req, res) => {
+    try {
+        const targetUserId = parseInt(req.params.id);
+        if (targetUserId === req.user.id) {
+            return res.status(400).json({ error: "You cannot change your own admin privileges." });
+        }
+        const user = await User.findByPk(targetUserId);
+        if (!user) return res.status(404).json({ error: "User not found." });
+        
+        user.isAdmin = !user.isAdmin;
+        await user.save();
+        res.json({ message: "Admin status updated successfully.", user });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update admin status." });
+    }
+});
+
+// 🚀 TOGGLE BAN STATUS
+app.put('/api/admin/users/:id/toggle-ban', verifyAdmin, async (req, res) => {
+    try {
+        const targetUserId = parseInt(req.params.id);
+        if (targetUserId === req.user.id) {
+            return res.status(400).json({ error: "You cannot ban your own admin account." });
+        }
+        const user = await User.findByPk(targetUserId);
+        if (!user) return res.status(404).json({ error: "User not found." });
+        
+        user.isBanned = !user.isBanned;
+        await user.save();
+        res.json({ message: "Ban status updated successfully.", user });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update ban status." });
     }
 });
 

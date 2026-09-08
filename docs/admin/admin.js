@@ -135,7 +135,6 @@ async function loadUsers() {
     if (!tableBody) return;
 
     try {
-        // Adjust this endpoint if your backend route is named differently (e.g., /api/users)
         const response = await fetch('/api/admin/users'); 
         if (!response.ok) {
             tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Failed to load users.</td></tr>`;
@@ -150,27 +149,48 @@ async function loadUsers() {
             return;
         }
 
+        const currentAdminName = document.getElementById("adminNameDisplay").textContent;
+
         users.forEach(user => {
             const date = new Date(user.createdAt).toLocaleDateString();
             
-            // Generate visual badge based on user role
+            // Generate visual badges based on user role & status
+            const statusBadge = user.isBanned 
+                ? `<span style="background: rgba(231, 76, 60, 0.15); color: #e74c3c; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; border: 1px solid #e74c3c; margin-left: 5px;">Banned</span>`
+                : `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; border: 1px solid #2ecc71; margin-left: 5px;">Active</span>`;
+
             const roleBadge = user.isAdmin 
-                ? `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #2ecc71;">Admin</span>`
+                ? `<span style="background: rgba(52, 152, 219, 0.15); color: #3498db; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #3498db;">Admin</span>`
                 : `<span style="background: rgba(149, 165, 166, 0.15); color: #95a5a6; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #95a5a6;">User</span>`;
 
-            // Prevent deleting other admins or yourself by disabling the button
-            const actionButton = user.isAdmin 
-                ? `<button disabled style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 6px 12px; border-radius: 4px; cursor: not-allowed; font-weight: bold;">Protected</button>`
-                : `<button onclick="deleteUser(${user.id}, '${user.name}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Delete</button>`;
+            // Protect the logged-in superuser from modifying themselves
+            let actionButtons = '';
+            if (user.isAdmin && user.name === currentAdminName) {
+                actionButtons = `<span style="color: var(--text-muted); font-style: italic;">Protected Account</span>`;
+            } else {
+                const adminBtnText = user.isAdmin ? "Demote" : "Make Admin";
+                const adminBtnColor = user.isAdmin ? "#e67e22" : "#3498db";
+                const banBtnText = user.isBanned ? "Unban" : "Ban";
+                const banBtnColor = user.isBanned ? "#2ecc71" : "#e74c3c";
+                
+                // Escape names for inline onclick handlers to prevent breaks on names with quotes
+                const safeName = user.name.replace(/'/g, "\\'");
+
+                actionButtons = `
+                    <button onclick="toggleAdmin(${user.id}, '${safeName}', ${user.isAdmin})" style="background: rgba(52, 152, 219, 0.2); color: ${adminBtnColor}; border: 1px solid ${adminBtnColor}; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px;">${adminBtnText}</button>
+                    <button onclick="toggleBan(${user.id}, '${safeName}', ${user.isBanned})" style="background: rgba(231, 76, 60, 0.2); color: ${banBtnColor}; border: 1px solid ${banBtnColor}; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px;">${banBtnText}</button>
+                    <button onclick="deleteUser(${user.id}, '${safeName}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Delete</button>
+                `;
+            }
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td style="font-weight: bold; color: var(--text-main);">#${user.id}</td>
                 <td style="font-weight: bold; color: var(--text-main);">${user.name}</td>
                 <td style="color: var(--text-muted);">${user.email}</td>
-                <td>${roleBadge}</td>
+                <td>${roleBadge} ${statusBadge}</td>
                 <td>${date}</td>
-                <td style="text-align: right;">${actionButton}</td>
+                <td style="text-align: right; min-width: 250px;">${actionButtons}</td>
             `;
             tableBody.appendChild(tr);
         });
@@ -180,8 +200,42 @@ async function loadUsers() {
     }
 }
 
+async function toggleAdmin(userId, userName, currentStatus) {
+    const action = currentStatus ? "remove admin privileges from" : "grant admin privileges to";
+    if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/users/${userId}/toggle-admin`, { method: 'PUT' });
+        if (res.ok) {
+            loadUsers(); // Refresh the list to show updated UI
+        } else {
+            const data = await res.json();
+            alert(data.error || "Failed to update admin role.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
+}
+
+async function toggleBan(userId, userName, currentStatus) {
+    const action = currentStatus ? "unban" : "ban";
+    if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/users/${userId}/toggle-ban`, { method: 'PUT' });
+        if (res.ok) {
+            loadUsers(); // Refresh the list to show updated UI
+        } else {
+            const data = await res.json();
+            alert(data.error || "Failed to update ban status.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
+}
+
 async function deleteUser(userId, userName) {
-    if (!confirm(`WARNING: Are you absolutely sure you want to delete user "${userName}"? This action cannot be undone.`)) return;
+    if (!confirm(`WARNING: Are you absolutely sure you want to permanently delete user "${userName}"? This action cannot be undone.`)) return;
 
     try {
         const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
