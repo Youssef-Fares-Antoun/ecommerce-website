@@ -13,11 +13,11 @@
   <!-- CSS Files -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/profile.css"> 
-  <link rel="stylesheet" href="/css/admin.css"> <!-- 🚀 New dedicated admin CSS -->
+  <link rel="stylesheet" href="/css/admin.css"> <!-- 🚀 Isolated Admin Styles -->
   
   <script src="/admin/admin.js" defer></script>
 </head>
-<body>
+<body class="admin-body">
 
   <!-- NAVBAR -->
   <header class="navbar glass-nav">
@@ -37,7 +37,7 @@
   </header>
 
   <!-- ADMIN LOGIN GATE -->
-  <div id="adminLoginGate" class="login-gate">
+  <div id="adminLoginGate" class="login-gate" style="display: none;">
     <div class="login-box">
       <h2 class="login-title">Restricted Garage</h2>
       <p class="login-subtitle">Please log in with Paddock Administrator credentials.</p>
@@ -51,7 +51,7 @@
           <label class="form-label">Password</label>
           <input type="password" id="adminPasswordInput" required class="form-input">
         </div>
-        <button type="submit" class="btn-outline">Authenticate</button>
+        <button type="submit" class="btn-auth">Authenticate</button>
       </form>
     </div>
   </div>
@@ -112,7 +112,6 @@
                 </button>
             </div>
         </div>
-        
         <div class="table-responsive">
           <table>
             <thead>
@@ -139,7 +138,6 @@
             <h2 class="card-title">Garage Inventory</h2>
             <button type="button" onclick="openProductModal()" class="btn-action btn-add">+ Add New CarTee</button>
         </div>
-        
         <div class="table-responsive">
           <table>
             <thead>
@@ -165,7 +163,6 @@
         <div class="card-header">
             <h2 class="card-title">User Management</h2>
         </div>
-        
         <div class="table-responsive">
           <table>
             <thead>
@@ -195,14 +192,14 @@
           <h3 class="promo-title">Create Discount Code</h3>
           <form id="adminPromoForm" class="promo-form">
             <div class="flex-1">
-              <label class="form-label">Promo Code (e.g. SUMMER20)</label>
-              <input type="text" id="newPromoCode" required class="form-input uppercase">
+              <label class="form-label">Promo Code</label>
+              <input type="text" id="newPromoCode" required class="form-input uppercase" placeholder="SUMMER20">
             </div>
             <div class="flex-1">
-              <label class="form-label">Discount Percentage (%)</label>
+              <label class="form-label">Discount (%)</label>
               <input type="number" id="newPromoDiscount" required min="1" max="100" class="form-input">
             </div>
-            <button type="submit" class="btn-outline">Add Code</button>
+            <button type="submit" class="btn-action btn-add">Add Code</button>
           </form>
         </div>
 
@@ -276,9 +273,9 @@
 
         <div class="form-group">
           <label class="form-label">Upload Product Image</label>
-          <input type="file" id="prodImageFile" accept="image/*" class="form-input">
+          <input type="file" id="prodImageFile" accept="image/*" class="form-input" style="padding: 9px;">
           <input type="hidden" id="existingImage">
-          <small id="currentImageText" class="form-text" style="display:none;">Leave blank to keep the current image.</small>
+          <small id="currentImageText" class="form-text" style="display:none;">Leave blank to keep current image.</small>
         </div>
 
         <div class="checkbox-row">
@@ -292,7 +289,7 @@
             </label>
         </div>
 
-        <button type="submit" class="btn-outline">Save Product</button>
+        <button type="submit" class="btn-auth" style="margin-top: 0;">Save Product</button>
       </form>
     </div>
   </div>
