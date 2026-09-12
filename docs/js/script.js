@@ -197,7 +197,6 @@ function proceedToCheckout() {
 let appliedDiscountPercent = 0;
 let appliedPromoString = null;
 
-// 🚀 NEW: Promo Code Validator
 window.applyPromoCode = async function() {
     const input = document.getElementById("promoCodeInput");
     const msg = document.getElementById("promoMessage");
@@ -219,7 +218,7 @@ window.applyPromoCode = async function() {
             msg.style.color = "var(--accent)";
             msg.textContent = `✔ ${data.discountPercent}% discount applied successfully!`;
             input.disabled = true;
-            displayCheckoutSummary(); // Recalculate total visually
+            displayCheckoutSummary(); 
         } else {
             msg.style.color = "#e74c3c";
             msg.textContent = data.message || "Invalid code.";
@@ -268,7 +267,6 @@ function displayCheckoutSummary() {
     orderSummaryContainer.appendChild(itemDiv);
   });
 
-  // 🚀 Apply active percentage reduction to visual display
   if (appliedDiscountPercent > 0) {
     const discountAmount = (total * appliedDiscountPercent) / 100;
     total = total - discountAmount;
@@ -384,7 +382,7 @@ async function handlePlaceOrder(e) {
       body: JSON.stringify({ 
           cart: cart,
           payment: selectedPayment,
-          promoCode: appliedPromoString // 🚀 Passes validated promo code to the backend
+          promoCode: appliedPromoString 
       })
     });
     
@@ -509,7 +507,6 @@ function initThemeToggle() {
   const themeToggleBtns = document.querySelectorAll('#themeToggle');
   const currentTheme = localStorage.getItem('theme');
 
-  // Apply the saved theme on load
   if (currentTheme === 'light') {
     document.body.classList.add('light-mode');
     updateToggleIcons('🌒'); 
@@ -517,7 +514,6 @@ function initThemeToggle() {
     updateToggleIcons('🌗');
   }
 
-  // Add click listener to all theme toggle buttons
   themeToggleBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       document.body.classList.toggle('light-mode');
@@ -595,10 +591,17 @@ async function initAuth() {
       if (response.ok) {
         const data = await response.json();
         currentUser = data.user;
+
+        // 🚀 NEW: Unhide Admin button if the user is an admin
+        if (currentUser && currentUser.isAdmin) {
+            const adminNavBtn = document.getElementById("adminNavBtn");
+            if (adminNavBtn) adminNavBtn.style.display = "block";
+        }
       }
     } catch (err) {
       console.error("Auth check failed:", err);
   }  
+  
   if (currentUser && userIcon) {
     userIcon.innerHTML = "👤 "; 
     userIcon.href = "profile.html"; 
@@ -658,10 +661,17 @@ async function initAuth() {
           body: JSON.stringify({ email, password })
         });
         const data = await response.json();
+        
         if (response.ok) {
           alert("Login successful!");
           authModal.style.display = "none";
-          location.reload();
+          
+          // 🚀 NEW: Check if the user is an admin and redirect them appropriately
+          if (data.user && data.user.isAdmin) {
+              window.location.href = "/admin"; // Send admins straight to the garage
+          } else {
+              location.reload(); // Reload for normal users to update nav state
+          }
         } else {
           alert(data.message); 
         }
@@ -703,7 +713,6 @@ async function initProfile() {
   if(document.getElementById("displayUserName")) document.getElementById("displayUserName").textContent = currentUser.name;
   if(document.getElementById("displayUserEmail")) document.getElementById("displayUserEmail").textContent = currentUser.email;
 
-  // 🚀 Fetch and Draw the Address Book
   const loadAddresses = async () => {
       const addrList = document.getElementById("saved-addresses-list");
       if(!addrList) return;
@@ -749,7 +758,6 @@ async function initProfile() {
   };
   loadAddresses();
 
-  // 🚀 Toggle Form Logic
   const showFormBtn = document.getElementById("showFormBtn");
   const cancelFormBtn = document.getElementById("cancelFormBtn");
   const newAddressWrapper = document.getElementById("newAddressWrapper");
@@ -757,19 +765,18 @@ async function initProfile() {
   if(showFormBtn && newAddressWrapper) {
       showFormBtn.addEventListener("click", () => {
           newAddressWrapper.style.display = "block";
-          showFormBtn.style.display = "none"; // Hides the "+ Add New" button while form is open
+          showFormBtn.style.display = "none"; 
       });
   }
 
   if(cancelFormBtn && newAddressWrapper) {
       cancelFormBtn.addEventListener("click", () => {
           newAddressWrapper.style.display = "none";
-          showFormBtn.style.display = "block"; // Brings the button back
-          document.getElementById("newAddressForm").reset(); // Clears any half-typed info
+          showFormBtn.style.display = "block"; 
+          document.getElementById("newAddressForm").reset(); 
       });
   }
 
-  // 🚀 Save a New Address
   const newAddrForm = document.getElementById("newAddressForm");
   if(newAddrForm) {
       newAddrForm.addEventListener("submit", async (e) => {
@@ -792,13 +799,12 @@ async function initProfile() {
                   alert("Address saved to your Address Book!");
                   newAddrForm.reset();
                   
-                  // Hide the form and show the button again!
                   if (newAddressWrapper && showFormBtn) {
                       newAddressWrapper.style.display = "none";
                       showFormBtn.style.display = "block";
                   }
                   
-                  loadAddresses(); // Instantly update the visual list
+                  loadAddresses(); 
               } else {
                   alert("Failed to save address.");
               }
@@ -806,7 +812,6 @@ async function initProfile() {
       });
   }
 
-  // Profile Tab Switching
   const menuItems = document.querySelectorAll(".sidebar-menu .menu-item:not(.logout)");
   const detailsCard = document.getElementById("details-card");
   const addressesCard = document.getElementById("addresses-card");
@@ -839,7 +844,6 @@ async function initProfile() {
     });
   });
 
-  // 🚀 MAGIC FIX: Check URL on load and open the right tab!
   const urlHash = window.location.hash;
   if (urlHash) {
       const targetTab = document.querySelector(`.sidebar-menu a[href="${urlHash}"]`);
@@ -849,14 +853,12 @@ async function initProfile() {
   }
 }
 
-// 🚀 NEW: Global function so the generated buttons can trigger the API
 window.setDefaultAddress = async function(addressId) {
     try {
         const res = await fetch(`/api/addresses/${addressId}/default`, { 
             method: 'PUT' 
         });
         if(res.ok) {
-            // Instantly reload the page to snap the new default to the top!
             location.reload(); 
         } else {
             alert("Failed to update default address.");
@@ -874,7 +876,7 @@ window.cancelOrder = async function(orderId) {
         const data = await res.json();
         
         if (res.ok) {
-            loadOrderHistory(); // Instantly refresh the UI to show "Cancelled"
+            loadOrderHistory(); 
         } else {
             alert(data.message || "Failed to cancel order.");
         }
@@ -931,7 +933,6 @@ async function loadOrderHistory() {
       if (order.status === "Shipped") statusColor = "#3498db";
       if (order.status === "Delivered") statusColor = "#2ecc71";
 
-      // Only show the cancel button if the order is still "Processing"
       let cancelBtnHtml = '';
       if (order.status === 'Processing') {
           cancelBtnHtml = `<button onclick="cancelOrder(${order.id})" style="background: transparent; color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; font-family: 'Syncopate', sans-serif; font-size: 0.7em; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c';">CANCEL ORDER</button>`;
