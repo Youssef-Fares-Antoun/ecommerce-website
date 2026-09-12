@@ -335,12 +335,12 @@ nav a:hover {
     transition: all 0.3s ease;
   }
 
-  /* ✅ Mobile Hover & Active State */
+  /* ✅ FIXED Mobile Hover & Active State Visibility */
   .nav-links a:hover,
   .nav-links a.active {
-    background-color: var(--accent);
-    color: var(--bg-deep);
-    border-color: var(--accent);
+    background-color: var(--accent) !important;
+    color: var(--bg-deep) !important; /* Force text to dark color */
+    border-color: var(--accent) !important;
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(204, 255, 0, 0.2); 
   }
