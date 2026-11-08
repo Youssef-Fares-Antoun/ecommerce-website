@@ -1512,18 +1512,86 @@ function populateSitePastReviewSelector() {
   });
 }
 
+// 🚀 CLICKABLE STAR RATING WIDGET HELPER
+window.setStarRating = function(inputId, ratingValue) {
+  const rating = Math.max(1, Math.min(5, parseInt(ratingValue) || 5));
+  const inputEl = document.getElementById(inputId);
+  if (inputEl) inputEl.value = String(rating);
+
+  const container = document.getElementById(`stars-for-${inputId}`);
+  if (!container) return;
+  container.dataset.rating = String(rating);
+
+  const paintStars = (activeCount) => {
+    const stars = container.querySelectorAll('.clickable-star');
+    stars.forEach(star => {
+      const val = parseInt(star.dataset.value);
+      if (val <= activeCount) {
+        star.style.color = '#f1c40f';
+        star.style.textShadow = '0 0 8px rgba(241, 196, 15, 0.45)';
+        star.style.transform = 'scale(1.08)';
+      } else {
+        star.style.color = 'rgba(150, 150, 150, 0.35)';
+        star.style.textShadow = 'none';
+        star.style.transform = 'scale(1)';
+      }
+    });
+  };
+
+  if (!container.dataset.initialized) {
+    container.dataset.initialized = 'true';
+    container.innerHTML = [1, 2, 3, 4, 5].map(num => `
+      <span class="clickable-star" data-value="${num}" title="${num} Star${num > 1 ? 's' : ''}" style="font-size: 24px; cursor: pointer; user-select: none; transition: transform 0.15s ease, color 0.15s ease; line-height: 1; display: inline-block;">★</span>
+    `).join('');
+
+    container.querySelectorAll('.clickable-star').forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        paintStars(parseInt(star.dataset.value));
+      });
+      star.addEventListener('click', () => {
+        const chosen = parseInt(star.dataset.value);
+        window.setStarRating(inputId, chosen);
+      });
+    });
+
+    container.addEventListener('mouseleave', () => {
+      paintStars(parseInt(container.dataset.rating) || 5);
+    });
+  }
+
+  paintStars(rating);
+};
+
+function ensureStarPickerForInput(inputId, defaultRating = 5) {
+  const existingEl = document.getElementById(inputId);
+  if (existingEl && existingEl.tagName === 'SELECT') {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'star-rating-picker';
+    wrapper.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 4px;';
+    wrapper.innerHTML = `
+      <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Your Rating</span>
+      <div class="star-buttons" id="stars-for-${inputId}" style="display: flex; gap: 6px; align-items: center;"></div>
+    `;
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.id = inputId;
+    hidden.value = String(defaultRating);
+    existingEl.replaceWith(wrapper, hidden);
+  }
+  window.setStarRating(inputId, defaultRating);
+}
+
 function startSiteReviewFormEdit(reviewId) {
   const review = currentSiteReviews.find(r => r.id === reviewId);
   if (!review || !isMyReview(review, 'site')) return;
   editingSiteReviewId = review.id;
 
   const nameInput = document.getElementById("reviewerName");
-  const ratingSelect = document.getElementById("reviewRating");
   const commentInput = document.getElementById("reviewComment");
   const form = document.getElementById("siteReviewForm");
 
   if (nameInput) nameInput.value = review.reviewerName;
-  if (ratingSelect) ratingSelect.value = String(review.rating);
+  window.setStarRating("reviewRating", review.rating);
   if (commentInput) commentInput.value = review.comment;
 
   const pastSelect = document.getElementById("sitePastReviewSelect");
@@ -1551,6 +1619,7 @@ function resetSiteReviewFormMode() {
   const form = document.getElementById("siteReviewForm");
   if (form) {
     form.reset();
+    window.setStarRating("reviewRating", 5);
     if (window.currentUser && window.currentUser.name) {
       const nameInput = document.getElementById("reviewerName");
       if (nameInput) nameInput.value = window.currentUser.name;
@@ -1571,18 +1640,14 @@ window.openSiteReviewEdit = function(reviewId) {
   if (!card) return;
 
   card.dataset.origHtml = card.innerHTML;
+  const ratingInputId = `edit-site-rating-${reviewId}`;
 
   card.innerHTML = `
     <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
         <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Your Review</span>
-        <select id="edit-site-rating-${reviewId}" style="padding: 5px 8px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 14px;">
-          <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ (5)</option>
-          <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ (4)</option>
-          <option value="3" ${review.rating === 3 ? 'selected' : ''}>⭐⭐⭐ (3)</option>
-          <option value="2" ${review.rating === 2 ? 'selected' : ''}>⭐⭐ (2)</option>
-          <option value="1" ${review.rating === 1 ? 'selected' : ''}>⭐ (1)</option>
-        </select>
+        <div class="star-buttons" id="stars-for-${ratingInputId}" style="display: flex; gap: 6px; align-items: center;"></div>
+        <input type="hidden" id="${ratingInputId}" value="${review.rating}" />
       </div>
       <input type="text" id="edit-site-name-${reviewId}" value="${escapeHtml(review.reviewerName)}" placeholder="Your Name" style="width: 100%; padding: 8px 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;" required />
       <textarea id="edit-site-comment-${reviewId}" rows="3" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px; resize: vertical;" required>${escapeHtml(review.comment)}</textarea>
@@ -1592,6 +1657,7 @@ window.openSiteReviewEdit = function(reviewId) {
       </div>
     </div>
   `;
+  window.setStarRating(ratingInputId, review.rating);
 };
 
 window.cancelSiteReviewEdit = function(reviewId) {
@@ -1643,6 +1709,8 @@ function initSiteReviewForm() {
   const form = document.getElementById("siteReviewForm");
   if (!form) return;
 
+  ensureStarPickerForInput("reviewRating", 5);
+
   // Auto-fill reviewer name if logged in
   if (window.currentUser && window.currentUser.name) {
     const nameInput = document.getElementById("reviewerName");
@@ -1691,6 +1759,7 @@ function initSiteReviewForm() {
         }
         alert("Thank you for your review!");
         form.reset();
+        window.setStarRating("reviewRating", 5);
         if (window.currentUser) {
           const siteNameInput = document.getElementById("reviewerName");
           if (siteNameInput) siteNameInput.value = window.currentUser.name;
@@ -1851,12 +1920,11 @@ function startProductReviewFormEdit(reviewId) {
   editingProductReviewId = review.id;
 
   const nameInput = document.getElementById("prodReviewerName");
-  const ratingSelect = document.getElementById("prodReviewRating");
   const commentInput = document.getElementById("prodReviewComment");
   const form = document.getElementById("productReviewForm");
 
   if (nameInput) nameInput.value = review.reviewerName;
-  if (ratingSelect) ratingSelect.value = String(review.rating);
+  window.setStarRating("prodReviewRating", review.rating);
   if (commentInput) commentInput.value = review.comment;
 
   const pastSelect = document.getElementById("prodPastReviewSelect");
@@ -1884,6 +1952,7 @@ function resetProductReviewFormMode() {
   const form = document.getElementById("productReviewForm");
   if (form) {
     form.reset();
+    window.setStarRating("prodReviewRating", 5);
     if (window.currentUser && window.currentUser.name) {
       const nameInput = document.getElementById("prodReviewerName");
       if (nameInput) nameInput.value = window.currentUser.name;
@@ -1904,18 +1973,14 @@ window.openProductReviewEdit = function(reviewId, productId) {
   if (!row) return;
 
   row.dataset.origHtml = row.innerHTML;
+  const ratingInputId = `edit-prod-rating-${reviewId}`;
 
   row.innerHTML = `
     <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 12px; width: 100%; background: var(--bg-hover); padding: 20px; border-radius: 4px; border: 1px solid var(--border-subtle); margin-top: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <span style="font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Your Product Review</span>
-        <select id="edit-prod-rating-${reviewId}" style="padding: 6px 10px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;">
-          <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ - Excellent (5)</option>
-          <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ - Good (4)</option>
-          <option value="3" ${review.rating === 3 ? 'selected' : ''}>⭐⭐⭐ - Okay (3)</option>
-          <option value="2" ${review.rating === 2 ? 'selected' : ''}>⭐⭐ - Poor (2)</option>
-          <option value="1" ${review.rating === 1 ? 'selected' : ''}>⭐ - Terrible (1)</option>
-        </select>
+        <div class="star-buttons" id="stars-for-${ratingInputId}" style="display: flex; gap: 6px; align-items: center;"></div>
+        <input type="hidden" id="${ratingInputId}" value="${review.rating}" />
       </div>
       <input type="text" id="edit-prod-name-${reviewId}" value="${escapeHtml(review.reviewerName)}" placeholder="Your Name" style="width: 100%; padding: 10px 12px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;" required />
       <textarea id="edit-prod-comment-${reviewId}" rows="4" style="width: 100%; padding: 12px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; resize: vertical;" required>${escapeHtml(review.comment)}</textarea>
@@ -1925,6 +1990,7 @@ window.openProductReviewEdit = function(reviewId, productId) {
       </div>
     </div>
   `;
+  window.setStarRating(ratingInputId, review.rating);
 };
 
 window.cancelProductReviewEdit = function(reviewId) {
@@ -1976,6 +2042,8 @@ function initProductReviewForm(productId) {
   const form = document.getElementById("productReviewForm");
   if (!form) return;
 
+  ensureStarPickerForInput("prodReviewRating", 5);
+
   // Auto-fill reviewer name if logged in
   if (window.currentUser && window.currentUser.name) {
     const nameInput = document.getElementById("prodReviewerName");
@@ -2024,6 +2092,7 @@ function initProductReviewForm(productId) {
         }
         alert("Thanks for your review!");
         form.reset();
+        window.setStarRating("prodReviewRating", 5);
         if (window.currentUser) {
           const prodNameInput = document.getElementById("prodReviewerName");
           if (prodNameInput) prodNameInput.value = window.currentUser.name;

@@ -160,13 +160,11 @@
             <form id="productReviewForm" class="detailed-review-form" onsubmit="event.preventDefault();">
               <input type="text" id="prodReviewerName" placeholder="Your Name" required>
               
-              <select id="prodReviewRating">
-                <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
-                <option value="4">⭐⭐⭐⭐ - Good</option>
-                <option value="3">⭐⭐⭐ - Okay</option>
-                <option value="2">⭐⭐ - Poor</option>
-                <option value="1">⭐ - Terrible</option>
-              </select>
+              <div class="star-rating-picker" data-target="prodReviewRating" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: var(--bg-deep); border: 1px solid var(--border-subtle); border-radius: 4px;">
+                <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Your Rating</span>
+                <div class="star-buttons" id="stars-for-prodReviewRating" style="display: flex; gap: 6px; align-items: center;"></div>
+              </div>
+              <input type="hidden" id="prodReviewRating" value="5">
 
               <textarea id="prodReviewComment" placeholder="What did you like or dislike?" required rows="4"></textarea>
               <button type="submit">Write a customer review</button>

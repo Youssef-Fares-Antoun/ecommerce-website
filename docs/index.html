@@ -115,13 +115,11 @@
       <h3>Leave a Review</h3>
       <form id="siteReviewForm">
         <input type="text" id="reviewerName" placeholder="Driver Name" required>
-        <select id="reviewRating">
-          <option value="5">⭐⭐⭐⭐⭐ (Flawless)</option>
-          <option value="4">⭐⭐⭐⭐ (Great)</option>
-          <option value="3">⭐⭐⭐ (Good)</option>
-          <option value="2">⭐⭐ (Needs Work)</option>
-          <option value="1">⭐ (Pit Stop Required)</option>
-        </select>
+        <div class="star-rating-picker" data-target="reviewRating" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 2px;">
+          <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Your Rating</span>
+          <div class="star-buttons" id="stars-for-reviewRating" style="display: flex; gap: 6px; align-items: center;"></div>
+        </div>
+        <input type="hidden" id="reviewRating" value="5">
         <textarea id="reviewComment" placeholder="Tell us about the fit, feel, and performance..." required rows="3"></textarea>
         <button type="submit" class="btn-neon">Submit Feedback</button>
       </form>
