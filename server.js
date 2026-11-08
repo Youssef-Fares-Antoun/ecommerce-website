@@ -447,6 +447,29 @@ app.post('/api/products/:id/reviews', async (req, res) => {
   } catch (err) { res.status(400).json({ error: "Failed to add product review" }); }
 });
 
+app.get(['/api/admin/product-reviews', '/api/product-reviews'], verifyAdmin, async (req, res) => {
+  try {
+    const reviews = await ProductReview.findAll({
+      include: [{ model: Product, attributes: ['id', 'name', 'image', 'category', 'price'] }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch all product reviews" });
+  }
+});
+
+app.delete(['/api/admin/product-reviews/:id', '/api/product-reviews/:id'], verifyAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deletedCount = await ProductReview.destroy({ where: { id: id } });
+    if (deletedCount === 0) return res.status(404).json({ error: "Product review not found." });
+    res.json({ message: `Success! Product Review #${id} has been removed.` });
+  } catch (err) {
+    res.status(500).json({ error: "Server error during product review deletion." });
+  }
+});
+
 app.put(['/api/product-reviews/:id', '/api/products/:productId/reviews/:id'], async (req, res) => {
   try {
     const review = await ProductReview.findByPk(req.params.id);

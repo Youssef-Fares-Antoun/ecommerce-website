@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/profile.css"> 
   
-  <script src="/admin/admin.js" defer></script>
+  <script src="/admin/admin.js?v=2" defer></script>
 
   <style>
     /* Strict Desktop-First Bento Admin Styles */
@@ -144,6 +144,7 @@
         <a href="#users" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Users</a>
         <a href="#promos" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Promo Codes</a>
         <a href="#reviews" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Reviews</a>
+        <a href="#product-reviews" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Product Reviews</a>
         <a href="javascript:void(0)" onclick="handleAdminLogout()" class="menu-item logout" style="padding: 12px; color: #e74c3c; text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; margin-top: 20px;">Logout</a>      
       </nav>
     </aside>
@@ -329,6 +330,23 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- TAB 6: PRODUCT REVIEWS -->
+      <div class="content-card" id="product-reviews-card" style="display: none;">
+        <div style="display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; justify-content: space-between !important; align-items: center !important; gap: 15px !important; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; margin-bottom: 20px;">
+          <h2 style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1.3rem; margin: 0; text-transform: uppercase;">Product Reviews Moderation</h2>
+          <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important;">
+            <label for="productReviewFilter" style="font-family: 'Syncopate', sans-serif; font-size: 0.75em; color: var(--text-muted); text-transform: uppercase;">Classify / Filter by Product:</label>
+            <select id="productReviewFilter" onchange="filterAdminProductReviews()" style="padding: 8px 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-weight: bold; font-size: 15px;">
+              <option value="All">All Products (Classified)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="admin-product-reviews-container">
+          <p style="text-align: center; padding: 20px; color: var(--text-muted); font-family: 'Rajdhani', sans-serif;">Loading product reviews...</p>
         </div>
       </div>
 

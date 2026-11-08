@@ -53,6 +53,7 @@ async function verifyAdminAndLoad() {
         loadAdminStats();
         loadInventory();
         loadAdminReviews();
+        loadAdminProductReviews();
         loadPromoCodes(); 
         loadUsers(); // 🚀 Load Users
 
@@ -93,6 +94,7 @@ function setupAdminTabs() {
     const inventoryCard = document.getElementById("inventory-card");
     const promosCard = document.getElementById("promos-card"); 
     const reviewsCard = document.getElementById("reviews-card");
+    const productReviewsCard = document.getElementById("product-reviews-card");
     const usersCard = document.getElementById("users-card"); // 🚀 Get Users Card
 
     menuItems.forEach(item => {
@@ -106,6 +108,7 @@ function setupAdminTabs() {
             if (inventoryCard) inventoryCard.style.display = "none";
             if (promosCard) promosCard.style.display = "none";
             if (reviewsCard) reviewsCard.style.display = "none";
+            if (productReviewsCard) productReviewsCard.style.display = "none";
             if (usersCard) usersCard.style.display = "none"; // 🚀 Hide Users Card
 
             const target = item.getAttribute("href");
@@ -119,6 +122,9 @@ function setupAdminTabs() {
             } else if (target === "#reviews" && reviewsCard) {
                 reviewsCard.style.display = "block";
                 loadAdminReviews();
+            } else if (target === "#product-reviews" && productReviewsCard) {
+                productReviewsCard.style.display = "block";
+                loadAdminProductReviews();
             } else if (target === "#users" && usersCard) {
                 usersCard.style.display = "block";
                 loadUsers(); // 🚀 Reload users when tab is opened
@@ -535,6 +541,211 @@ async function deleteReview(reviewId) {
             loadAdminReviews();
         } else {
             alert("Failed to delete review.");
+        }
+    } catch (e) {
+        alert("Network error.");
+    }
+}
+
+// ==========================================
+// PRODUCT REVIEWS MODERATION (CLASSIFIED BY PRODUCT)
+// ==========================================
+let adminProductReviewsCache = [];
+let adminProductsMapCache = {};
+
+function escapeAdminHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+async function loadAdminProductReviews() {
+    const container = document.getElementById("admin-product-reviews-container");
+    if (!container) return;
+
+    try {
+        const [reviewsRes, productsRes] = await Promise.all([
+            fetch('/api/admin/product-reviews'),
+            fetch('/api/products')
+        ]);
+
+        if (!reviewsRes.ok) {
+            container.innerHTML = `<p style="color:red; text-align:center; padding: 20px; font-family: 'Rajdhani', sans-serif;">Failed to load product reviews.</p>`;
+            return;
+        }
+
+        const reviews = await reviewsRes.json();
+        const products = productsRes.ok ? await productsRes.json() : [];
+
+        adminProductReviewsCache = Array.isArray(reviews) ? reviews : [];
+        adminProductsMapCache = {};
+        if (Array.isArray(products)) {
+            products.forEach(p => { adminProductsMapCache[p.id] = p; });
+        }
+        adminProductReviewsCache.forEach(r => {
+            if (r.Product && r.Product.id) {
+                adminProductsMapCache[r.Product.id] = r.Product;
+            }
+        });
+
+        // Populate product classification filter dropdown
+        const filterSelect = document.getElementById("productReviewFilter");
+        if (filterSelect) {
+            const previousSelection = filterSelect.value || "All";
+            const countByProduct = {};
+            adminProductReviewsCache.forEach(r => {
+                const pid = r.ProductId || (r.Product && r.Product.id) || 'unknown';
+                countByProduct[pid] = (countByProduct[pid] || 0) + 1;
+            });
+
+            // Collect products that have reviews first, then other products
+            const productIdsWithReviews = Object.keys(countByProduct);
+            let optionsHtml = `<option value="All">All Products (${adminProductReviewsCache.length} Reviews)</option>`;
+
+            productIdsWithReviews
+                .sort((a, b) => Number(a) - Number(b))
+                .forEach(pid => {
+                    const prod = adminProductsMapCache[pid];
+                    const prodName = prod ? prod.name : `Product #${pid}`;
+                    const count = countByProduct[pid] || 0;
+                    optionsHtml += `<option value="${pid}">${escapeAdminHtml(prodName)} (${count})</option>`;
+                });
+
+            filterSelect.innerHTML = optionsHtml;
+            if ([...filterSelect.options].some(o => o.value === previousSelection)) {
+                filterSelect.value = previousSelection;
+            }
+        }
+
+        renderAdminProductReviews();
+    } catch (err) {
+        console.error("Admin Product Reviews Load Error:", err);
+        container.innerHTML = `<p style="color:red; text-align:center; padding: 20px; font-family: 'Rajdhani', sans-serif;">Network error loading product reviews.</p>`;
+    }
+}
+
+function filterAdminProductReviews() {
+    renderAdminProductReviews();
+}
+
+function renderAdminProductReviews() {
+    const container = document.getElementById("admin-product-reviews-container");
+    if (!container) return;
+
+    const filterSelect = document.getElementById("productReviewFilter");
+    const selectedProductId = filterSelect ? filterSelect.value : "All";
+
+    if (adminProductReviewsCache.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding: 25px; color: var(--text-muted); font-family: 'Rajdhani', sans-serif; font-size: 16px;">No product reviews have been submitted yet.</p>`;
+        return;
+    }
+
+    // Group reviews by ProductId
+    const groupedByProduct = {};
+    adminProductReviewsCache.forEach(review => {
+        const pid = String(review.ProductId || (review.Product && review.Product.id) || 'unknown');
+        if (selectedProductId !== "All" && pid !== String(selectedProductId)) return;
+        if (!groupedByProduct[pid]) groupedByProduct[pid] = [];
+        groupedByProduct[pid].push(review);
+    });
+
+    const groupKeys = Object.keys(groupedByProduct).sort((a, b) => Number(a) - Number(b));
+
+    if (groupKeys.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding: 25px; color: var(--text-muted); font-family: 'Rajdhani', sans-serif; font-size: 16px;">No reviews found for this product.</p>`;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    groupKeys.forEach(pid => {
+        const prodReviews = groupedByProduct[pid];
+        const product = adminProductsMapCache[pid] || (prodReviews[0] && prodReviews[0].Product) || null;
+        const prodName = product ? product.name : `Product #${pid}`;
+        const prodCategory = product && product.category ? product.category.toUpperCase() : "CARTEE";
+        const avgRating = (prodReviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / prodReviews.length).toFixed(1);
+
+        let imgSrc = product && product.image ? product.image.replace(/^\//, "") : "images/default.jpg";
+        if (!imgSrc.startsWith("http") && !imgSrc.startsWith("images/")) {
+            imgSrc = "images/" + imgSrc.split('/').pop();
+        }
+        if (!imgSrc.startsWith("http")) {
+            imgSrc = '/' + imgSrc;
+        }
+
+        const section = document.createElement("div");
+        section.style.cssText = "margin-bottom: 30px; border: 1px solid var(--border-subtle); border-radius: 4px; overflow: hidden; background: var(--bg-deep);";
+
+        const rowsHtml = prodReviews.map(review => {
+            const stars = "⭐".repeat(review.rating);
+            const dateStr = review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "-";
+            return `
+                <tr>
+                    <td style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
+                    <td style="font-family: 'Rajdhani', sans-serif;">${stars}</td>
+                    <td style="font-style: italic; font-family: 'Rajdhani', sans-serif; color: var(--text-muted);">"${escapeAdminHtml(review.comment)}"</td>
+                    <td style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
+                    <td style="text-align: right;">
+                        <button onclick="deleteProductReview(${review.id})" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: 'Rajdhani', sans-serif;">Purge</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        section.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background: var(--bg-hover); border-bottom: 1px solid var(--border-subtle); border-left: 4px solid var(--accent);">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="${imgSrc}" alt="${escapeAdminHtml(prodName)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                    <div>
+                        <h3 style="margin: 0; font-family: 'Syncopate', sans-serif; font-size: 0.95rem; color: var(--text-main); text-transform: uppercase;">
+                            ${escapeAdminHtml(prodName)} <span style="color: var(--text-muted); font-size: 0.8em;">#${pid}</span>
+                        </h3>
+                        <span style="display: inline-block; margin-top: 4px; font-family: 'Syncopate', sans-serif; font-size: 0.65rem; color: var(--accent); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px; text-transform: uppercase;">
+                            ${escapeAdminHtml(prodCategory)}
+                        </span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; font-family: 'Syncopate', sans-serif; font-size: 0.75rem;">
+                    <span style="color: var(--text-muted);">AVG: <strong style="color: var(--accent);">⭐ ${avgRating}</strong></span>
+                    <span style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-subtle); padding: 5px 10px; border-radius: 4px; font-weight: 700;">
+                        ${prodReviews.length} ${prodReviews.length === 1 ? 'Review' : 'Reviews'}
+                    </span>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Driver</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.appendChild(section);
+    });
+}
+
+async function deleteProductReview(reviewId) {
+    if (!confirm(`Are you sure you want to purge Product Review #${reviewId}?`)) return;
+    try {
+        const res = await fetch(`/api/admin/product-reviews/${reviewId}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadAdminProductReviews();
+        } else {
+            alert("Failed to delete product review.");
         }
     } catch (e) {
         alert("Network error.");
