@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
 const path = require('path');
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 const pg = require('pg');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
@@ -95,7 +95,15 @@ const User = sequelize.define('User', {
   address: { type: DataTypes.STRING, allowNull: true  },
   phone: { type: DataTypes.STRING, allowNull: true },
   isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false },
-  isBanned: { type: DataTypes.BOOLEAN, defaultValue: false } // 🚀 Added ban tracking
+  isBanned: { type: DataTypes.BOOLEAN, defaultValue: false }, // 🚀 Added ban tracking
+  lastIp: { type: DataTypes.STRING, allowNull: true } // 🚀 Track user IP for IP-level bans
+});
+
+const BannedIdentity = sequelize.define('BannedIdentity', {
+  email: { type: DataTypes.STRING, allowNull: true },
+  ipAddress: { type: DataTypes.STRING, allowNull: true },
+  userId: { type: DataTypes.INTEGER, allowNull: true },
+  reason: { type: DataTypes.STRING, allowNull: true }
 });
 
 const Address = sequelize.define('Address', {
@@ -159,6 +167,19 @@ async function ensureReviewColumns() {
   try {
     await sequelize.query('ALTER TABLE "SiteReviews" ADD COLUMN IF NOT EXISTS "UserId" INTEGER REFERENCES "Users"(id) ON DELETE SET NULL;');
     await sequelize.query('ALTER TABLE "ProductReviews" ADD COLUMN IF NOT EXISTS "UserId" INTEGER REFERENCES "Users"(id) ON DELETE SET NULL;');
+    await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "isBanned" BOOLEAN DEFAULT false;');
+    await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "lastIp" VARCHAR(255);');
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS "BannedIdentities" (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255),
+        "ipAddress" VARCHAR(255),
+        "userId" INTEGER,
+        reason VARCHAR(255),
+        "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+        "updatedAt" TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
   } catch (e) {
     // Ignore if table doesn't exist yet or dialect doesn't support IF NOT EXISTS
   }
@@ -250,33 +271,137 @@ app.delete('/api/products/:id', verifyAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Server error during deletion." }); }
 });
 
+const getClientIp = (req) => {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) {
+    const first = String(xff).split(',')[0].trim();
+    if (first) return first;
+  }
+  const realIp = req.headers['x-real-ip'];
+  if (realIp) return String(realIp).trim();
+  return req.ip || (req.socket && req.socket.remoteAddress) || null;
+};
+
+const checkBanStatus = async ({ email, ipAddress }) => {
+  const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+  const cleanIp = ipAddress ? String(ipAddress).trim() : null;
+
+  if (cleanEmail) {
+    const bannedUserByEmail = await User.findOne({
+      where: {
+        isBanned: true,
+        [Op.or]: [
+          { email: cleanEmail },
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+        ]
+      }
+    });
+    if (bannedUserByEmail) return { banned: true, reason: 'email' };
+
+    const bannedIdentityByEmail = await BannedIdentity.findOne({
+      where: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+    });
+    if (bannedIdentityByEmail) return { banned: true, reason: 'email' };
+  }
+
+  if (cleanIp) {
+    const bannedUserByIp = await User.findOne({
+      where: { isBanned: true, lastIp: cleanIp }
+    });
+    if (bannedUserByIp) return { banned: true, reason: 'ip' };
+
+    const bannedIdentityByIp = await BannedIdentity.findOne({
+      where: { ipAddress: cleanIp }
+    });
+    if (bannedIdentityByIp) return { banned: true, reason: 'ip' };
+  }
+
+  return { banned: false, reason: null };
+};
+
 app.post('/api/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    const userExits = await User.findOne({ where: { email: email } });
-    if (userExits) return res.status(400).json({ message: "This email is already registered." });
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const clientIp = getClientIp(req);
+
+    // 🚀 1. Block banned email addresses and banned IP addresses from creating a new account
+    const banStatus = await checkBanStatus({ email: cleanEmail, ipAddress: clientIp });
+    if (banStatus.banned) {
+      const msg = banStatus.reason === 'email'
+        ? "Access Denied: This email address has been banned and cannot be used to create an account."
+        : "Access Denied: You have been banned from creating an account from this IP address.";
+      return res.status(403).json({ message: msg });
+    }
+
+    const userExits = await User.findOne({
+      where: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+    });
+    if (userExits) {
+      if (userExits.isBanned) {
+        return res.status(403).json({ message: "Access Denied: This email address has been banned and cannot be used to create an account." });
+      }
+      return res.status(400).json({ message: "This email is already registered." });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const newUser = await User.create({ name, email, password: hashedPassword });
+    const newUser = await User.create({
+      name: (name || '').trim(),
+      email: (email || '').trim(),
+      password: hashedPassword,
+      isBanned: false,
+      lastIp: clientIp
+    });
     res.status(201).json({ message: "Registration successful!", user: { id: newUser.id, name: newUser.name, email: newUser.email } });
-  } catch (err) { res.status(500).send("Server Error"); }
+  } catch (err) {
+    console.error("Register error:", err);
+    res.status(500).json({ message: "Server Error during registration." });
+  }
 });
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ where: { email: email } });
-    if (!user) return res.status(401).json({ message: "Invalid email or password." });
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const clientIp = getClientIp(req);
+
+    const user = await User.findOne({
+      where: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+    });
+
+    if (!user) {
+      const banStatus = await checkBanStatus({ email: cleanEmail, ipAddress: clientIp });
+      if (banStatus.banned) {
+        return res.status(403).json({ message: "Access Denied: Your account or IP address has been banned." });
+      }
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
     
-    // 🚀 Check if user is banned
-    if (user.isBanned) return res.status(403).json({ message: "Access Denied: This account has been banned." });
+    // 🚀 Check if user is banned (or if a non-admin user is logging in from a banned IP)
+    if (user.isBanned) {
+      return res.status(403).json({ message: "Access Denied: This account has been banned." });
+    }
+    if (!user.isAdmin) {
+      const banStatus = await checkBanStatus({ email: cleanEmail, ipAddress: clientIp });
+      if (banStatus.banned) {
+        return res.status(403).json({ message: "Access Denied: Your account or IP address has been banned." });
+      }
+    }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(401).json({ message: "Invalid email or password." });
+
+    // Record the user's IP address on login
+    if (clientIp && user.lastIp !== clientIp) {
+      user.lastIp = clientIp;
+      await user.save();
+    }
+
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 });
     res.json({ message: "Login successful!", user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin }});
-  } catch (err) { res.status(500).send("Server Error"); }
+  } catch (err) { res.status(500).json({ message: "Server Error" }); }
 });
 
 app.get('/api/users/me', async (req, res) => {
@@ -286,6 +411,18 @@ app.get('/api/users/me', async (req, res) => {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(verified.id, { attributes: { exclude: ['password'] } });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.isBanned) {
+      res.clearCookie('token');
+      return res.status(403).json({ message: "Access Denied: Your account has been banned.", isBanned: true });
+    }
+
+    const clientIp = getClientIp(req);
+    if (clientIp && user.lastIp !== clientIp) {
+      await User.update({ lastIp: clientIp }, { where: { id: user.id } });
+      user.lastIp = clientIp;
+    }
+
     res.json({ user });
   } catch (err) { res.status(401).json({ message: "Invalid or expired token" }); }
 });
@@ -298,6 +435,10 @@ app.put('/api/users/me', async (req, res) => {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(verified.id);
     if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.isBanned) {
+      res.clearCookie('token');
+      return res.status(403).json({ message: "Access Denied: Your account has been banned." });
+    }
 
     const { email, currentPassword, newPassword } = req.body;
 
@@ -343,7 +484,9 @@ const getAuthUser = async (req) => {
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     if (!verified || !verified.id) return null;
-    return await User.findByPk(verified.id);
+    const user = await User.findByPk(verified.id);
+    if (!user || user.isBanned) return null;
+    return user;
   } catch (err) {
     return null;
   }
@@ -813,11 +956,33 @@ app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
             return res.status(400).json({ error: "You cannot delete your own admin account." });
         }
 
-        const deletedCount = await User.destroy({ where: { id: targetUserId } });
-        
-        if (deletedCount === 0) {
+        const targetUser = await User.findByPk(targetUserId);
+        if (!targetUser) {
             return res.status(404).json({ error: "User not found." });
         }
+
+        // If the user was banned before deletion, keep their email & IP in BannedIdentities so they cannot re-register
+        if (targetUser.isBanned) {
+            const cleanEmail = targetUser.email ? targetUser.email.trim().toLowerCase() : null;
+            const existingBan = await BannedIdentity.findOne({
+                where: {
+                    [Op.or]: [
+                        { userId: targetUser.id },
+                        ...(cleanEmail ? [{ email: cleanEmail }] : [])
+                    ]
+                }
+            });
+            if (!existingBan) {
+                await BannedIdentity.create({
+                    userId: targetUser.id,
+                    email: cleanEmail,
+                    ipAddress: targetUser.lastIp || null,
+                    reason: 'Deleted while banned'
+                });
+            }
+        }
+
+        await targetUser.destroy();
 
         res.json({ message: "User deleted successfully." });
     } catch (error) {
@@ -844,7 +1009,7 @@ app.put('/api/admin/users/:id/toggle-admin', verifyAdmin, async (req, res) => {
     }
 });
 
-// 🚀 TOGGLE BAN STATUS
+// 🚀 TOGGLE BAN STATUS (Bans User Account + Email + IP Address)
 app.put('/api/admin/users/:id/toggle-ban', verifyAdmin, async (req, res) => {
     try {
         const targetUserId = parseInt(req.params.id);
@@ -856,8 +1021,41 @@ app.put('/api/admin/users/:id/toggle-ban', verifyAdmin, async (req, res) => {
         
         user.isBanned = !user.isBanned;
         await user.save();
-        res.json({ message: "Ban status updated successfully.", user });
+
+        const cleanEmail = user.email ? user.email.trim().toLowerCase() : null;
+
+        if (user.isBanned) {
+            await BannedIdentity.destroy({
+                where: {
+                    [Op.or]: [
+                        { userId: user.id },
+                        ...(cleanEmail ? [{ email: cleanEmail }] : [])
+                    ]
+                }
+            });
+            await BannedIdentity.create({
+                userId: user.id,
+                email: cleanEmail,
+                ipAddress: user.lastIp || null,
+                reason: `Banned by Admin #${req.user.id}`
+            });
+        } else {
+            const orConditions = [{ userId: user.id }];
+            if (cleanEmail) orConditions.push({ email: cleanEmail });
+            if (user.lastIp) orConditions.push({ ipAddress: user.lastIp });
+            await BannedIdentity.destroy({
+                where: { [Op.or]: orConditions }
+            });
+        }
+
+        res.json({
+            message: user.isBanned
+                ? `User ${user.name} has been banned (Email & IP blocked).`
+                : `User ${user.name} has been unbanned.`,
+            user
+        });
     } catch (err) {
+        console.error("Toggle ban error:", err);
         res.status(500).json({ error: "Failed to update ban status." });
     }
 });

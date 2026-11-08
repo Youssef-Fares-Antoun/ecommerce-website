@@ -162,7 +162,7 @@ async function loadUsers() {
             
             // Generate visual badges based on user role & status
             const statusBadge = user.isBanned 
-                ? `<span style="background: rgba(231, 76, 60, 0.15); color: #e74c3c; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; border: 1px solid #e74c3c; margin-left: 5px;">Banned</span>`
+                ? `<span style="background: rgba(231, 76, 60, 0.15); color: #e74c3c; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; border: 1px solid #e74c3c; margin-left: 5px;">Banned (Email & IP Blocked)</span>`
                 : `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; border: 1px solid #2ecc71; margin-left: 5px;">Active</span>`;
 
             const roleBadge = user.isAdmin 
@@ -189,11 +189,15 @@ async function loadUsers() {
                 `;
             }
 
+            const ipTag = user.lastIp
+                ? `<div style="font-size: 0.78em; color: #7f8c8d; margin-top: 2px;">IP: ${user.lastIp}</div>`
+                : `<div style="font-size: 0.78em; color: #7f8c8d; margin-top: 2px;">IP: Not recorded yet</div>`;
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td style="font-weight: bold; color: var(--text-main);">#${user.id}</td>
                 <td style="font-weight: bold; color: var(--text-main);">${user.name}</td>
-                <td style="color: var(--text-muted);">${user.email}</td>
+                <td style="color: var(--text-muted);">${user.email}${ipTag}</td>
                 <td>${roleBadge} ${statusBadge}</td>
                 <td>${date}</td>
                 <td style="text-align: right; min-width: 250px;">${actionButtons}</td>
@@ -213,6 +217,7 @@ async function toggleAdmin(userId, userName, currentStatus) {
     try {
         const res = await fetch(`/api/admin/users/${userId}/toggle-admin`, { method: 'PUT' });
         if (res.ok) {
+            adminUsersCache = [];
             loadUsers(); // Refresh the list to show updated UI
         } else {
             const data = await res.json();
@@ -224,15 +229,18 @@ async function toggleAdmin(userId, userName, currentStatus) {
 }
 
 async function toggleBan(userId, userName, currentStatus) {
-    const action = currentStatus ? "unban" : "ban";
-    if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
+    const confirmMsg = currentStatus
+        ? `Are you sure you want to UNBAN "${userName}" and unblock their email and IP address?`
+        : `Are you sure you want to BAN "${userName}"?\n\nThis will lock their account and block their email and IP address from logging in or creating any new accounts.`;
+    if (!confirm(confirmMsg)) return;
 
     try {
         const res = await fetch(`/api/admin/users/${userId}/toggle-ban`, { method: 'PUT' });
+        const data = await res.json();
         if (res.ok) {
+            adminUsersCache = [];
             loadUsers(); // Refresh the list to show updated UI
         } else {
-            const data = await res.json();
             alert(data.error || "Failed to update ban status.");
         }
     } catch (err) {
@@ -246,6 +254,7 @@ async function deleteUser(userId, userName) {
     try {
         const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
         if (res.ok) {
+            adminUsersCache = [];
             loadUsers(); // Refresh the list
         } else {
             const data = await res.json();

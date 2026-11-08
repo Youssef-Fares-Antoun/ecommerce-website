@@ -590,7 +590,16 @@ async function getCurrentUser() {
   if (window.currentUser !== undefined) return window.currentUser;
   if (!currentUserPromise) {
     currentUserPromise = fetch('/api/users/me')
-      .then(r => r.ok ? r.json() : null)
+      .then(async r => {
+        if (r.status === 403) {
+          const errData = await r.json().catch(() => ({}));
+          if (errData && errData.isBanned) {
+            alert(errData.error || "Access Denied: Your account has been banned.");
+          }
+          return null;
+        }
+        return r.ok ? r.json() : null;
+      })
       .then(data => {
         window.currentUser = (data && data.user) ? data.user : null;
         return window.currentUser;
