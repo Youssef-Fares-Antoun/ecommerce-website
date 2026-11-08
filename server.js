@@ -117,6 +117,9 @@ const SiteReview = sequelize.define('SiteReview', {
   comment: { type: DataTypes.TEXT, allowNull: false }
 });
 
+User.hasMany(SiteReview);
+SiteReview.belongsTo(User);
+
 const ProductReview = sequelize.define('ProductReview', {
   reviewerName: { type: DataTypes.STRING, allowNull: false },
   rating: { type: DataTypes.INTEGER, allowNull: false }, 
@@ -125,6 +128,8 @@ const ProductReview = sequelize.define('ProductReview', {
 
 Product.hasMany(ProductReview);
 ProductReview.belongsTo(Product);
+User.hasMany(ProductReview);
+ProductReview.belongsTo(User);
 
 const Order = sequelize.define('Order', {
   totalAmount: { type: DataTypes.FLOAT, allowNull: false },
@@ -150,6 +155,15 @@ const PromoCode = sequelize.define('PromoCode', {
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true }
 });
 
+async function ensureReviewColumns() {
+  try {
+    await sequelize.query('ALTER TABLE "SiteReviews" ADD COLUMN IF NOT EXISTS "UserId" INTEGER REFERENCES "Users"(id) ON DELETE SET NULL;');
+    await sequelize.query('ALTER TABLE "ProductReviews" ADD COLUMN IF NOT EXISTS "UserId" INTEGER REFERENCES "Users"(id) ON DELETE SET NULL;');
+  } catch (e) {
+    // Ignore if table doesn't exist yet or dialect doesn't support IF NOT EXISTS
+  }
+}
+
 async function initDb() {
   try {
     await sequelize.sync({ alter: true }); 
@@ -159,6 +173,7 @@ async function initDb() {
   }
 }
 
+ensureReviewColumns();
 if (process.env.NODE_ENV !== 'production') {
     initDb();
 }
@@ -334,6 +349,27 @@ const getAuthUser = async (req) => {
   }
 };
 
+const canUserModifyReview = (review, authUser, claimedByBrowser) => {
+  if (review.UserId) {
+    return Boolean(authUser && authUser.id === review.UserId);
+  }
+  if (authUser && authUser.name && review.reviewerName) {
+    const rName = review.reviewerName.trim().toLowerCase();
+    const uName = authUser.name.trim().toLowerCase();
+    if (rName === uName) return true;
+    const rFirst = rName.split(/\s+/)[0];
+    const uFirst = uName.split(/\s+/)[0];
+    if (rFirst.length >= 3 && rFirst === uFirst) return true;
+  }
+  if (!authUser && claimedByBrowser === true) {
+    return true;
+  }
+  if (authUser && claimedByBrowser === true) {
+    return true;
+  }
+  return false;
+};
+
 app.get('/api/site-reviews', async (req, res) => {
   try { res.json(await SiteReview.findAll({ order: [['createdAt', 'DESC']] })); } 
   catch (err) { res.status(500).json({ error: "Failed to fetch site reviews" }); }
@@ -347,7 +383,8 @@ app.post('/api/site-reviews', async (req, res) => {
     res.status(201).json(await SiteReview.create({
       reviewerName: finalName,
       rating: parseInt(rating),
-      comment
+      comment,
+      UserId: authUser ? authUser.id : null
     }));
   } 
   catch (err) { res.status(400).json({ error: "Failed to add site review" }); }
@@ -358,11 +395,20 @@ app.put('/api/site-reviews/:id', async (req, res) => {
     const review = await SiteReview.findByPk(req.params.id);
     if (!review) return res.status(404).json({ error: "Review not found." });
 
-    const { rating, comment, reviewerName } = req.body;
+    const authUser = await getAuthUser(req);
+    const { rating, comment, reviewerName, claimedByBrowser } = req.body;
+
+    if (!canUserModifyReview(review, authUser, claimedByBrowser)) {
+      return res.status(403).json({ error: "You can only edit your own reviews." });
+    }
+
     if (rating !== undefined) review.rating = parseInt(rating);
     if (comment !== undefined) review.comment = comment;
     if (reviewerName !== undefined && String(reviewerName).trim() !== "") {
       review.reviewerName = String(reviewerName).trim();
+    }
+    if (authUser && !review.UserId) {
+      review.UserId = authUser.id;
     }
 
     await review.save();
@@ -395,7 +441,8 @@ app.post('/api/products/:id/reviews', async (req, res) => {
       ProductId: req.params.id,
       reviewerName: finalName,
       rating: parseInt(rating),
-      comment
+      comment,
+      UserId: authUser ? authUser.id : null
     }));
   } catch (err) { res.status(400).json({ error: "Failed to add product review" }); }
 });
@@ -405,11 +452,20 @@ app.put(['/api/product-reviews/:id', '/api/products/:productId/reviews/:id'], as
     const review = await ProductReview.findByPk(req.params.id);
     if (!review) return res.status(404).json({ error: "Review not found." });
 
-    const { rating, comment, reviewerName } = req.body;
+    const authUser = await getAuthUser(req);
+    const { rating, comment, reviewerName, claimedByBrowser } = req.body;
+
+    if (!canUserModifyReview(review, authUser, claimedByBrowser)) {
+      return res.status(403).json({ error: "You can only edit your own reviews." });
+    }
+
     if (rating !== undefined) review.rating = parseInt(rating);
     if (comment !== undefined) review.comment = comment;
     if (reviewerName !== undefined && String(reviewerName).trim() !== "") {
       review.reviewerName = String(reviewerName).trim();
+    }
+    if (authUser && !review.UserId) {
+      review.UserId = authUser.id;
     }
 
     await review.save();

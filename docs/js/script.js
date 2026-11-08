@@ -1079,14 +1079,27 @@ function rememberMyReview(type, reviewId) {
   } catch (e) {}
 }
 
-function isMyReview(review, type) {
+function isClaimedInBrowser(reviewId, type) {
   const storageKey = type === 'site' ? 'revvo_my_site_reviews' : 'revvo_my_product_reviews';
   try {
     const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    if (list.includes(review.id)) {
-      return true;
-    }
-  } catch (e) {}
+    return list.includes(reviewId);
+  } catch (e) {
+    return false;
+  }
+}
+
+function isMyReview(review, type) {
+  if (!review) return false;
+  // 1. If the review is linked to a registered user account, ONLY that logged-in user owns it
+  if (review.UserId) {
+    return Boolean(window.currentUser && window.currentUser.id === review.UserId);
+  }
+  // 2. For legacy/guest reviews without a UserId, check if created in this browser session
+  if (isClaimedInBrowser(review.id, type)) {
+    return true;
+  }
+  // 3. Or if logged in and the legacy review name matches the logged-in user's name
   if (window.currentUser && window.currentUser.name && review.reviewerName) {
     const rName = review.reviewerName.trim().toLowerCase();
     const uName = window.currentUser.name.trim().toLowerCase();
@@ -1123,7 +1136,7 @@ async function loadSiteReviews() {
         article.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
             <h4 style="margin: 0; color: var(--accent);">${stars}</h4>
-            <button type="button" class="btn-edit-review" onclick="openSiteReviewEdit(${review.id})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
+            ${isMine ? `<button type="button" class="btn-edit-review" onclick="openSiteReviewEdit(${review.id})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>` : ''}
           </div>
           <p class="review-comment" id="site-review-comment-${review.id}">"${escapeHtml(review.comment)}"</p>
           <p style="margin-top: 10px;">
@@ -1192,21 +1205,21 @@ function populateSitePastReviewSelector() {
     form.parentNode.insertBefore(selectorBox, form);
   }
 
-  if (!currentSiteReviews || currentSiteReviews.length === 0) {
+  const myReviews = (currentSiteReviews || []).filter(r => isMyReview(r, 'site'));
+  if (myReviews.length === 0) {
     selectorBox.style.display = "none";
     return;
   }
 
   selectorBox.style.display = "block";
-  const optionsHtml = currentSiteReviews.map(r => {
-    const mineTag = isMyReview(r, 'site') ? ' (Your Review)' : '';
+  const optionsHtml = myReviews.map(r => {
     const snippet = r.comment.length > 35 ? r.comment.slice(0, 35) + '...' : r.comment;
-    return `<option value="${r.id}" ${editingSiteReviewId === r.id ? 'selected' : ''}>${escapeHtml(r.reviewerName)}${mineTag} - ${"⭐".repeat(r.rating)} "${escapeHtml(snippet)}"</option>`;
+    return `<option value="${r.id}" ${editingSiteReviewId === r.id ? 'selected' : ''}>${escapeHtml(r.reviewerName)} - ${"⭐".repeat(r.rating)} "${escapeHtml(snippet)}"</option>`;
   }).join('');
 
   selectorBox.innerHTML = `
     <label for="sitePastReviewSelect" style="display: block; font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">
-      ✏️ Had a review in the past? Select to edit:
+      ✏️ Edit Your Past Review:
     </label>
     <select id="sitePastReviewSelect" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); font-family: 'Rajdhani', sans-serif; font-size: 15px;">
       <option value="">-- Write a New Review --</option>
@@ -1227,7 +1240,7 @@ function populateSitePastReviewSelector() {
 
 function startSiteReviewFormEdit(reviewId) {
   const review = currentSiteReviews.find(r => r.id === reviewId);
-  if (!review) return;
+  if (!review || !isMyReview(review, 'site')) return;
   editingSiteReviewId = review.id;
 
   const nameInput = document.getElementById("reviewerName");
@@ -1279,7 +1292,7 @@ function resetSiteReviewFormMode() {
 
 window.openSiteReviewEdit = function(reviewId) {
   const review = currentSiteReviews.find(r => r.id === reviewId);
-  if (!review) return;
+  if (!review || !isMyReview(review, 'site')) return;
   const card = document.getElementById(`site-review-${reviewId}`);
   if (!card) return;
 
@@ -1288,7 +1301,7 @@ window.openSiteReviewEdit = function(reviewId) {
   card.innerHTML = `
     <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-        <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Review</span>
+        <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Your Review</span>
         <select id="edit-site-rating-${reviewId}" style="padding: 5px 8px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 14px;">
           <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ (5)</option>
           <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ (4)</option>
@@ -1331,7 +1344,12 @@ window.saveSiteReviewEdit = async function(reviewId) {
     const res = await fetch(`/api/site-reviews/${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: newRating, comment: newComment, reviewerName: newName })
+      body: JSON.stringify({
+        rating: newRating,
+        comment: newComment,
+        reviewerName: newName,
+        claimedByBrowser: isClaimedInBrowser(reviewId, 'site')
+      })
     });
     const data = await res.json();
     if (res.ok) {
@@ -1368,15 +1386,21 @@ function initSiteReviewForm() {
         const res = await fetch(`/api/site-reviews/${editingSiteReviewId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
+          body: JSON.stringify({
+            reviewerName: name,
+            rating: parseInt(rating),
+            comment: comment,
+            claimedByBrowser: isClaimedInBrowser(editingSiteReviewId, 'site')
+          })
         });
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
           rememberMyReview('site', editingSiteReviewId);
           alert("✅ Your review was updated successfully!");
           resetSiteReviewFormMode();
           loadSiteReviews();
         } else {
-          alert("Failed to update review.");
+          alert(data.error || "Failed to update review.");
         }
         return;
       }
@@ -1449,7 +1473,7 @@ async function loadProductReviews(productId) {
               <span class="reviewer-name">${escapeHtml(review.reviewerName)}</span>
               ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 4px;">(Your Review)</span>` : ''}
             </div>
-            <button type="button" class="btn-edit-prod-review" onclick="openProductReviewEdit(${review.id}, ${productId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
+            ${isMine ? `<button type="button" class="btn-edit-prod-review" onclick="openProductReviewEdit(${review.id}, ${productId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>` : ''}
           </div>
           <div class="review-rating-row">
             <span class="review-stars">${stars}</span>
@@ -1513,21 +1537,21 @@ function populateProductPastReviewSelector(productId) {
     form.parentNode.insertBefore(selectorBox, form);
   }
 
-  if (!currentProductReviews || currentProductReviews.length === 0) {
+  const myReviews = (currentProductReviews || []).filter(r => isMyReview(r, 'product'));
+  if (myReviews.length === 0) {
     selectorBox.style.display = "none";
     return;
   }
 
   selectorBox.style.display = "block";
-  const optionsHtml = currentProductReviews.map(r => {
-    const mineTag = isMyReview(r, 'product') ? ' (Your Review)' : '';
+  const optionsHtml = myReviews.map(r => {
     const snippet = r.comment.length > 30 ? r.comment.slice(0, 30) + '...' : r.comment;
-    return `<option value="${r.id}" ${editingProductReviewId === r.id ? 'selected' : ''}>${escapeHtml(r.reviewerName)}${mineTag} - ${"⭐".repeat(r.rating)} "${escapeHtml(snippet)}"</option>`;
+    return `<option value="${r.id}" ${editingProductReviewId === r.id ? 'selected' : ''}>${escapeHtml(r.reviewerName)} - ${"⭐".repeat(r.rating)} "${escapeHtml(snippet)}"</option>`;
   }).join('');
 
   selectorBox.innerHTML = `
     <label for="prodPastReviewSelect" style="display: block; font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">
-      ✏️ Had a review in the past? Select to edit:
+      ✏️ Edit Your Past Review:
     </label>
     <select id="prodPastReviewSelect" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;">
       <option value="">-- Write a New Review --</option>
@@ -1548,7 +1572,7 @@ function populateProductPastReviewSelector(productId) {
 
 function startProductReviewFormEdit(reviewId) {
   const review = currentProductReviews.find(r => r.id === reviewId);
-  if (!review) return;
+  if (!review || !isMyReview(review, 'product')) return;
   editingProductReviewId = review.id;
 
   const nameInput = document.getElementById("prodReviewerName");
@@ -1600,7 +1624,7 @@ function resetProductReviewFormMode() {
 
 window.openProductReviewEdit = function(reviewId, productId) {
   const review = currentProductReviews.find(r => r.id === reviewId);
-  if (!review) return;
+  if (!review || !isMyReview(review, 'product')) return;
   const row = document.getElementById(`prod-review-${reviewId}`);
   if (!row) return;
 
@@ -1609,7 +1633,7 @@ window.openProductReviewEdit = function(reviewId, productId) {
   row.innerHTML = `
     <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 12px; width: 100%; background: var(--bg-hover); padding: 20px; border-radius: 4px; border: 1px solid var(--border-subtle); margin-top: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Product Review</span>
+        <span style="font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Your Product Review</span>
         <select id="edit-prod-rating-${reviewId}" style="padding: 6px 10px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;">
           <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ - Excellent (5)</option>
           <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ - Good (4)</option>
@@ -1652,7 +1676,12 @@ window.saveProductReviewEdit = async function(reviewId, productId) {
     const res = await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: newRating, comment: newComment, reviewerName: newName })
+      body: JSON.stringify({
+        rating: newRating,
+        comment: newComment,
+        reviewerName: newName,
+        claimedByBrowser: isClaimedInBrowser(reviewId, 'product')
+      })
     });
     const data = await res.json();
     if (res.ok) {
@@ -1689,15 +1718,21 @@ function initProductReviewForm(productId) {
         const res = await fetch(`/api/products/${productId}/reviews/${editingProductReviewId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
+          body: JSON.stringify({
+            reviewerName: name,
+            rating: parseInt(rating),
+            comment: comment,
+            claimedByBrowser: isClaimedInBrowser(editingProductReviewId, 'product')
+          })
         });
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
           rememberMyReview('product', editingProductReviewId);
           alert("✅ Your review was updated successfully!");
           resetProductReviewFormMode();
           loadProductReviews(productId);
         } else {
-          alert("Failed to update product review.");
+          alert(data.error || "Failed to update product review.");
         }
         return;
       }
