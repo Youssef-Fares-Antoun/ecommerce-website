@@ -194,12 +194,12 @@ async function loadUsers() {
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td style="font-weight: bold; color: var(--text-main);">#${user.id}</td>
-                <td style="font-weight: bold; color: var(--text-main);">${user.name}</td>
-                <td style="color: var(--text-muted);">${user.email}${ipTag}</td>
-                <td>${roleBadge} ${statusBadge}</td>
-                <td>${date}</td>
-                <td style="text-align: right; min-width: 250px;">${actionButtons}</td>
+                <td data-label="ID" style="font-weight: bold; color: var(--text-main);">#${user.id}</td>
+                <td data-label="Name" style="font-weight: bold; color: var(--text-main);">${user.name}</td>
+                <td data-label="Email & IP" style="color: var(--text-muted);">${user.email}${ipTag}</td>
+                <td data-label="Role & Status">${roleBadge} ${statusBadge}</td>
+                <td data-label="Joined Date">${date}</td>
+                <td data-label="Action" style="text-align: right; min-width: 250px;">${actionButtons}</td>
             `;
             tableBody.appendChild(tr);
         });
@@ -285,10 +285,10 @@ async function loadPromoCodes() {
             const date = new Date(promo.createdAt).toLocaleDateString();
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td style="font-weight: bold; color: var(--accent); font-family: 'Syncopate', sans-serif;">${promo.code}</td>
-                <td><strong style="color: var(--text-main);">${promo.discountPercent}%</strong></td>
-                <td>${date}</td>
-                <td style="text-align: right;">
+                <td data-label="Code" style="font-weight: bold; color: var(--accent); font-family: 'Syncopate', sans-serif;">${promo.code}</td>
+                <td data-label="Discount (%)"><strong style="color: var(--text-main);">${promo.discountPercent}%</strong></td>
+                <td data-label="Created">${date}</td>
+                <td data-label="Action" style="text-align: right;">
                     <button onclick="deletePromoCode(${promo.id}, '${promo.code}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Delete</button>
                 </td>
             `;
@@ -379,23 +379,27 @@ async function loadAllOrders() {
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td style="font-weight: bold; color: var(--text-main);">#${order.id}</td>
-                <td style="font-size: 0.9em;">${date}</td>
-                <td style="font-size: 0.9em;">
-                    <strong style="color: var(--text-main);">${order.User ? order.User.name : 'Unknown'}</strong><br>
-                    <span style="color: var(--text-muted);">${order.User ? order.User.email : ''}</span>
+                <td data-label="Order #" style="font-weight: bold; color: var(--text-main);">#${order.id}</td>
+                <td data-label="Date" style="font-size: 0.9em;">${date}</td>
+                <td data-label="Customer" style="font-size: 0.9em;">
+                    <div>
+                        <strong style="color: var(--text-main);">${order.User ? order.User.name : 'Unknown'}</strong><br>
+                        <span style="color: var(--text-muted);">${order.User ? order.User.email : ''}</span>
+                    </div>
                 </td>
-                <td>${itemsHtml}</td>
-                <td style="font-size: 0.9em;">
-                    <strong style="color: var(--text-main);">LE ${parseFloat(order.totalAmount).toFixed(2)}</strong><br>
-                    <span style="color: var(--text-muted); text-transform: uppercase;">${order.paymentMethod}</span>
+                <td data-label="Items">${itemsHtml}</td>
+                <td data-label="Total & Payment" style="font-size: 0.9em;">
+                    <div>
+                        <strong style="color: var(--text-main);">LE ${parseFloat(order.totalAmount).toFixed(2)}</strong><br>
+                        <span style="color: var(--text-muted); text-transform: uppercase;">${order.paymentMethod}</span>
+                    </div>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span style="background: ${statusBg}; color: ${statusColor}; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid ${statusColor};">
                         ${order.status}
                     </span>
                 </td>
-                <td>
+                <td data-label="Action">
                     <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 6px; border-radius: 4px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); font-family: 'Rajdhani', sans-serif;">
                         <option value="" disabled selected>Update...</option>
                         <option value="Processing">Processing</option>
@@ -480,15 +484,15 @@ async function loadInventory() {
             const productString = JSON.stringify(product).replace(/"/g, '&quot;');
 
             tr.innerHTML = `
-                <td style="font-weight: bold; color: var(--text-main);">#${product.id}</td>
-                <td>
+                <td data-label="ID" style="font-weight: bold; color: var(--text-main);">#${product.id}</td>
+                <td data-label="Image">
                     <img src="${imgSrc}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-subtle);">
                 </td>
-                <td style="font-weight: bold; color: var(--text-main);">${product.name}</td>
-                <td>LE ${parseFloat(product.price).toFixed(2)}</td>
-                <td style="text-transform: capitalize;">${product.category || 'N/A'}</td>
-                <td>${badges}</td>
-                <td style="text-align: right;">
+                <td data-label="Name" style="font-weight: bold; color: var(--text-main);">${product.name}</td>
+                <td data-label="Price (LE)">LE ${parseFloat(product.price).toFixed(2)}</td>
+                <td data-label="Category" style="text-transform: capitalize;">${product.category || 'N/A'}</td>
+                <td data-label="Badges">${badges || '-'}</td>
+                <td data-label="Actions" style="text-align: right;">
                     <button onclick="openProductModal(${productString})" style="background: rgba(241, 196, 15, 0.2); color: #f39c12; border: 1px solid #f39c12; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px;">Edit</button>
                     <button onclick="deleteProduct(${product.id})" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Delete</button>
                 </td>
@@ -600,12 +604,12 @@ async function loadAdminReviews() {
             const userAccountHtml = formatReviewUserAccountHtml(review);
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
-                <td>${userAccountHtml}</td>
-                <td>${stars}</td>
-                <td style="font-style: italic; font-family: 'Rajdhani', sans-serif;">"${escapeAdminHtml(review.comment)}"</td>
-                <td style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
-                <td style="text-align: right;">
+                <td data-label="Driver" style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
+                <td data-label="User Account">${userAccountHtml}</td>
+                <td data-label="Rating">${stars}</td>
+                <td data-label="Comment" style="font-style: italic; font-family: 'Rajdhani', sans-serif;">"${escapeAdminHtml(review.comment)}"</td>
+                <td data-label="Date" style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
+                <td data-label="Action" style="text-align: right;">
                     <button onclick="deleteReview(${review.id})" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: 'Rajdhani', sans-serif;">Purge</button>
                 </td>
             `;
@@ -757,12 +761,12 @@ function renderAdminProductReviews() {
             const userAccountHtml = formatReviewUserAccountHtml(review);
             return `
                 <tr>
-                    <td style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
-                    <td>${userAccountHtml}</td>
-                    <td style="font-family: 'Rajdhani', sans-serif;">${stars}</td>
-                    <td style="font-style: italic; font-family: 'Rajdhani', sans-serif; color: var(--text-muted);">"${escapeAdminHtml(review.comment)}"</td>
-                    <td style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
-                    <td style="text-align: right;">
+                    <td data-label="Driver" style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
+                    <td data-label="User Account">${userAccountHtml}</td>
+                    <td data-label="Rating" style="font-family: 'Rajdhani', sans-serif;">${stars}</td>
+                    <td data-label="Comment" style="font-style: italic; font-family: 'Rajdhani', sans-serif; color: var(--text-muted);">"${escapeAdminHtml(review.comment)}"</td>
+                    <td data-label="Date" style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
+                    <td data-label="Action" style="text-align: right;">
                         <button onclick="deleteProductReview(${review.id})" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: 'Rajdhani', sans-serif;">Purge</button>
                     </td>
                 </tr>
