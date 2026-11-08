@@ -135,9 +135,9 @@ function updateResultsHeading(count) {
     const brandLabel = shopFilters.brand === "all" ? "" : (activeLi ? activeLi.textContent : shopFilters.brand);
 
     if (shopFilters.search) {
-        counterText.innerText = `Found ${count} results for "${shopFilters.search}"${brandLabel ? ` in ${brandLabel}` : ""}`;
+        counterText.textContent = `Found ${count} results for "${shopFilters.search}"${brandLabel ? ` in ${brandLabel}` : ""}`;
     } else {
-        counterText.innerText = brandLabel ? `Showing ${brandLabel} Products` : "Showing All Products";
+        counterText.textContent = brandLabel ? `Showing ${brandLabel} Products` : "Showing All Products";
     }
 }
 
