@@ -555,11 +555,14 @@ function injectAuthModal() {
         <h2 style="margin-bottom: 20px; font-family: 'Syncopate', sans-serif; text-transform: uppercase; font-size: 20px; color: var(--text-main);">Garage Access</h2>
         <form id="loginForm">
           <input type="email" id="loginEmail" placeholder="Email" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
-          <input type="password" id="loginPassword" placeholder="Password" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <input type="password" id="loginPassword" placeholder="Password" required style="width: 100%; padding: 14px; margin-bottom: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <div style="text-align: right; margin-bottom: 15px;">
+            <a href="javascript:void(0)" id="openForgotPasswordLink" style="color: var(--accent); text-decoration: none; font-size: 0.9em; font-weight: 700;">Forgot Password?</a>
+          </div>
           <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Ignition (Login)</button>
         </form>
         <p style="margin-top: 15px; font-size: 0.9em; text-align: center; color: var(--text-muted);">
-          No keys? <a href="javascript:void(0)" onclick="document.getElementById('loginSection').style.display='none'; document.getElementById('registerSection').style.display='block';" style="color: var(--accent); text-decoration: none; font-weight: bold;">Register here</a>
+          No keys? <a href="javascript:void(0)" onclick="document.getElementById('loginSection').style.display='none'; document.getElementById('forgotPasswordSection').style.display='none'; document.getElementById('registerSection').style.display='block';" style="color: var(--accent); text-decoration: none; font-weight: bold;">Register here</a>
         </p>
       </div>
 
@@ -572,7 +575,46 @@ function injectAuthModal() {
           <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Create Profile</button>
         </form>
         <p style="margin-top: 15px; font-size: 0.9em; text-align: center; color: var(--text-muted);">
-          Already in the crew? <a href="javascript:void(0)" onclick="document.getElementById('registerSection').style.display='none'; document.getElementById('loginSection').style.display='block';" style="color: var(--accent); text-decoration: none; font-weight: bold;">Login here</a>
+          Already in the crew? <a href="javascript:void(0)" onclick="document.getElementById('registerSection').style.display='none'; document.getElementById('forgotPasswordSection').style.display='none'; document.getElementById('loginSection').style.display='block';" style="color: var(--accent); text-decoration: none; font-weight: bold;">Login here</a>
+        </p>
+      </div>
+
+      <div id="forgotPasswordSection" style="display: none;">
+        <h2 style="margin-bottom: 10px; font-family: 'Syncopate', sans-serif; text-transform: uppercase; font-size: 18px; color: var(--text-main);">2FA Password Reset</h2>
+
+        <!-- Step 1: Enter Email to receive 6-digit 2FA code -->
+        <form id="forgotStep1Form">
+          <p style="font-size: 0.92em; color: var(--text-muted); margin-bottom: 15px;">
+            Enter your account email. We will verify your account and send a 6-digit 2FA verification code to your email.
+          </p>
+          <input type="email" id="forgotEmail" placeholder="Account Email" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <button type="submit" id="forgotSendCodeBtn" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Send 2FA Code</button>
+        </form>
+
+        <!-- Step 2: Enter 6-digit 2FA code from email -->
+        <form id="forgotStep2Form" style="display: none;">
+          <p style="font-size: 0.92em; color: var(--text-muted); margin-bottom: 15px;">
+            Enter the 6-digit 2FA verification code sent to <strong id="forgotEmailDisplay" style="color: var(--text-main);"></strong> to verify it's you:
+          </p>
+          <input type="text" id="forgotOtpCode" maxlength="6" pattern="[0-9]{6}" placeholder="6-Digit 2FA Code" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 20px; text-align: center; letter-spacing: 6px; font-weight: 700;" />
+          <button type="submit" id="forgotVerifyCodeBtn" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Verify 2FA Code</button>
+          <p style="margin-top: 12px; font-size: 0.85em; text-align: center; color: var(--text-muted);">
+            Didn't receive it? <a href="javascript:void(0)" id="resendForgotCodeLink" style="color: var(--accent); text-decoration: none; font-weight: bold;">Resend 2FA Code</a>
+          </p>
+        </form>
+
+        <!-- Step 3: Set New Password -->
+        <form id="forgotStep3Form" style="display: none;">
+          <p id="forgotVerifiedBanner" style="font-size: 0.92em; color: #2ecc71; margin-bottom: 15px; font-weight: 700;">
+            ✅ Identity verified! Enter your new password below:
+          </p>
+          <input type="password" id="forgotNewPassword" placeholder="New Password (min 6 chars)" minlength="6" required style="width: 100%; padding: 14px; margin-bottom: 12px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <input type="password" id="forgotConfirmPassword" placeholder="Confirm New Password" minlength="6" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
+          <button type="submit" id="forgotResetPasswordBtn" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Update Password</button>
+        </form>
+
+        <p style="margin-top: 15px; font-size: 0.9em; text-align: center; color: var(--text-muted);">
+          Remembered your keys? <a href="javascript:void(0)" id="backToLoginFromForgot" style="color: var(--accent); text-decoration: none; font-weight: bold;">Back to Login</a>
         </p>
       </div>
     </div>
@@ -721,6 +763,198 @@ async function initAuth() {
         }
       } catch (err) {
         console.error("Login Error:", err);
+      }
+    });
+  }
+
+  // 🚀 2FA FORGOT PASSWORD FLOW
+  let forgotState = { email: '', code: '', resetToken: '' };
+
+  const openForgotLink = document.getElementById("openForgotPasswordLink");
+  const backToLoginLink = document.getElementById("backToLoginFromForgot");
+  const forgotSection = document.getElementById("forgotPasswordSection");
+  const loginSection = document.getElementById("loginSection");
+  const registerSection = document.getElementById("registerSection");
+  const forgotStep1Form = document.getElementById("forgotStep1Form");
+  const forgotStep2Form = document.getElementById("forgotStep2Form");
+  const forgotStep3Form = document.getElementById("forgotStep3Form");
+  const resendCodeLink = document.getElementById("resendForgotCodeLink");
+
+  function resetForgotPasswordUI() {
+    forgotState = { email: '', code: '', resetToken: '' };
+    if (forgotStep1Form) {
+      forgotStep1Form.reset();
+      forgotStep1Form.style.display = "block";
+    }
+    if (forgotStep2Form) {
+      forgotStep2Form.reset();
+      forgotStep2Form.style.display = "none";
+    }
+    if (forgotStep3Form) {
+      forgotStep3Form.reset();
+      forgotStep3Form.style.display = "none";
+    }
+  }
+
+  if (openForgotLink) {
+    openForgotLink.addEventListener("click", () => {
+      resetForgotPasswordUI();
+      const loginEmailVal = document.getElementById("loginEmail")?.value?.trim();
+      if (loginEmailVal) {
+        const forgotEmailInput = document.getElementById("forgotEmail");
+        if (forgotEmailInput) forgotEmailInput.value = loginEmailVal;
+      }
+      if (loginSection) loginSection.style.display = "none";
+      if (registerSection) registerSection.style.display = "none";
+      if (forgotSection) forgotSection.style.display = "block";
+    });
+  }
+
+  if (backToLoginLink) {
+    backToLoginLink.addEventListener("click", () => {
+      resetForgotPasswordUI();
+      if (forgotSection) forgotSection.style.display = "none";
+      if (registerSection) registerSection.style.display = "none";
+      if (loginSection) loginSection.style.display = "block";
+    });
+  }
+
+  if (forgotStep1Form) {
+    forgotStep1Form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("forgotEmail").value.trim();
+      const btn = document.getElementById("forgotSendCodeBtn");
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Sending Code...";
+
+      try {
+        const res = await fetch('/api/auth/forgot-password/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          forgotState.email = email;
+          const emailDisp = document.getElementById("forgotEmailDisplay");
+          if (emailDisp) emailDisp.textContent = email;
+          forgotStep1Form.style.display = "none";
+          forgotStep2Form.style.display = "block";
+          alert(data.message || "A 6-digit 2FA verification code has been sent to your email.");
+        } else {
+          alert(data.message || "Could not send verification code.");
+        }
+      } catch (err) {
+        console.error("Forgot Password Step 1 Error:", err);
+        alert("Network error sending verification code.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    });
+  }
+
+  if (resendCodeLink) {
+    resendCodeLink.addEventListener("click", async () => {
+      if (!forgotState.email) return;
+      try {
+        const res = await fetch('/api/auth/forgot-password/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: forgotState.email })
+        });
+        const data = await res.json();
+        alert(data.message || "Verification code resent!");
+      } catch (err) {
+        alert("Failed to resend code.");
+      }
+    });
+  }
+
+  if (forgotStep2Form) {
+    forgotStep2Form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const code = document.getElementById("forgotOtpCode").value.trim();
+      const btn = document.getElementById("forgotVerifyCodeBtn");
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Verifying...";
+
+      try {
+        const res = await fetch('/api/auth/forgot-password/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: forgotState.email, code })
+        });
+        const data = await res.json();
+        if (res.ok && data.verified) {
+          forgotState.code = code;
+          forgotState.resetToken = data.resetToken || '';
+          const banner = document.getElementById("forgotVerifiedBanner");
+          if (banner && data.userName) {
+            banner.textContent = `✅ Identity verified for ${data.userName}! Set your new password below:`;
+          }
+          forgotStep2Form.style.display = "none";
+          forgotStep3Form.style.display = "block";
+        } else {
+          alert(data.message || "Invalid 2FA verification code.");
+        }
+      } catch (err) {
+        console.error("Forgot Password Step 2 Error:", err);
+        alert("Network error verifying 2FA code.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    });
+  }
+
+  if (forgotStep3Form) {
+    forgotStep3Form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById("forgotNewPassword").value;
+      const confirmPassword = document.getElementById("forgotConfirmPassword").value;
+
+      if (newPassword !== confirmPassword) {
+        alert("Passwords do not match. Please confirm your new password.");
+        return;
+      }
+
+      const btn = document.getElementById("forgotResetPasswordBtn");
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Updating...";
+
+      try {
+        const res = await fetch('/api/auth/forgot-password/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: forgotState.email,
+            code: forgotState.code,
+            resetToken: forgotState.resetToken,
+            newPassword
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.message || "Password updated successfully! Please log in.");
+          const savedEmail = forgotState.email;
+          resetForgotPasswordUI();
+          if (forgotSection) forgotSection.style.display = "none";
+          if (loginSection) loginSection.style.display = "block";
+          const loginEmailInput = document.getElementById("loginEmail");
+          if (loginEmailInput && savedEmail) loginEmailInput.value = savedEmail;
+        } else {
+          alert(data.message || "Failed to update password.");
+        }
+      } catch (err) {
+        console.error("Forgot Password Step 3 Error:", err);
+        alert("Network error updating password.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
       }
     });
   }

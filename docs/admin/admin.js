@@ -155,10 +155,9 @@ async function loadUsers() {
             return;
         }
 
-        const currentAdminName = document.getElementById("adminNameDisplay").textContent;
-
         users.forEach(user => {
             const date = new Date(user.createdAt).toLocaleDateString();
+            const isPrimaryOwner = Number(user.id) === 1 || String(user.email || '').trim().toLowerCase() === 'yousseffantounn@gmail.com';
             
             // Generate visual badges based on user role & status
             const statusBadge = user.isBanned 
@@ -169,9 +168,9 @@ async function loadUsers() {
                 ? `<span style="background: rgba(52, 152, 219, 0.15); color: #3498db; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #3498db;">Admin</span>`
                 : `<span style="background: rgba(149, 165, 166, 0.15); color: #95a5a6; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #95a5a6;">User</span>`;
 
-            // Protect the logged-in superuser from modifying themselves
+            // Only the primary owner account (#1 / yousseffantounn@gmail.com) is a Protected Account
             let actionButtons = '';
-            if (user.isAdmin && user.name === currentAdminName) {
+            if (isPrimaryOwner) {
                 actionButtons = `<span style="color: var(--text-muted); font-style: italic;">Protected Account</span>`;
             } else {
                 const adminBtnText = user.isAdmin ? "Demote" : "Make Admin";

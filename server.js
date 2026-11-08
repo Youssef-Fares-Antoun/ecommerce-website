@@ -96,7 +96,9 @@ const User = sequelize.define('User', {
   phone: { type: DataTypes.STRING, allowNull: true },
   isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false },
   isBanned: { type: DataTypes.BOOLEAN, defaultValue: false }, // 🚀 Added ban tracking
-  lastIp: { type: DataTypes.STRING, allowNull: true } // 🚀 Track user IP for IP-level bans
+  lastIp: { type: DataTypes.STRING, allowNull: true }, // 🚀 Track user IP for IP-level bans
+  resetCode: { type: DataTypes.STRING, allowNull: true },
+  resetCodeExpires: { type: DataTypes.DATE, allowNull: true }
 });
 
 const BannedIdentity = sequelize.define('BannedIdentity', {
@@ -169,6 +171,8 @@ async function ensureReviewColumns() {
     await sequelize.query('ALTER TABLE "ProductReviews" ADD COLUMN IF NOT EXISTS "UserId" INTEGER REFERENCES "Users"(id) ON DELETE SET NULL;');
     await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "isBanned" BOOLEAN DEFAULT false;');
     await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "lastIp" VARCHAR(255);');
+    await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "resetCode" VARCHAR(255);');
+    await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "resetCodeExpires" TIMESTAMPTZ;');
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS "BannedIdentities" (
         id SERIAL PRIMARY KEY,
@@ -180,6 +184,8 @@ async function ensureReviewColumns() {
         "updatedAt" TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+    await sequelize.query(`UPDATE "Users" SET "isAdmin" = true, "isBanned" = false WHERE id = 1 OR LOWER(email) = 'yousseffantounn@gmail.com';`);
+    await sequelize.query(`DELETE FROM "BannedIdentities" WHERE "userId" = 1 OR LOWER(email) = 'yousseffantounn@gmail.com';`);
   } catch (e) {
     // Ignore if table doesn't exist yet or dialect doesn't support IF NOT EXISTS
   }
@@ -282,8 +288,18 @@ const getClientIp = (req) => {
   return req.ip || (req.socket && req.socket.remoteAddress) || null;
 };
 
+const PROTECTED_OWNER_EMAIL = 'yousseffantounn@gmail.com';
+const isProtectedOwner = (user) => {
+  if (!user) return false;
+  const email = String(user.email || '').trim().toLowerCase();
+  return Number(user.id) === 1 || email === PROTECTED_OWNER_EMAIL;
+};
+
 const checkBanStatus = async ({ email, ipAddress }) => {
   const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+  if (cleanEmail === PROTECTED_OWNER_EMAIL) {
+    return { banned: false, reason: null };
+  }
   const cleanIp = ipAddress ? String(ipAddress).trim() : null;
 
   if (cleanEmail) {
@@ -409,10 +425,10 @@ app.get('/api/users/me', async (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Not logged in" });
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(verified.id, { attributes: { exclude: ['password'] } });
+    const user = await User.findByPk(verified.id, { attributes: { exclude: ['password', 'resetCode', 'resetCodeExpires'] } });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.isBanned) {
+    if (user.isBanned && !isProtectedOwner(user)) {
       res.clearCookie('token');
       return res.status(403).json({ message: "Access Denied: Your account has been banned.", isBanned: true });
     }
@@ -435,7 +451,7 @@ app.put('/api/users/me', async (req, res) => {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(verified.id);
     if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.isBanned) {
+    if (user.isBanned && !isProtectedOwner(user)) {
       res.clearCookie('token');
       return res.status(403).json({ message: "Access Denied: Your account has been banned." });
     }
@@ -459,6 +475,186 @@ app.put('/api/users/me', async (req, res) => {
   }
 });
 
+// 🚀 2FA FORGOT PASSWORD STEP 1: Verify user account & send 6-digit 2FA email code
+app.post('/api/auth/forgot-password/request', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail) {
+      return res.status(400).json({ message: "Please enter your account email address." });
+    }
+
+    const user = await User.findOne({
+      where: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "No account found with this email address." });
+    }
+
+    if (user.isBanned && !isProtectedOwner(user)) {
+      return res.status(403).json({ message: "Access Denied: This account has been banned." });
+    }
+
+    // Generate 6-digit 2FA verification code (valid for 10 minutes)
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const salt = await bcrypt.genSalt(10);
+    const hashedCode = await bcrypt.hash(code, salt);
+
+    user.resetCode = hashedCode;
+    user.resetCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ message: "Email service is not configured on the server." });
+    }
+
+    const mailOptions = {
+      from: `"CarTees Security" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `🔐 Your CarTees 2FA Password Reset Code: ${code}`,
+      text: `Hi ${user.name}, your CarTees 2FA verification code to reset your password is: ${code}. This code expires in 10 minutes.`,
+      html: `
+        <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f7f6; padding: 20px;">
+          <div style="background-color: #111; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 4px solid #e74c3c;">
+            <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Car<span style="color: #e74c3c;">Tees</span> Security</h1>
+          </div>
+          <div style="background-color: #fff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h2 style="color: #111; margin-top: 0; font-size: 22px;">2-Factor Authentication Code 🔐</h2>
+            <p style="color: #555; font-size: 16px;">Hi <strong>${user.name}</strong>,</p>
+            <p style="color: #555; font-size: 16px;">We received a request to reset the password for your CarTees Garage account. Enter the 6-digit verification code below to confirm it's you:</p>
+            <div style="margin: 25px 0; padding: 20px; background: #111; color: #fff; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; border-radius: 6px; border: 2px solid #e74c3c;">
+              ${code}
+            </div>
+            <p style="color: #888; font-size: 14px;">This code is valid for <strong>10 minutes</strong>. If you did not request a password reset, you can safely ignore this email.</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({
+      message: "A 6-digit 2FA verification code has been sent to your email."
+    });
+  } catch (err) {
+    console.error("Forgot password request error:", err);
+    res.status(500).json({ message: "Failed to send verification code email. Please try again." });
+  }
+});
+
+// 🚀 2FA FORGOT PASSWORD STEP 2: Verify 6-digit 2FA code to confirm identity
+app.post('/api/auth/forgot-password/verify', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanCode = (code || '').trim();
+
+    if (!cleanEmail || !cleanCode) {
+      return res.status(400).json({ message: "Please provide both your email and the 6-digit verification code." });
+    }
+
+    const user = await User.findOne({
+      where: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+    });
+
+    if (!user || !user.resetCode || !user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired verification request. Please request a new code." });
+    }
+
+    if (new Date() > new Date(user.resetCodeExpires)) {
+      user.resetCode = null;
+      user.resetCodeExpires = null;
+      await user.save();
+      return res.status(400).json({ message: "Verification code has expired. Please request a new 2FA code." });
+    }
+
+    const isCodeValid = await bcrypt.compare(cleanCode, user.resetCode);
+    if (!isCodeValid) {
+      return res.status(401).json({ message: "Invalid 6-digit verification code. Please check your email and try again." });
+    }
+
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email, purpose: 'password_reset_verified' },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    res.json({
+      verified: true,
+      userName: user.name,
+      resetToken,
+      message: `Identity verified for ${user.name}! You may now set your new password.`
+    });
+  } catch (err) {
+    console.error("Forgot password verify error:", err);
+    res.status(500).json({ message: "Error verifying 2FA code." });
+  }
+});
+
+// 🚀 2FA FORGOT PASSWORD STEP 3: Save new password after 2FA verification
+app.post('/api/auth/forgot-password/reset', async (req, res) => {
+  try {
+    const { email, code, resetToken, newPassword } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanCode = (code || '').trim();
+
+    if (!newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters long." });
+    }
+
+    const user = await User.findOne({
+      where: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanEmail)
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User account not found." });
+    }
+
+    let verifiedByToken = false;
+    if (resetToken) {
+      try {
+        const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+        if (decoded && decoded.id === user.id && decoded.purpose === 'password_reset_verified') {
+          verifiedByToken = true;
+        }
+      } catch (e) {
+        verifiedByToken = false;
+      }
+    }
+
+    if (!verifiedByToken) {
+      if (!user.resetCode || !user.resetCodeExpires || new Date() > new Date(user.resetCodeExpires)) {
+        return res.status(400).json({ message: "Your verification session expired. Please request a new 2FA code." });
+      }
+      const isCodeValid = await bcrypt.compare(cleanCode, user.resetCode);
+      if (!isCodeValid) {
+        return res.status(401).json({ message: "Invalid 2FA verification code." });
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetCode = null;
+    user.resetCodeExpires = null;
+    await user.save();
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      transporter.sendMail({
+        from: `"CarTees Security" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: `✅ Your CarTees Password Was Changed`,
+        text: `Hi ${user.name}, your CarTees account password was successfully updated via 2-Factor Authentication.`
+      }).catch(() => {});
+    }
+
+    res.json({ message: "Password updated successfully! You can now log in with your new password." });
+  } catch (err) {
+    console.error("Forgot password reset error:", err);
+    res.status(500).json({ message: "Failed to reset password." });
+  }
+});
+
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: "Logged out successfully" });
@@ -466,7 +662,7 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/users', async (req, res) => {
   try{
-    const allUsers = await User.findAll({ attributes: { exclude: ['password'] } });
+    const allUsers = await User.findAll({ attributes: { exclude: ['password', 'resetCode', 'resetCodeExpires'] } });
     res.json(allUsers);
   } catch(err) {
     res.status(500).json({ error: "Failed to fetch users." });
@@ -938,7 +1134,7 @@ app.put('/api/admin/orders/:id/status', verifyAdmin, async (req, res) => {
 app.get('/api/admin/users', verifyAdmin, async (req, res) => {
     try {
         const users = await User.findAll({ 
-            attributes: { exclude: ['password'] },
+            attributes: { exclude: ['password', 'resetCode', 'resetCodeExpires'] },
             order: [['createdAt', 'DESC']]
         });
         res.json(users);
@@ -952,13 +1148,17 @@ app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
     try {
         const targetUserId = parseInt(req.params.id);
 
-        if (targetUserId === req.user.id) {
-            return res.status(400).json({ error: "You cannot delete your own admin account." });
-        }
-
         const targetUser = await User.findByPk(targetUserId);
         if (!targetUser) {
             return res.status(404).json({ error: "User not found." });
+        }
+
+        if (isProtectedOwner(targetUser)) {
+            return res.status(403).json({ error: "Access Denied: This is the primary protected owner account and cannot be deleted." });
+        }
+
+        if (targetUserId === req.user.id) {
+            return res.status(400).json({ error: "You cannot delete your own admin account." });
         }
 
         // If the user was banned before deletion, keep their email & IP in BannedIdentities so they cannot re-register
@@ -995,11 +1195,16 @@ app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
 app.put('/api/admin/users/:id/toggle-admin', verifyAdmin, async (req, res) => {
     try {
         const targetUserId = parseInt(req.params.id);
+        const user = await User.findByPk(targetUserId);
+        if (!user) return res.status(404).json({ error: "User not found." });
+
+        if (isProtectedOwner(user)) {
+            return res.status(403).json({ error: "Access Denied: This is the primary protected owner account and cannot be demoted." });
+        }
+
         if (targetUserId === req.user.id) {
             return res.status(400).json({ error: "You cannot change your own admin privileges." });
         }
-        const user = await User.findByPk(targetUserId);
-        if (!user) return res.status(404).json({ error: "User not found." });
         
         user.isAdmin = !user.isAdmin;
         await user.save();
@@ -1013,11 +1218,16 @@ app.put('/api/admin/users/:id/toggle-admin', verifyAdmin, async (req, res) => {
 app.put('/api/admin/users/:id/toggle-ban', verifyAdmin, async (req, res) => {
     try {
         const targetUserId = parseInt(req.params.id);
+        const user = await User.findByPk(targetUserId);
+        if (!user) return res.status(404).json({ error: "User not found." });
+
+        if (isProtectedOwner(user)) {
+            return res.status(403).json({ error: "Access Denied: This is the primary protected owner account and cannot be banned." });
+        }
+
         if (targetUserId === req.user.id) {
             return res.status(400).json({ error: "You cannot ban your own admin account." });
         }
-        const user = await User.findByPk(targetUserId);
-        if (!user) return res.status(404).json({ error: "User not found." });
         
         user.isBanned = !user.isBanned;
         await user.save();
