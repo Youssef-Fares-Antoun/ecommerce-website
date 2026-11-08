@@ -611,10 +611,23 @@ async function initAuth() {
   const currentUser = await getCurrentUser();
 
   if (currentUser) {
-    // 🚀 NEW: Unhide Admin button if the user is an admin
+    // 🚀 NEW: Unhide or inject Admin Garage button on all storefront pages if user is an admin
     if (currentUser.isAdmin) {
-      const adminNavBtn = document.getElementById("adminNavBtn");
-      if (adminNavBtn) adminNavBtn.style.display = "block";
+      let adminNavBtn = document.getElementById("adminNavBtn");
+      if (!adminNavBtn) {
+        const navLinks = document.querySelector(".nav-links");
+        if (navLinks) {
+          adminNavBtn = document.createElement("a");
+          adminNavBtn.href = "/admin";
+          adminNavBtn.id = "adminNavBtn";
+          adminNavBtn.style.color = "var(--accent)";
+          adminNavBtn.style.fontWeight = "800";
+          adminNavBtn.textContent = "Admin Garage";
+          navLinks.appendChild(adminNavBtn);
+        }
+      } else {
+        adminNavBtn.style.display = "inline-block";
+      }
     }
 
     // Auto-fill reviewer name input if present
