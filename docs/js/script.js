@@ -549,7 +549,7 @@ function injectAuthModal() {
   const modalHTML = `
   <div id="authModal" class="cart-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
     <div style="background: var(--bg-card); color: var(--text-main); padding: 30px; border-radius: 4px; border: 1px solid var(--border-subtle); width: 90%; max-width: 400px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-      <span onclick="document.getElementById('authModal').style.display='none'" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</span>
+      <span onclick="if(window.resetAuthModalToLogin) window.resetAuthModalToLogin(); document.getElementById('authModal').style.display='none';" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</span>
       
       <div id="loginSection">
         <h2 style="margin-bottom: 20px; font-family: 'Syncopate', sans-serif; text-transform: uppercase; font-size: 20px; color: var(--text-main);">Garage Access</h2>
@@ -700,6 +700,7 @@ async function initAuth() {
     userIcon.href = "javascript:void(0)";
     userIcon.onclick = (e) => {
       e.preventDefault();
+      if (window.resetAuthModalToLogin) window.resetAuthModalToLogin();
       authModal.style.display = "flex";
     };
   }
@@ -795,6 +796,13 @@ async function initAuth() {
       forgotStep3Form.style.display = "none";
     }
   }
+
+  window.resetAuthModalToLogin = function() {
+    resetForgotPasswordUI();
+    if (forgotSection) forgotSection.style.display = "none";
+    if (registerSection) registerSection.style.display = "none";
+    if (loginSection) loginSection.style.display = "block";
+  };
 
   if (openForgotLink) {
     openForgotLink.addEventListener("click", () => {
@@ -2134,6 +2142,7 @@ document.addEventListener("click", function(e) {
     // 3. CATCH: OUTSIDE CLICKS (Auth Modal)
     const authModal = document.getElementById("authModal");
     if (authModal && e.target === authModal) {
+        if (window.resetAuthModalToLogin) window.resetAuthModalToLogin();
         authModal.style.display = "none";
     }
 });
