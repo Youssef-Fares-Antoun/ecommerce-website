@@ -42,9 +42,8 @@ h1, h2, h3, h4, .logo {
   transition: all 0.3s ease;
 }
 
-.navbar a { color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
-.navbar a:hover, .navbar a.active { color: var(--accent); }
-.navbar a::after { background: var(--accent); }
+/* Navbar link fonts/sizes come from style.css so Home matches every other page.
+   (A blanket `.navbar a` rule here used to shrink the logo to 12px and restyle the login link.) */
 .logo span { color: var(--accent); }
 .hamburger span { background-color: var(--text-main); }
 

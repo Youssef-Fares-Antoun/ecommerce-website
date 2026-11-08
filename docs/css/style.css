@@ -198,18 +198,23 @@ nav a:hover {
   position: relative;
 }
 
+/* Drops down BELOW the search icon (right-aligned) so it never slides over
+   the theme toggle / other navbar icons. */
 .search-bar {
   position: absolute;
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
+  top: calc(100% + 18px);
+  right: 0;
   width: 0;
   opacity: 0;
   overflow: hidden;
+  pointer-events: none;
   transition: width 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
-  background: transparent;
+  background: var(--bg-card);
+  border: 1px solid transparent;
+  border-radius: 4px;
   box-shadow: none;
   padding: 0;
+  z-index: 1001;
 }
 
 .search-input {
@@ -225,7 +230,7 @@ nav a:hover {
 }
 
 .search-input.active {
-  width: 180px;
+  width: 100%;
   opacity: 1;
   padding: 6px 10px;
 }
@@ -233,7 +238,22 @@ nav a:hover {
 .search-bar.show {
   width: 240px;
   opacity: 1;
+  padding: 10px;
+  pointer-events: auto;
+  border-color: var(--border-subtle);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* Theme toggle: opt out of the global full-width button styles */
+#themeToggle {
+  width: auto;
+  margin-top: 0;
   padding: 0;
+  line-height: 1;
+}
+#themeToggle:hover {
+  background: none;
+  box-shadow: none;
 }
 
 .search-icon {

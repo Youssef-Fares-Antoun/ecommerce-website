@@ -459,7 +459,12 @@ function initSearchFilter() {
   });
   }
 
-  if (brandFilter) {
+  // shop.js has its own unified brand + sort + search pipeline; if it's loaded,
+  // don't attach these legacy DOM handlers (they override its heading and
+  // re-sort cards by a non-existent data-price, scrambling the results).
+  const shopPipelineActive = typeof applyShopFilters === "function";
+
+  if (brandFilter && !shopPipelineActive) {
     brandFilter.addEventListener("click", e => {
       if (e.target.tagName === "LI") {
         const brand = e.target.getAttribute("data-brand");
@@ -478,7 +483,7 @@ function initSearchFilter() {
     });
   }
 
-  if (sortSelect && grid) {
+  if (sortSelect && grid && !shopPipelineActive) {
     sortSelect.addEventListener("change", () => {
       let cards = Array.from(grid.querySelectorAll(".card"));
       const val = sortSelect.value;

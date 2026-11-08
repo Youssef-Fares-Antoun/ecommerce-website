@@ -20,7 +20,7 @@
 }
 
 .search-input.active {
-  width: 220px;
+  width: 100%; /* fills the dropdown search bar (see style.css) */
   opacity: 1;
   pointer-events: auto;
 }

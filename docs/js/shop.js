@@ -33,7 +33,7 @@ async function loadProducts() {
         grid.innerHTML = ''; // Clear hardcoded items
 
         fetchedProducts = products; // Store for sorting/filtering
-        renderGrid(fetchedProducts);
+        applyShopFilters();
 
         // After cards exist, check if the URL wants a specific brand
         handleUrlParams();
@@ -90,28 +90,67 @@ function handleUrlParams() {
     }
 }
 
-// Logic for the Brand Sidebar
-function applyBrandFilter(brand) {
-    if (brand === "all") {
-        renderGrid(fetchedProducts);
-    } else {
-        // Filter the global fleet and send the results to the grid
-        const filtered = fetchedProducts.filter(p => p.category.toLowerCase() === brand.toLowerCase());
-        renderGrid(filtered);
-    }
-}
+// Shared filter state so brand, sort and search all work together
+// (previously each one re-rendered from the full product list and wiped out the others)
+const shopFilters = {
+    brand: "all",
+    sort: "default",
+    search: ""
+};
 
-// Logic for the Sort Dropdown
-function sortProducts() {
-    const criteria = document.getElementById('sortSelect').value;
+// Single pipeline: brand -> search -> sort -> render
+function applyShopFilters() {
     let results = [...fetchedProducts]; // Work on a copy to keep the original data safe
 
+    // 1. Brand
+    if (shopFilters.brand !== "all") {
+        results = results.filter(p => (p.category || "").toLowerCase() === shopFilters.brand.toLowerCase());
+    }
+
+    // 2. Search (name or brand category)
+    if (shopFilters.search) {
+        results = results.filter(p =>
+            p.name.toLowerCase().includes(shopFilters.search) ||
+            (p.category || "").toLowerCase().includes(shopFilters.search)
+        );
+    }
+
+    // 3. Sort
+    const criteria = shopFilters.sort;
     if (criteria === "low-high") results.sort((a, b) => a.price - b.price);
     if (criteria === "high-low") results.sort((a, b) => b.price - a.price);
     if (criteria === "a-z") results.sort((a, b) => a.name.localeCompare(b.name));
     if (criteria === "z-a") results.sort((a, b) => b.name.localeCompare(a.name));
 
     renderGrid(results);
+    updateResultsHeading(results.length);
+}
+
+// Keeps the "Showing ..." text in the sort bar in sync with the active filters
+function updateResultsHeading(count) {
+    const counterText = document.querySelector('.sortbar p strong');
+    if (!counterText) return;
+
+    const activeLi = document.querySelector('#brandFilter li.active');
+    const brandLabel = shopFilters.brand === "all" ? "" : (activeLi ? activeLi.textContent : shopFilters.brand);
+
+    if (shopFilters.search) {
+        counterText.innerText = `Found ${count} results for "${shopFilters.search}"${brandLabel ? ` in ${brandLabel}` : ""}`;
+    } else {
+        counterText.innerText = brandLabel ? `Showing ${brandLabel} Products` : "Showing All Products";
+    }
+}
+
+// Logic for the Brand Sidebar
+function applyBrandFilter(brand) {
+    shopFilters.brand = brand || "all";
+    applyShopFilters();
+}
+
+// Logic for the Sort Dropdown
+function sortProducts() {
+    shopFilters.sort = document.getElementById('sortSelect').value;
+    applyShopFilters();
 }
 
 // Grid Rendering Logic (Used for both initial load and filtering/sorting)
@@ -145,25 +184,8 @@ function renderGrid(products) {
 
 // Logic for the Search Bar
 function searchProducts() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
-    // Filter the current fleet based on name or brand category
-    const filteredResults = fetchedProducts.filter(product => {
-        const nameMatch = product.name.toLowerCase().includes(searchTerm);
-        const brandMatch = product.category.toLowerCase().includes(searchTerm);
-        return nameMatch || brandMatch;
-    });
-
-    // Update the showroom grid
-    renderGrid(filteredResults);
-    
-    // Update the counter text
-    const counterText = document.querySelector('.sortbar p strong');
-    if (counterText) {
-        counterText.innerText = searchTerm === "" 
-            ? "Showing All Products" 
-            : `Found ${filteredResults.length} results for "${searchTerm}"`;
-    }
+    shopFilters.search = document.getElementById('searchInput').value.trim().toLowerCase();
+    applyShopFilters(); // Respects the selected brand + sort order
 }
 
 // 4. Initialize everything
