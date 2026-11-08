@@ -585,7 +585,7 @@ function injectAuthModal() {
         <!-- Step 1: Enter Email to receive 6-digit 2FA code -->
         <form id="forgotStep1Form">
           <p style="font-size: 0.92em; color: var(--text-muted); margin-bottom: 15px;">
-            Enter your account email. We will verify your account and send a 6-digit 2FA verification code to your email.
+            Enter your account email.
           </p>
           <input type="email" id="forgotEmail" placeholder="Account Email" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px;" />
           <button type="submit" id="forgotSendCodeBtn" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Send 2FA Code</button>
@@ -594,7 +594,7 @@ function injectAuthModal() {
         <!-- Step 2: Enter 6-digit 2FA code from email -->
         <form id="forgotStep2Form" style="display: none;">
           <p style="font-size: 0.92em; color: var(--text-muted); margin-bottom: 15px;">
-            Enter the 6-digit 2FA verification code sent to <strong id="forgotEmailDisplay" style="color: var(--text-main);"></strong> to verify it's you:
+            Type the 6-digit code sent to <strong id="forgotEmailDisplay" style="color: var(--text-main);"></strong>
           </p>
           <input type="text" id="forgotOtpCode" maxlength="6" pattern="[0-9]{6}" placeholder="6-Digit 2FA Code" required style="width: 100%; padding: 14px; margin-bottom: 15px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 20px; text-align: center; letter-spacing: 6px; font-weight: 700;" />
           <button type="submit" id="forgotVerifyCodeBtn" class="btn-primary" style="width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 0;">Verify 2FA Code</button>
