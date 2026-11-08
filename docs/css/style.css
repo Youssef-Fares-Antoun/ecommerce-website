@@ -578,6 +578,21 @@ button:hover,
   box-shadow: 0 0 15px rgba(204, 255, 0, 0.2);
 }
 
+/* Review Edit Controls */
+.btn-edit-review,
+.btn-edit-prod-review,
+.review-edit-box button {
+  width: auto !important;
+  margin-top: 0 !important;
+}
+
+.btn-edit-review:hover,
+.btn-edit-prod-review:hover {
+  background: var(--accent) !important;
+  color: var(--bg-deep) !important;
+  border-color: var(--accent) !important;
+}
+
 /* Newsletter */
 .newsletter {
   background: var(--bg-deep);

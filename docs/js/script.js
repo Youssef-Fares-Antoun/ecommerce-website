@@ -585,26 +585,43 @@ function injectAuthModal() {
 // 5. AUTHENTICATION SYSTEM
 // =====================
 
+let currentUserPromise = null;
+async function getCurrentUser() {
+  if (window.currentUser !== undefined) return window.currentUser;
+  if (!currentUserPromise) {
+    currentUserPromise = fetch('/api/users/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        window.currentUser = (data && data.user) ? data.user : null;
+        return window.currentUser;
+      })
+      .catch(() => {
+        window.currentUser = null;
+        return null;
+      });
+  }
+  return currentUserPromise;
+}
+
 async function initAuth() {
   injectAuthModal(); 
   const userIcon = document.getElementById("userIcon");
   const authModal = document.getElementById("authModal");
 
-  let currentUser = null;
-    try {
-      const response = await fetch('/api/users/me');
-      if (response.ok) {
-        const data = await response.json();
-        currentUser = data.user;
+  const currentUser = await getCurrentUser();
 
-        // 🚀 NEW: Unhide Admin button if the user is an admin
-        if (currentUser && currentUser.isAdmin) {
-            const adminNavBtn = document.getElementById("adminNavBtn");
-            if (adminNavBtn) adminNavBtn.style.display = "block";
-        }
-      }
-    } catch (err) {
-      console.error("Auth check failed:", err);
+  if (currentUser) {
+    // 🚀 NEW: Unhide Admin button if the user is an admin
+    if (currentUser.isAdmin) {
+      const adminNavBtn = document.getElementById("adminNavBtn");
+      if (adminNavBtn) adminNavBtn.style.display = "block";
+    }
+
+    // Auto-fill reviewer name input if present
+    const siteNameInput = document.getElementById("reviewerName");
+    if (siteNameInput && !siteNameInput.value) siteNameInput.value = currentUser.name;
+    const prodNameInput = document.getElementById("prodReviewerName");
+    if (prodNameInput && !prodNameInput.value) prodNameInput.value = currentUser.name;
   }  
   
   if (currentUser && userIcon) {
@@ -1038,26 +1055,84 @@ async function loadBrands() {
 // =====================
 // 5.8 DYNAMIC SITE REVIEWS
 // =====================
+// =====================
+// 5.8 DYNAMIC SITE REVIEWS
+// =====================
+let currentSiteReviews = [];
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function rememberMyReview(type, reviewId) {
+  const storageKey = type === 'site' ? 'revvo_my_site_reviews' : 'revvo_my_product_reviews';
+  try {
+    const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (!list.includes(reviewId)) {
+      list.push(reviewId);
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    }
+  } catch (e) {}
+}
+
+function isMyReview(review, type) {
+  if (window.currentUser && review.UserId && window.currentUser.id === review.UserId) {
+    return true;
+  }
+  const storageKey = type === 'site' ? 'revvo_my_site_reviews' : 'revvo_my_product_reviews';
+  try {
+    const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (list.includes(review.id)) {
+      return true;
+    }
+  } catch (e) {}
+  if (window.currentUser && !review.UserId && review.reviewerName) {
+    if (review.reviewerName.trim().toLowerCase() === window.currentUser.name.trim().toLowerCase()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function loadSiteReviews() {
   const reviewGrid = document.getElementById("dynamic-reviews");
   if (!reviewGrid) return;
+
+  await getCurrentUser();
 
   try {
     const response = await fetch('/api/site-reviews');
     const reviews = await response.json();
     reviewGrid.innerHTML = "";
 
-    const sortedReviews = reviews.sort((a, b) => b.rating - a.rating); 
+    currentSiteReviews = reviews;
+    const sortedReviews = [...reviews].sort((a, b) => b.rating - a.rating); 
     
     const renderSiteReviews = (reviewsToRender) => {
         reviewsToRender.forEach(review => {
+          const isMine = isMyReview(review, 'site');
           const stars = "⭐".repeat(review.rating); 
           const article = document.createElement("article");
           article.className = "review-card"; 
+          article.id = `site-review-${review.id}`;
           article.innerHTML = `
-            <h4>${stars}</h4>
-            <p class="review-comment">"${review.comment}"</p>
-            <p><strong>- ${review.reviewerName}</strong></p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
+              <h4 style="margin: 0; color: var(--accent);">${stars}</h4>
+              ${isMine ? `
+                <button type="button" class="btn-edit-review" onclick="openSiteReviewEdit(${review.id})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
+              ` : ''}
+            </div>
+            <p class="review-comment" id="site-review-comment-${review.id}">"${escapeHtml(review.comment)}"</p>
+            <p style="margin-top: 10px;">
+              <strong>- ${escapeHtml(review.reviewerName)}</strong>
+              ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 6px;">(Your Review)</span>` : ''}
+            </p>
           `;
           reviewGrid.appendChild(article);
         });
@@ -1080,6 +1155,8 @@ async function loadSiteReviews() {
         showAllBtn.style.border = "none";
         showAllBtn.style.cursor = "pointer";
         showAllBtn.style.borderRadius = "4px";
+        showAllBtn.style.width = "auto";
+        showAllBtn.style.margin = "0 auto";
         
         showAllBtn.onclick = () => {
             const remainingSiteReviews = sortedReviews.slice(4);
@@ -1096,9 +1173,81 @@ async function loadSiteReviews() {
   }
 }
 
+window.openSiteReviewEdit = function(reviewId) {
+  const review = currentSiteReviews.find(r => r.id === reviewId);
+  if (!review) return;
+  const card = document.getElementById(`site-review-${reviewId}`);
+  if (!card) return;
+
+  card.dataset.origHtml = card.innerHTML;
+
+  card.innerHTML = `
+    <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+        <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Your Feedback</span>
+        <select id="edit-site-rating-${reviewId}" style="padding: 5px 8px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 14px;">
+          <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ (5)</option>
+          <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ (4)</option>
+          <option value="3" ${review.rating === 3 ? 'selected' : ''}>⭐⭐⭐ (3)</option>
+          <option value="2" ${review.rating === 2 ? 'selected' : ''}>⭐⭐ (2)</option>
+          <option value="1" ${review.rating === 1 ? 'selected' : ''}>⭐ (1)</option>
+        </select>
+      </div>
+      <textarea id="edit-site-comment-${reviewId}" rows="3" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px; resize: vertical;" required>${escapeHtml(review.comment)}</textarea>
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px;">
+        <button type="button" onclick="cancelSiteReviewEdit(${reviewId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 6px 14px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px;">Cancel</button>
+        <button type="button" onclick="saveSiteReviewEdit(${reviewId})" style="width: auto !important; margin: 0 !important; background: var(--accent); color: var(--bg-deep); border: 1px solid var(--accent); padding: 6px 14px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px;">Save</button>
+      </div>
+    </div>
+  `;
+};
+
+window.cancelSiteReviewEdit = function(reviewId) {
+  const card = document.getElementById(`site-review-${reviewId}`);
+  if (card && card.dataset.origHtml) {
+    card.innerHTML = card.dataset.origHtml;
+  }
+};
+
+window.saveSiteReviewEdit = async function(reviewId) {
+  const ratingEl = document.getElementById(`edit-site-rating-${reviewId}`);
+  const commentEl = document.getElementById(`edit-site-comment-${reviewId}`);
+  if (!commentEl || !commentEl.value.trim()) {
+    alert("Review comment cannot be empty.");
+    return;
+  }
+
+  const newRating = parseInt(ratingEl.value);
+  const newComment = commentEl.value.trim();
+
+  try {
+    const res = await fetch(`/api/site-reviews/${reviewId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating: newRating, comment: newComment })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ Your review was updated successfully!");
+      loadSiteReviews();
+    } else {
+      alert(data.error || "Failed to update review.");
+    }
+  } catch (err) {
+    console.error("Save site review error:", err);
+    alert("Network error updating review.");
+  }
+};
+
 function initSiteReviewForm() {
   const form = document.getElementById("siteReviewForm");
   if (!form) return;
+
+  // Auto-fill reviewer name if logged in
+  if (window.currentUser && window.currentUser.name) {
+    const nameInput = document.getElementById("reviewerName");
+    if (nameInput && !nameInput.value) nameInput.value = window.currentUser.name;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1113,9 +1262,19 @@ function initSiteReviewForm() {
         body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
       });
       if (response.ok) {
+        const created = await response.json();
+        if (created && created.id) {
+          rememberMyReview('site', created.id);
+        }
         alert("Thank you for your review!");
         form.reset();
+        if (window.currentUser) {
+          const siteNameInput = document.getElementById("reviewerName");
+          if (siteNameInput) siteNameInput.value = window.currentUser.name;
+        }
         loadSiteReviews();
+      } else {
+        alert("Failed to submit review.");
       }
     } catch (err) {
       console.error("Failed to post review:", err);
@@ -1126,9 +1285,13 @@ function initSiteReviewForm() {
 // =====================
 // 5.9 DYNAMIC PRODUCT REVIEWS
 // =====================
+let currentProductReviews = [];
+
 async function loadProductReviews(productId) {
   const reviewGrid = document.getElementById("dynamic-product-reviews");
   if (!reviewGrid) return;
+
+  await getCurrentUser();
 
   try {
     const response = await fetch(`/api/products/${productId}/reviews`);
@@ -1140,21 +1303,31 @@ async function loadProductReviews(productId) {
       return;
     }
 
+    currentProductReviews = reviews;
+
     const renderProductReviews = (reviewsToRender) => {
         reviewsToRender.forEach(review => {
+          const isMine = isMyReview(review, 'product');
           const stars = "⭐".repeat(review.rating); 
           const article = document.createElement("article");
           article.className = "detailed-review-row"; 
+          article.id = `prod-review-${review.id}`;
           article.innerHTML = `
-            <div class="reviewer-profile">
-              <div class="avatar">👤</div>
-              <span class="reviewer-name">${review.reviewerName}</span>
+            <div class="reviewer-profile" style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="avatar">👤</div>
+                <span class="reviewer-name">${escapeHtml(review.reviewerName)}</span>
+                ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 4px;">(Your Review)</span>` : ''}
+              </div>
+              ${isMine ? `
+                <button type="button" class="btn-edit-prod-review" onclick="openProductReviewEdit(${review.id}, ${productId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
+              ` : ''}
             </div>
             <div class="review-rating-row">
               <span class="review-stars">${stars}</span>
               <span class="verified-purchase">Verified Purchase</span>
             </div>
-            <p class="review-text">"${review.comment}"</p>
+            <p class="review-text">"${escapeHtml(review.comment)}"</p>
           `;
           reviewGrid.appendChild(article);
         });
@@ -1179,6 +1352,8 @@ async function loadProductReviews(productId) {
         showAllBtn.style.fontFamily = "'Syncopate', sans-serif";
         showAllBtn.style.textTransform = "uppercase";
         showAllBtn.style.fontWeight = "700";
+        showAllBtn.style.width = "auto";
+        showAllBtn.style.margin = "0 auto";
         
         showAllBtn.onclick = () => {
             const remainingReviews = reviews.slice(3);
@@ -1194,9 +1369,81 @@ async function loadProductReviews(productId) {
   }
 }
 
+window.openProductReviewEdit = function(reviewId, productId) {
+  const review = currentProductReviews.find(r => r.id === reviewId);
+  if (!review) return;
+  const row = document.getElementById(`prod-review-${reviewId}`);
+  if (!row) return;
+
+  row.dataset.origHtml = row.innerHTML;
+
+  row.innerHTML = `
+    <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 12px; width: 100%; background: var(--bg-hover); padding: 20px; border-radius: 4px; border: 1px solid var(--border-subtle); margin-top: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Product Review</span>
+        <select id="edit-prod-rating-${reviewId}" style="padding: 6px 10px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;">
+          <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ - Excellent (5)</option>
+          <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ - Good (4)</option>
+          <option value="3" ${review.rating === 3 ? 'selected' : ''}>⭐⭐⭐ - Okay (3)</option>
+          <option value="2" ${review.rating === 2 ? 'selected' : ''}>⭐⭐ - Poor (2)</option>
+          <option value="1" ${review.rating === 1 ? 'selected' : ''}>⭐ - Terrible (1)</option>
+        </select>
+      </div>
+      <textarea id="edit-prod-comment-${reviewId}" rows="4" style="width: 100%; padding: 12px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; resize: vertical;" required>${escapeHtml(review.comment)}</textarea>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" onclick="cancelProductReviewEdit(${reviewId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 8px 16px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px;">Cancel</button>
+        <button type="button" onclick="saveProductReviewEdit(${reviewId}, ${productId})" style="width: auto !important; margin: 0 !important; background: var(--accent); color: var(--bg-deep); border: 1px solid var(--accent); padding: 8px 16px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px;">Save Changes</button>
+      </div>
+    </div>
+  `;
+};
+
+window.cancelProductReviewEdit = function(reviewId) {
+  const row = document.getElementById(`prod-review-${reviewId}`);
+  if (row && row.dataset.origHtml) {
+    row.innerHTML = row.dataset.origHtml;
+  }
+};
+
+window.saveProductReviewEdit = async function(reviewId, productId) {
+  const ratingEl = document.getElementById(`edit-prod-rating-${reviewId}`);
+  const commentEl = document.getElementById(`edit-prod-comment-${reviewId}`);
+  if (!commentEl || !commentEl.value.trim()) {
+    alert("Review comment cannot be empty.");
+    return;
+  }
+
+  const newRating = parseInt(ratingEl.value);
+  const newComment = commentEl.value.trim();
+
+  try {
+    const res = await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating: newRating, comment: newComment })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ Your review was updated successfully!");
+      loadProductReviews(productId);
+    } else {
+      alert(data.error || "Failed to update review.");
+    }
+  } catch (err) {
+    console.error("Save product review error:", err);
+    alert("Network error updating product review.");
+  }
+};
+
 function initProductReviewForm(productId) {
   const form = document.getElementById("productReviewForm");
   if (!form) return;
+
+  // Auto-fill reviewer name if logged in
+  if (window.currentUser && window.currentUser.name) {
+    const nameInput = document.getElementById("prodReviewerName");
+    if (nameInput && !nameInput.value) nameInput.value = window.currentUser.name;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault(); 
@@ -1211,8 +1458,16 @@ function initProductReviewForm(productId) {
         body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
       });
       if (response.ok) {
+        const created = await response.json();
+        if (created && created.id) {
+          rememberMyReview('product', created.id);
+        }
         alert("Thanks for your review!");
         form.reset(); 
+        if (window.currentUser) {
+          const prodNameInput = document.getElementById("prodReviewerName");
+          if (prodNameInput) prodNameInput.value = window.currentUser.name;
+        }
         loadProductReviews(productId); 
       } else {
         alert("Server Error: The backend refused to save the review.");
