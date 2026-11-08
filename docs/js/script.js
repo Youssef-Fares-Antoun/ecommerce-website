@@ -1111,6 +1111,15 @@ function isMyReview(review, type) {
   return false;
 }
 
+function getAdminAuthorBadgeHtml(review) {
+  if (!window.currentUser || !window.currentUser.isAdmin) return '';
+  if (review.User && review.User.id) {
+    const emailPart = review.User.email ? ` &bull; ${escapeHtml(review.User.email)}` : '';
+    return `<div style="margin-top: 6px; padding: 4px 8px; background: rgba(52, 152, 219, 0.12); border: 1px solid rgba(52, 152, 219, 0.4); border-radius: 3px; font-size: 11px; color: #3498db; font-family: 'Rajdhani', sans-serif; display: inline-block;">👑 <strong>Account #${review.User.id}:</strong> ${escapeHtml(review.User.name)}${emailPart}</div>`;
+  }
+  return `<div style="margin-top: 6px; padding: 4px 8px; background: rgba(149, 165, 166, 0.12); border: 1px solid rgba(149, 165, 166, 0.4); border-radius: 3px; font-size: 11px; color: #95a5a6; font-family: 'Rajdhani', sans-serif; display: inline-block;">👑 <strong>Account:</strong> Guest (Unregistered)</div>`;
+}
+
 async function loadSiteReviews() {
   const reviewGrid = document.getElementById("dynamic-reviews");
   if (!reviewGrid) return;
@@ -1143,6 +1152,7 @@ async function loadSiteReviews() {
             <strong>- ${escapeHtml(review.reviewerName)}</strong>
             ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 6px;">(Your Review)</span>` : ''}
           </p>
+          ${getAdminAuthorBadgeHtml(review)}
         `;
         reviewGrid.appendChild(article);
       });
@@ -1480,6 +1490,7 @@ async function loadProductReviews(productId) {
             <span class="verified-purchase">Verified Purchase</span>
           </div>
           <p class="review-text">"${escapeHtml(review.comment)}"</p>
+          ${getAdminAuthorBadgeHtml(review)}
         `;
         reviewGrid.appendChild(article);
       });

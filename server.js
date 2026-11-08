@@ -370,9 +370,18 @@ const canUserModifyReview = (review, authUser, claimedByBrowser) => {
   return false;
 };
 
-app.get('/api/site-reviews', async (req, res) => {
-  try { res.json(await SiteReview.findAll({ order: [['createdAt', 'DESC']] })); } 
-  catch (err) { res.status(500).json({ error: "Failed to fetch site reviews" }); }
+app.get(['/api/site-reviews', '/api/admin/site-reviews'], async (req, res) => {
+  try {
+    const authUser = await getAuthUser(req);
+    const userAttrs = (authUser && authUser.isAdmin) ? ['id', 'name', 'email', 'isAdmin'] : ['id', 'name'];
+    const reviews = await SiteReview.findAll({
+      include: [{ model: User, attributes: userAttrs }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch site reviews" });
+  }
 });
 
 app.post('/api/site-reviews', async (req, res) => {
@@ -428,8 +437,18 @@ app.delete('/api/site-reviews/:id', verifyAdmin, async (req, res) => {
 });
 
 app.get('/api/products/:id/reviews', async (req, res) => {
-  try { res.json(await ProductReview.findAll({ where: { ProductId: req.params.id }, order: [['createdAt', 'DESC']] })); } 
-  catch (err) { res.status(500).json({ error: "Failed to fetch product reviews" }); }
+  try {
+    const authUser = await getAuthUser(req);
+    const userAttrs = (authUser && authUser.isAdmin) ? ['id', 'name', 'email', 'isAdmin'] : ['id', 'name'];
+    const reviews = await ProductReview.findAll({
+      where: { ProductId: req.params.id },
+      include: [{ model: User, attributes: userAttrs }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch product reviews" });
+  }
 });
 
 app.post('/api/products/:id/reviews', async (req, res) => {
@@ -450,7 +469,10 @@ app.post('/api/products/:id/reviews', async (req, res) => {
 app.get(['/api/admin/product-reviews', '/api/product-reviews'], verifyAdmin, async (req, res) => {
   try {
     const reviews = await ProductReview.findAll({
-      include: [{ model: Product, attributes: ['id', 'name', 'image', 'category', 'price'] }],
+      include: [
+        { model: Product, attributes: ['id', 'name', 'image', 'category', 'price'] },
+        { model: User, attributes: ['id', 'name', 'email', 'isAdmin'] }
+      ],
       order: [['createdAt', 'DESC']]
     });
     res.json(reviews);

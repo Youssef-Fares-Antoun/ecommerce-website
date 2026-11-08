@@ -496,14 +496,85 @@ async function loadInventory() {
 // ==========================================
 // REVIEWS MODERATION LOGIC
 // ==========================================
+let adminProductReviewsCache = [];
+let adminProductsMapCache = {};
+let adminUsersCache = [];
+
+function escapeAdminHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+async function ensureAdminUsersCache() {
+    if (adminUsersCache && adminUsersCache.length > 0) return adminUsersCache;
+    try {
+        const res = await fetch('/api/admin/users');
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) adminUsersCache = data;
+        }
+    } catch (e) {}
+    return adminUsersCache;
+}
+
+function formatReviewUserAccountHtml(review) {
+    let linkedUser = review.User || null;
+
+    if (!linkedUser && review.UserId && adminUsersCache.length > 0) {
+        linkedUser = adminUsersCache.find(u => Number(u.id) === Number(review.UserId)) || null;
+    }
+
+    let isNameMatchedFallback = false;
+    if (!linkedUser && review.reviewerName && adminUsersCache.length > 0) {
+        const rName = review.reviewerName.trim().toLowerCase();
+        const rFirst = rName.split(/\s+/)[0];
+        linkedUser = adminUsersCache.find(u => {
+            if (!u.name) return false;
+            const uName = u.name.trim().toLowerCase();
+            if (uName === rName) return true;
+            const uFirst = uName.split(/\s+/)[0];
+            return rFirst.length >= 3 && rFirst === uFirst;
+        }) || null;
+        if (linkedUser) isNameMatchedFallback = true;
+    }
+
+    if (linkedUser) {
+        const badgeColor = linkedUser.isAdmin ? "#3498db" : "#2ecc71";
+        const badgeBg = linkedUser.isAdmin ? "rgba(52, 152, 219, 0.15)" : "rgba(46, 204, 113, 0.15)";
+        const roleLabel = linkedUser.isAdmin ? `ADMIN #${linkedUser.id}` : `USER #${linkedUser.id}`;
+        return `
+            <div style="line-height: 1.35;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 2px 7px; border-radius: 4px; font-size: 0.7em; font-weight: bold; border: 1px solid ${badgeColor}; font-family: 'Syncopate', sans-serif; white-space: nowrap;">${roleLabel}</span>
+                    <strong style="color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(linkedUser.name)}</strong>
+                </div>
+                ${linkedUser.email ? `<div style="font-size: 0.85em; color: var(--text-muted); font-family: 'Rajdhani', sans-serif; margin-top: 2px;">${escapeAdminHtml(linkedUser.email)}</div>` : ''}
+            </div>
+        `;
+    }
+
+    return `
+        <div>
+            <span style="background: rgba(149, 165, 166, 0.15); color: #95a5a6; padding: 3px 8px; border-radius: 4px; font-size: 0.72em; font-weight: bold; border: 1px solid #95a5a6; font-family: 'Syncopate', sans-serif; white-space: nowrap;">GUEST</span>
+            <div style="font-size: 0.82em; color: var(--text-muted); font-family: 'Rajdhani', sans-serif; margin-top: 3px;">Unregistered Visitor</div>
+        </div>
+    `;
+}
+
 async function loadAdminReviews() {
     const tableBody = document.getElementById("admin-review-list");
     if (!tableBody) return;
 
     try {
-        const response = await fetch('/api/site-reviews');
+        await ensureAdminUsersCache();
+        const response = await fetch('/api/admin/site-reviews');
         if (!response.ok) {
-            tableBody.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Failed to load reviews.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Failed to load reviews.</td></tr>`;
             return;
         }
 
@@ -511,19 +582,23 @@ async function loadAdminReviews() {
         tableBody.innerHTML = "";
 
         if (reviews.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">No telemetry feedback submitted yet.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No telemetry feedback submitted yet.</td></tr>`;
             return;
         }
 
         reviews.forEach(review => {
             const stars = "⭐".repeat(review.rating);
+            const dateStr = review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "-";
+            const userAccountHtml = formatReviewUserAccountHtml(review);
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td style="font-weight: bold; color: var(--text-main);">${review.reviewerName}</td>
+                <td style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
+                <td>${userAccountHtml}</td>
                 <td>${stars}</td>
-                <td style="font-style: italic;">"${review.comment}"</td>
+                <td style="font-style: italic; font-family: 'Rajdhani', sans-serif;">"${escapeAdminHtml(review.comment)}"</td>
+                <td style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
                 <td style="text-align: right;">
-                    <button onclick="deleteReview(${review.id})" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Purge</button>
+                    <button onclick="deleteReview(${review.id})" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: 'Rajdhani', sans-serif;">Purge</button>
                 </td>
             `;
             tableBody.appendChild(tr);
@@ -550,24 +625,12 @@ async function deleteReview(reviewId) {
 // ==========================================
 // PRODUCT REVIEWS MODERATION (CLASSIFIED BY PRODUCT)
 // ==========================================
-let adminProductReviewsCache = [];
-let adminProductsMapCache = {};
-
-function escapeAdminHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
 async function loadAdminProductReviews() {
     const container = document.getElementById("admin-product-reviews-container");
     if (!container) return;
 
     try {
+        await ensureAdminUsersCache();
         const [reviewsRes, productsRes] = await Promise.all([
             fetch('/api/admin/product-reviews'),
             fetch('/api/products')
@@ -683,9 +746,11 @@ function renderAdminProductReviews() {
         const rowsHtml = prodReviews.map(review => {
             const stars = "⭐".repeat(review.rating);
             const dateStr = review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "-";
+            const userAccountHtml = formatReviewUserAccountHtml(review);
             return `
                 <tr>
                     <td style="font-weight: bold; color: var(--text-main); font-family: 'Rajdhani', sans-serif;">${escapeAdminHtml(review.reviewerName)}</td>
+                    <td>${userAccountHtml}</td>
                     <td style="font-family: 'Rajdhani', sans-serif;">${stars}</td>
                     <td style="font-style: italic; font-family: 'Rajdhani', sans-serif; color: var(--text-muted);">"${escapeAdminHtml(review.comment)}"</td>
                     <td style="font-family: 'Rajdhani', sans-serif; font-size: 0.9em; color: var(--text-muted);">${dateStr}</td>
@@ -720,7 +785,8 @@ function renderAdminProductReviews() {
                 <table>
                     <thead>
                         <tr>
-                            <th>Driver</th>
+                            <th>Driver (Display)</th>
+                            <th>User Account</th>
                             <th>Rating</th>
                             <th>Comment</th>
                             <th>Date</th>
