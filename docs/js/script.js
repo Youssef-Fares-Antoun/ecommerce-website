@@ -1055,10 +1055,8 @@ async function loadBrands() {
 // =====================
 // 5.8 DYNAMIC SITE REVIEWS
 // =====================
-// =====================
-// 5.8 DYNAMIC SITE REVIEWS
-// =====================
 let currentSiteReviews = [];
+let editingSiteReviewId = null;
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -1082,9 +1080,6 @@ function rememberMyReview(type, reviewId) {
 }
 
 function isMyReview(review, type) {
-  if (window.currentUser && review.UserId && window.currentUser.id === review.UserId) {
-    return true;
-  }
   const storageKey = type === 'site' ? 'revvo_my_site_reviews' : 'revvo_my_product_reviews';
   try {
     const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -1092,10 +1087,13 @@ function isMyReview(review, type) {
       return true;
     }
   } catch (e) {}
-  if (window.currentUser && !review.UserId && review.reviewerName) {
-    if (review.reviewerName.trim().toLowerCase() === window.currentUser.name.trim().toLowerCase()) {
-      return true;
-    }
+  if (window.currentUser && window.currentUser.name && review.reviewerName) {
+    const rName = review.reviewerName.trim().toLowerCase();
+    const uName = window.currentUser.name.trim().toLowerCase();
+    if (rName === uName) return true;
+    const rFirst = rName.split(/\s+/)[0];
+    const uFirst = uName.split(/\s+/)[0];
+    if (rFirst.length >= 3 && rFirst === uFirst) return true;
   }
   return false;
 }
@@ -1108,69 +1106,175 @@ async function loadSiteReviews() {
 
   try {
     const response = await fetch('/api/site-reviews');
+    if (!response.ok) throw new Error("Failed to fetch site reviews");
     const reviews = await response.json();
     reviewGrid.innerHTML = "";
 
-    currentSiteReviews = reviews;
-    const sortedReviews = [...reviews].sort((a, b) => b.rating - a.rating); 
-    
+    currentSiteReviews = Array.isArray(reviews) ? reviews : [];
+    const sortedReviews = [...currentSiteReviews].sort((a, b) => b.rating - a.rating);
+
     const renderSiteReviews = (reviewsToRender) => {
-        reviewsToRender.forEach(review => {
-          const isMine = isMyReview(review, 'site');
-          const stars = "⭐".repeat(review.rating); 
-          const article = document.createElement("article");
-          article.className = "review-card"; 
-          article.id = `site-review-${review.id}`;
-          article.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
-              <h4 style="margin: 0; color: var(--accent);">${stars}</h4>
-              ${isMine ? `
-                <button type="button" class="btn-edit-review" onclick="openSiteReviewEdit(${review.id})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
-              ` : ''}
-            </div>
-            <p class="review-comment" id="site-review-comment-${review.id}">"${escapeHtml(review.comment)}"</p>
-            <p style="margin-top: 10px;">
-              <strong>- ${escapeHtml(review.reviewerName)}</strong>
-              ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 6px;">(Your Review)</span>` : ''}
-            </p>
-          `;
-          reviewGrid.appendChild(article);
-        });
+      reviewsToRender.forEach(review => {
+        const isMine = isMyReview(review, 'site');
+        const stars = "⭐".repeat(review.rating);
+        const article = document.createElement("article");
+        article.className = "review-card";
+        article.id = `site-review-${review.id}`;
+        article.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: var(--accent);">${stars}</h4>
+            <button type="button" class="btn-edit-review" onclick="openSiteReviewEdit(${review.id})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
+          </div>
+          <p class="review-comment" id="site-review-comment-${review.id}">"${escapeHtml(review.comment)}"</p>
+          <p style="margin-top: 10px;">
+            <strong>- ${escapeHtml(review.reviewerName)}</strong>
+            ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 6px;">(Your Review)</span>` : ''}
+          </p>
+        `;
+        reviewGrid.appendChild(article);
+      });
     };
 
-    const initialSiteReviews = sortedReviews.slice(0, 4);
+    // Show Top 3 reviews initially
+    const initialSiteReviews = sortedReviews.slice(0, 3);
     renderSiteReviews(initialSiteReviews);
 
-    if (sortedReviews.length > 4) {
-        const btnWrapper = document.createElement("div");
-        btnWrapper.style.gridColumn = "1 / -1"; 
-        btnWrapper.style.textAlign = "center";
-        btnWrapper.style.marginTop = "20px";
+    // "See All Reviews" button when there are more than 3 reviews
+    if (sortedReviews.length > 3) {
+      const btnWrapper = document.createElement("div");
+      btnWrapper.style.width = "100%";
+      btnWrapper.style.flexBasis = "100%";
+      btnWrapper.style.textAlign = "center";
+      btnWrapper.style.marginTop = "20px";
 
-        const showAllBtn = document.createElement("button");
-        showAllBtn.innerText = `Read All ${sortedReviews.length} Reviews`;
-        showAllBtn.style.padding = "10px 20px";
-        showAllBtn.style.background = "#333";
-        showAllBtn.style.color = "#fff";
-        showAllBtn.style.border = "none";
-        showAllBtn.style.cursor = "pointer";
-        showAllBtn.style.borderRadius = "4px";
-        showAllBtn.style.width = "auto";
-        showAllBtn.style.margin = "0 auto";
-        
-        showAllBtn.onclick = () => {
-            const remainingSiteReviews = sortedReviews.slice(4);
-            renderSiteReviews(remainingSiteReviews);
-            btnWrapper.style.display = "none"; 
-        };
+      const showAllBtn = document.createElement("button");
+      showAllBtn.type = "button";
+      showAllBtn.innerText = "See All Reviews";
+      showAllBtn.style.padding = "12px 28px";
+      showAllBtn.style.background = "transparent";
+      showAllBtn.style.color = "var(--accent)";
+      showAllBtn.style.border = "2px solid var(--accent)";
+      showAllBtn.style.cursor = "pointer";
+      showAllBtn.style.borderRadius = "0";
+      showAllBtn.style.fontFamily = "'Syncopate', sans-serif";
+      showAllBtn.style.textTransform = "uppercase";
+      showAllBtn.style.fontWeight = "700";
+      showAllBtn.style.fontSize = "12px";
+      showAllBtn.style.width = "auto";
+      showAllBtn.style.margin = "0 auto";
 
-        btnWrapper.appendChild(showAllBtn);
-        reviewGrid.appendChild(btnWrapper);
+      showAllBtn.onclick = () => {
+        const remainingSiteReviews = sortedReviews.slice(3);
+        renderSiteReviews(remainingSiteReviews);
+        btnWrapper.style.display = "none";
+      };
+
+      btnWrapper.appendChild(showAllBtn);
+      reviewGrid.appendChild(btnWrapper);
     }
+
+    populateSitePastReviewSelector();
   } catch (err) {
     console.error("Reviews Load Error:", err);
     reviewGrid.innerHTML = "<p>Could not load reviews at this time.</p>";
   }
+}
+
+function populateSitePastReviewSelector() {
+  const form = document.getElementById("siteReviewForm");
+  if (!form) return;
+
+  let selectorBox = document.getElementById("sitePastReviewSelectorBox");
+  if (!selectorBox) {
+    selectorBox = document.createElement("div");
+    selectorBox.id = "sitePastReviewSelectorBox";
+    selectorBox.style.cssText = "margin-bottom: 10px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-subtle); text-align: left;";
+    form.parentNode.insertBefore(selectorBox, form);
+  }
+
+  if (!currentSiteReviews || currentSiteReviews.length === 0) {
+    selectorBox.style.display = "none";
+    return;
+  }
+
+  selectorBox.style.display = "block";
+  const optionsHtml = currentSiteReviews.map(r => {
+    const mineTag = isMyReview(r, 'site') ? ' (Your Review)' : '';
+    const snippet = r.comment.length > 35 ? r.comment.slice(0, 35) + '...' : r.comment;
+    return `<option value="${r.id}" ${editingSiteReviewId === r.id ? 'selected' : ''}>${escapeHtml(r.reviewerName)}${mineTag} - ${"⭐".repeat(r.rating)} "${escapeHtml(snippet)}"</option>`;
+  }).join('');
+
+  selectorBox.innerHTML = `
+    <label for="sitePastReviewSelect" style="display: block; font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">
+      ✏️ Had a review in the past? Select to edit:
+    </label>
+    <select id="sitePastReviewSelect" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); font-family: 'Rajdhani', sans-serif; font-size: 15px;">
+      <option value="">-- Write a New Review --</option>
+      ${optionsHtml}
+    </select>
+  `;
+
+  const selectEl = document.getElementById("sitePastReviewSelect");
+  selectEl.addEventListener("change", () => {
+    const val = parseInt(selectEl.value);
+    if (!val) {
+      resetSiteReviewFormMode();
+    } else {
+      startSiteReviewFormEdit(val);
+    }
+  });
+}
+
+function startSiteReviewFormEdit(reviewId) {
+  const review = currentSiteReviews.find(r => r.id === reviewId);
+  if (!review) return;
+  editingSiteReviewId = review.id;
+
+  const nameInput = document.getElementById("reviewerName");
+  const ratingSelect = document.getElementById("reviewRating");
+  const commentInput = document.getElementById("reviewComment");
+  const form = document.getElementById("siteReviewForm");
+
+  if (nameInput) nameInput.value = review.reviewerName;
+  if (ratingSelect) ratingSelect.value = String(review.rating);
+  if (commentInput) commentInput.value = review.comment;
+
+  const pastSelect = document.getElementById("sitePastReviewSelect");
+  if (pastSelect) pastSelect.value = String(review.id);
+
+  if (form) {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Update My Review";
+
+    let cancelBtn = document.getElementById("cancelSiteFormEditBtn");
+    if (!cancelBtn) {
+      cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.id = "cancelSiteFormEditBtn";
+      cancelBtn.textContent = "Cancel Edit";
+      cancelBtn.style.cssText = "padding: 12px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-top: 0;";
+      cancelBtn.onclick = resetSiteReviewFormMode;
+      form.appendChild(cancelBtn);
+    }
+  }
+}
+
+function resetSiteReviewFormMode() {
+  editingSiteReviewId = null;
+  const form = document.getElementById("siteReviewForm");
+  if (form) {
+    form.reset();
+    if (window.currentUser && window.currentUser.name) {
+      const nameInput = document.getElementById("reviewerName");
+      if (nameInput) nameInput.value = window.currentUser.name;
+    }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Submit Feedback";
+  }
+  const cancelBtn = document.getElementById("cancelSiteFormEditBtn");
+  if (cancelBtn) cancelBtn.remove();
+  const pastSelect = document.getElementById("sitePastReviewSelect");
+  if (pastSelect) pastSelect.value = "";
 }
 
 window.openSiteReviewEdit = function(reviewId) {
@@ -1184,7 +1288,7 @@ window.openSiteReviewEdit = function(reviewId) {
   card.innerHTML = `
     <div class="review-edit-box" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-        <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Your Feedback</span>
+        <span style="font-family: 'Syncopate', sans-serif; font-size: 11px; font-weight: bold; color: var(--accent); text-transform: uppercase;">Edit Review</span>
         <select id="edit-site-rating-${reviewId}" style="padding: 5px 8px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 14px;">
           <option value="5" ${review.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ (5)</option>
           <option value="4" ${review.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ (4)</option>
@@ -1193,6 +1297,7 @@ window.openSiteReviewEdit = function(reviewId) {
           <option value="1" ${review.rating === 1 ? 'selected' : ''}>⭐ (1)</option>
         </select>
       </div>
+      <input type="text" id="edit-site-name-${reviewId}" value="${escapeHtml(review.reviewerName)}" placeholder="Your Name" style="width: 100%; padding: 8px 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;" required />
       <textarea id="edit-site-comment-${reviewId}" rows="3" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px; resize: vertical;" required>${escapeHtml(review.comment)}</textarea>
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px;">
         <button type="button" onclick="cancelSiteReviewEdit(${reviewId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 6px 14px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px;">Cancel</button>
@@ -1212,6 +1317,7 @@ window.cancelSiteReviewEdit = function(reviewId) {
 window.saveSiteReviewEdit = async function(reviewId) {
   const ratingEl = document.getElementById(`edit-site-rating-${reviewId}`);
   const commentEl = document.getElementById(`edit-site-comment-${reviewId}`);
+  const nameEl = document.getElementById(`edit-site-name-${reviewId}`);
   if (!commentEl || !commentEl.value.trim()) {
     alert("Review comment cannot be empty.");
     return;
@@ -1219,15 +1325,17 @@ window.saveSiteReviewEdit = async function(reviewId) {
 
   const newRating = parseInt(ratingEl.value);
   const newComment = commentEl.value.trim();
+  const newName = nameEl && nameEl.value.trim() ? nameEl.value.trim() : undefined;
 
   try {
     const res = await fetch(`/api/site-reviews/${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: newRating, comment: newComment })
+      body: JSON.stringify({ rating: newRating, comment: newComment, reviewerName: newName })
     });
     const data = await res.json();
     if (res.ok) {
+      rememberMyReview('site', reviewId);
       alert("✅ Your review was updated successfully!");
       loadSiteReviews();
     } else {
@@ -1256,6 +1364,23 @@ function initSiteReviewForm() {
     const comment = document.getElementById("reviewComment").value;
 
     try {
+      if (editingSiteReviewId) {
+        const res = await fetch(`/api/site-reviews/${editingSiteReviewId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
+        });
+        if (res.ok) {
+          rememberMyReview('site', editingSiteReviewId);
+          alert("✅ Your review was updated successfully!");
+          resetSiteReviewFormMode();
+          loadSiteReviews();
+        } else {
+          alert("Failed to update review.");
+        }
+        return;
+      }
+
       const response = await fetch('/api/site-reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1286,6 +1411,7 @@ function initSiteReviewForm() {
 // 5.9 DYNAMIC PRODUCT REVIEWS
 // =====================
 let currentProductReviews = [];
+let editingProductReviewId = null;
 
 async function loadProductReviews(productId) {
   const reviewGrid = document.getElementById("dynamic-product-reviews");
@@ -1295,78 +1421,181 @@ async function loadProductReviews(productId) {
 
   try {
     const response = await fetch(`/api/products/${productId}/reviews`);
+    if (!response.ok) throw new Error("Failed to fetch product reviews");
     const reviews = await response.json();
-    reviewGrid.innerHTML = ""; 
+    reviewGrid.innerHTML = "";
 
-    if (reviews.length === 0) {
+    currentProductReviews = Array.isArray(reviews) ? reviews : [];
+    populateProductPastReviewSelector(productId);
+
+    if (currentProductReviews.length === 0) {
       reviewGrid.innerHTML = "<p style='color: var(--text-muted);'>No reviews yet. Be the first to review this tee!</p>";
       return;
     }
 
-    currentProductReviews = reviews;
+    const sortedReviews = [...currentProductReviews].sort((a, b) => b.rating - a.rating);
 
     const renderProductReviews = (reviewsToRender) => {
-        reviewsToRender.forEach(review => {
-          const isMine = isMyReview(review, 'product');
-          const stars = "⭐".repeat(review.rating); 
-          const article = document.createElement("article");
-          article.className = "detailed-review-row"; 
-          article.id = `prod-review-${review.id}`;
-          article.innerHTML = `
-            <div class="reviewer-profile" style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="avatar">👤</div>
-                <span class="reviewer-name">${escapeHtml(review.reviewerName)}</span>
-                ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 4px;">(Your Review)</span>` : ''}
-              </div>
-              ${isMine ? `
-                <button type="button" class="btn-edit-prod-review" onclick="openProductReviewEdit(${review.id}, ${productId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
-              ` : ''}
+      reviewsToRender.forEach(review => {
+        const isMine = isMyReview(review, 'product');
+        const stars = "⭐".repeat(review.rating);
+        const article = document.createElement("article");
+        article.className = "detailed-review-row";
+        article.id = `prod-review-${review.id}`;
+        article.innerHTML = `
+          <div class="reviewer-profile" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="avatar">👤</div>
+              <span class="reviewer-name">${escapeHtml(review.reviewerName)}</span>
+              ${isMine ? `<span style="font-size: 0.8em; color: var(--accent); font-weight: bold; margin-left: 4px;">(Your Review)</span>` : ''}
             </div>
-            <div class="review-rating-row">
-              <span class="review-stars">${stars}</span>
-              <span class="verified-purchase">Verified Purchase</span>
-            </div>
-            <p class="review-text">"${escapeHtml(review.comment)}"</p>
-          `;
-          reviewGrid.appendChild(article);
-        });
+            <button type="button" class="btn-edit-prod-review" onclick="openProductReviewEdit(${review.id}, ${productId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: 0.2s; white-space: nowrap;">✏️ Edit</button>
+          </div>
+          <div class="review-rating-row">
+            <span class="review-stars">${stars}</span>
+            <span class="verified-purchase">Verified Purchase</span>
+          </div>
+          <p class="review-text">"${escapeHtml(review.comment)}"</p>
+        `;
+        reviewGrid.appendChild(article);
+      });
     };
 
-    const initialReviews = reviews.slice(0, 3);
+    // Show Top 3 reviews initially
+    const initialReviews = sortedReviews.slice(0, 3);
     renderProductReviews(initialReviews);
 
-    if (reviews.length > 3) {
-        const btnWrapper = document.createElement("div");
-        btnWrapper.style.textAlign = "center";
-        btnWrapper.style.marginTop = "20px";
+    // "See All Reviews" button when there are more than 3 reviews
+    if (sortedReviews.length > 3) {
+      const btnWrapper = document.createElement("div");
+      btnWrapper.style.textAlign = "center";
+      btnWrapper.style.marginTop = "20px";
 
-        const showAllBtn = document.createElement("button");
-        showAllBtn.innerText = `Show All ${reviews.length} Reviews`;
-        showAllBtn.style.padding = "10px 20px";
-        showAllBtn.style.background = "transparent"; 
-        showAllBtn.style.color = "var(--text-main)";
-        showAllBtn.style.border = "2px solid var(--border-subtle)";
-        showAllBtn.style.cursor = "pointer";
-        showAllBtn.style.borderRadius = "4px";
-        showAllBtn.style.fontFamily = "'Syncopate', sans-serif";
-        showAllBtn.style.textTransform = "uppercase";
-        showAllBtn.style.fontWeight = "700";
-        showAllBtn.style.width = "auto";
-        showAllBtn.style.margin = "0 auto";
-        
-        showAllBtn.onclick = () => {
-            const remainingReviews = reviews.slice(3);
-            renderProductReviews(remainingReviews);
-            btnWrapper.style.display = "none"; 
-        };
+      const showAllBtn = document.createElement("button");
+      showAllBtn.type = "button";
+      showAllBtn.innerText = "See All Reviews";
+      showAllBtn.style.padding = "12px 28px";
+      showAllBtn.style.background = "transparent";
+      showAllBtn.style.color = "var(--accent)";
+      showAllBtn.style.border = "2px solid var(--accent)";
+      showAllBtn.style.cursor = "pointer";
+      showAllBtn.style.borderRadius = "0";
+      showAllBtn.style.fontFamily = "'Syncopate', sans-serif";
+      showAllBtn.style.textTransform = "uppercase";
+      showAllBtn.style.fontWeight = "700";
+      showAllBtn.style.fontSize = "12px";
+      showAllBtn.style.width = "auto";
+      showAllBtn.style.margin = "0 auto";
 
-        btnWrapper.appendChild(showAllBtn);
-        reviewGrid.appendChild(btnWrapper);
+      showAllBtn.onclick = () => {
+        const remainingReviews = sortedReviews.slice(3);
+        renderProductReviews(remainingReviews);
+        btnWrapper.style.display = "none";
+      };
+
+      btnWrapper.appendChild(showAllBtn);
+      reviewGrid.appendChild(btnWrapper);
     }
   } catch (err) {
     console.error("Product Reviews Load Error:", err);
   }
+}
+
+function populateProductPastReviewSelector(productId) {
+  const form = document.getElementById("productReviewForm");
+  if (!form) return;
+
+  let selectorBox = document.getElementById("prodPastReviewSelectorBox");
+  if (!selectorBox) {
+    selectorBox = document.createElement("div");
+    selectorBox.id = "prodPastReviewSelectorBox";
+    selectorBox.style.cssText = "margin-bottom: 15px; padding: 12px; background: var(--bg-deep); border: 1px solid var(--border-subtle); border-radius: 4px; text-align: left;";
+    form.parentNode.insertBefore(selectorBox, form);
+  }
+
+  if (!currentProductReviews || currentProductReviews.length === 0) {
+    selectorBox.style.display = "none";
+    return;
+  }
+
+  selectorBox.style.display = "block";
+  const optionsHtml = currentProductReviews.map(r => {
+    const mineTag = isMyReview(r, 'product') ? ' (Your Review)' : '';
+    const snippet = r.comment.length > 30 ? r.comment.slice(0, 30) + '...' : r.comment;
+    return `<option value="${r.id}" ${editingProductReviewId === r.id ? 'selected' : ''}>${escapeHtml(r.reviewerName)}${mineTag} - ${"⭐".repeat(r.rating)} "${escapeHtml(snippet)}"</option>`;
+  }).join('');
+
+  selectorBox.innerHTML = `
+    <label for="prodPastReviewSelect" style="display: block; font-family: 'Syncopate', sans-serif; font-size: 11px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">
+      ✏️ Had a review in the past? Select to edit:
+    </label>
+    <select id="prodPastReviewSelect" style="width: 100%; padding: 10px; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;">
+      <option value="">-- Write a New Review --</option>
+      ${optionsHtml}
+    </select>
+  `;
+
+  const selectEl = document.getElementById("prodPastReviewSelect");
+  selectEl.addEventListener("change", () => {
+    const val = parseInt(selectEl.value);
+    if (!val) {
+      resetProductReviewFormMode();
+    } else {
+      startProductReviewFormEdit(val);
+    }
+  });
+}
+
+function startProductReviewFormEdit(reviewId) {
+  const review = currentProductReviews.find(r => r.id === reviewId);
+  if (!review) return;
+  editingProductReviewId = review.id;
+
+  const nameInput = document.getElementById("prodReviewerName");
+  const ratingSelect = document.getElementById("prodReviewRating");
+  const commentInput = document.getElementById("prodReviewComment");
+  const form = document.getElementById("productReviewForm");
+
+  if (nameInput) nameInput.value = review.reviewerName;
+  if (ratingSelect) ratingSelect.value = String(review.rating);
+  if (commentInput) commentInput.value = review.comment;
+
+  const pastSelect = document.getElementById("prodPastReviewSelect");
+  if (pastSelect) pastSelect.value = String(review.id);
+
+  if (form) {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Update My Review";
+
+    let cancelBtn = document.getElementById("cancelProdFormEditBtn");
+    if (!cancelBtn) {
+      cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.id = "cancelProdFormEditBtn";
+      cancelBtn.textContent = "Cancel Edit";
+      cancelBtn.style.cssText = "padding: 12px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); font-family: 'Syncopate', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-top: 0;";
+      cancelBtn.onclick = resetProductReviewFormMode;
+      form.appendChild(cancelBtn);
+    }
+  }
+}
+
+function resetProductReviewFormMode() {
+  editingProductReviewId = null;
+  const form = document.getElementById("productReviewForm");
+  if (form) {
+    form.reset();
+    if (window.currentUser && window.currentUser.name) {
+      const nameInput = document.getElementById("prodReviewerName");
+      if (nameInput) nameInput.value = window.currentUser.name;
+    }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Write a customer review";
+  }
+  const cancelBtn = document.getElementById("cancelProdFormEditBtn");
+  if (cancelBtn) cancelBtn.remove();
+  const pastSelect = document.getElementById("prodPastReviewSelect");
+  if (pastSelect) pastSelect.value = "";
 }
 
 window.openProductReviewEdit = function(reviewId, productId) {
@@ -1389,6 +1618,7 @@ window.openProductReviewEdit = function(reviewId, productId) {
           <option value="1" ${review.rating === 1 ? 'selected' : ''}>⭐ - Terrible (1)</option>
         </select>
       </div>
+      <input type="text" id="edit-prod-name-${reviewId}" value="${escapeHtml(review.reviewerName)}" placeholder="Your Name" style="width: 100%; padding: 10px 12px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 15px;" required />
       <textarea id="edit-prod-comment-${reviewId}" rows="4" style="width: 100%; padding: 12px; background: var(--bg-deep); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-size: 16px; resize: vertical;" required>${escapeHtml(review.comment)}</textarea>
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
         <button type="button" onclick="cancelProductReviewEdit(${reviewId})" style="width: auto !important; margin: 0 !important; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 8px 16px; font-size: 11px; font-family: 'Syncopate', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 2px;">Cancel</button>
@@ -1408,6 +1638,7 @@ window.cancelProductReviewEdit = function(reviewId) {
 window.saveProductReviewEdit = async function(reviewId, productId) {
   const ratingEl = document.getElementById(`edit-prod-rating-${reviewId}`);
   const commentEl = document.getElementById(`edit-prod-comment-${reviewId}`);
+  const nameEl = document.getElementById(`edit-prod-name-${reviewId}`);
   if (!commentEl || !commentEl.value.trim()) {
     alert("Review comment cannot be empty.");
     return;
@@ -1415,15 +1646,17 @@ window.saveProductReviewEdit = async function(reviewId, productId) {
 
   const newRating = parseInt(ratingEl.value);
   const newComment = commentEl.value.trim();
+  const newName = nameEl && nameEl.value.trim() ? nameEl.value.trim() : undefined;
 
   try {
     const res = await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: newRating, comment: newComment })
+      body: JSON.stringify({ rating: newRating, comment: newComment, reviewerName: newName })
     });
     const data = await res.json();
     if (res.ok) {
+      rememberMyReview('product', reviewId);
       alert("✅ Your review was updated successfully!");
       loadProductReviews(productId);
     } else {
@@ -1446,12 +1679,29 @@ function initProductReviewForm(productId) {
   }
 
   form.addEventListener("submit", async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     const name = document.getElementById("prodReviewerName").value;
     const rating = document.getElementById("prodReviewRating").value;
     const comment = document.getElementById("prodReviewComment").value;
 
     try {
+      if (editingProductReviewId) {
+        const res = await fetch(`/api/products/${productId}/reviews/${editingProductReviewId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reviewerName: name, rating: parseInt(rating), comment: comment })
+        });
+        if (res.ok) {
+          rememberMyReview('product', editingProductReviewId);
+          alert("✅ Your review was updated successfully!");
+          resetProductReviewFormMode();
+          loadProductReviews(productId);
+        } else {
+          alert("Failed to update product review.");
+        }
+        return;
+      }
+
       const response = await fetch(`/api/products/${productId}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1463,12 +1713,12 @@ function initProductReviewForm(productId) {
           rememberMyReview('product', created.id);
         }
         alert("Thanks for your review!");
-        form.reset(); 
+        form.reset();
         if (window.currentUser) {
           const prodNameInput = document.getElementById("prodReviewerName");
           if (prodNameInput) prodNameInput.value = window.currentUser.name;
         }
-        loadProductReviews(productId); 
+        loadProductReviews(productId);
       } else {
         alert("Server Error: The backend refused to save the review.");
       }

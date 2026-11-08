@@ -117,17 +117,11 @@ const SiteReview = sequelize.define('SiteReview', {
   comment: { type: DataTypes.TEXT, allowNull: false }
 });
 
-User.hasMany(SiteReview);
-SiteReview.belongsTo(User);
-
 const ProductReview = sequelize.define('ProductReview', {
   reviewerName: { type: DataTypes.STRING, allowNull: false },
   rating: { type: DataTypes.INTEGER, allowNull: false }, 
   comment: { type: DataTypes.TEXT, allowNull: false }
 });
-
-User.hasMany(ProductReview);
-ProductReview.belongsTo(User);
 
 Product.hasMany(ProductReview);
 ProductReview.belongsTo(Product);
@@ -348,12 +342,13 @@ app.get('/api/site-reviews', async (req, res) => {
 app.post('/api/site-reviews', async (req, res) => {
   try {
     const authUser = await getAuthUser(req);
-    const reviewData = { ...req.body };
-    if (!reviewData.reviewerName && authUser) {
-      reviewData.reviewerName = authUser.name;
-    }
-    if (authUser) reviewData.UserId = authUser.id;
-    res.status(201).json(await SiteReview.create(reviewData));
+    const { reviewerName, rating, comment } = req.body;
+    const finalName = (reviewerName && reviewerName.trim()) ? reviewerName.trim() : (authUser ? authUser.name : "Driver");
+    res.status(201).json(await SiteReview.create({
+      reviewerName: finalName,
+      rating: parseInt(rating),
+      comment
+    }));
   } 
   catch (err) { res.status(400).json({ error: "Failed to add site review" }); }
 });
@@ -363,18 +358,12 @@ app.put('/api/site-reviews/:id', async (req, res) => {
     const review = await SiteReview.findByPk(req.params.id);
     if (!review) return res.status(404).json({ error: "Review not found." });
 
-    const authUser = await getAuthUser(req);
-    if (review.UserId) {
-      if (!authUser || (review.UserId !== authUser.id && !authUser.isAdmin)) {
-        return res.status(403).json({ error: "Unauthorized: You can only edit your own review." });
-      }
-    }
-
     const { rating, comment, reviewerName } = req.body;
     if (rating !== undefined) review.rating = parseInt(rating);
     if (comment !== undefined) review.comment = comment;
-    if (reviewerName !== undefined) review.reviewerName = reviewerName;
-    if (!review.UserId && authUser) review.UserId = authUser.id;
+    if (reviewerName !== undefined && String(reviewerName).trim() !== "") {
+      review.reviewerName = String(reviewerName).trim();
+    }
 
     await review.save();
     res.json({ message: "Review updated successfully", review });
@@ -383,21 +372,11 @@ app.put('/api/site-reviews/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/site-reviews/:id', async (req, res) => {
+app.delete('/api/site-reviews/:id', verifyAdmin, async (req, res) => {
   try {
     const id = req.params.id;
-    const review = await SiteReview.findByPk(id);
-    if (!review) return res.status(404).json({ error: "Review not found." });
-
-    const authUser = await getAuthUser(req);
-    const isOwner = authUser && review.UserId && review.UserId === authUser.id;
-    const isAdmin = authUser && authUser.isAdmin;
-
-    if (!isAdmin && !isOwner && review.UserId) {
-      return res.status(403).json({ error: "Unauthorized: You can only delete your own review." });
-    }
-
-    await review.destroy();
+    const deletedCount = await SiteReview.destroy({ where: { id: id } });
+    if (deletedCount === 0) return res.status(404).json({ error: "Review not found." });
     res.json({ message: `Success! Review #${id} has been removed.` });
   } catch (err) { res.status(500).json({ error: "Server error during review deletion." }); }
 });
@@ -411,14 +390,13 @@ app.post('/api/products/:id/reviews', async (req, res) => {
   try {
     const { reviewerName, rating, comment } = req.body;
     const authUser = await getAuthUser(req);
-    const reviewData = {
+    const finalName = (reviewerName && reviewerName.trim()) ? reviewerName.trim() : (authUser ? authUser.name : "Driver");
+    res.status(201).json(await ProductReview.create({
       ProductId: req.params.id,
-      reviewerName: reviewerName || (authUser ? authUser.name : "Driver"),
+      reviewerName: finalName,
       rating: parseInt(rating),
       comment
-    };
-    if (authUser) reviewData.UserId = authUser.id;
-    res.status(201).json(await ProductReview.create(reviewData));
+    }));
   } catch (err) { res.status(400).json({ error: "Failed to add product review" }); }
 });
 
@@ -427,44 +405,17 @@ app.put(['/api/product-reviews/:id', '/api/products/:productId/reviews/:id'], as
     const review = await ProductReview.findByPk(req.params.id);
     if (!review) return res.status(404).json({ error: "Review not found." });
 
-    const authUser = await getAuthUser(req);
-    if (review.UserId) {
-      if (!authUser || (review.UserId !== authUser.id && !authUser.isAdmin)) {
-        return res.status(403).json({ error: "Unauthorized: You can only edit your own review." });
-      }
-    }
-
     const { rating, comment, reviewerName } = req.body;
     if (rating !== undefined) review.rating = parseInt(rating);
     if (comment !== undefined) review.comment = comment;
-    if (reviewerName !== undefined) review.reviewerName = reviewerName;
-    if (!review.UserId && authUser) review.UserId = authUser.id;
+    if (reviewerName !== undefined && String(reviewerName).trim() !== "") {
+      review.reviewerName = String(reviewerName).trim();
+    }
 
     await review.save();
     res.json({ message: "Product review updated successfully", review });
   } catch (err) {
     res.status(500).json({ error: "Failed to update product review" });
-  }
-});
-
-app.delete(['/api/product-reviews/:id', '/api/products/:productId/reviews/:id'], async (req, res) => {
-  try {
-    const id = req.params.id;
-    const review = await ProductReview.findByPk(id);
-    if (!review) return res.status(404).json({ error: "Review not found." });
-
-    const authUser = await getAuthUser(req);
-    const isOwner = authUser && review.UserId && review.UserId === authUser.id;
-    const isAdmin = authUser && authUser.isAdmin;
-
-    if (!isAdmin && !isOwner && review.UserId) {
-      return res.status(403).json({ error: "Unauthorized: You can only delete your own review." });
-    }
-
-    await review.destroy();
-    res.json({ message: `Success! Review #${id} has been removed.` });
-  } catch (err) {
-    res.status(500).json({ error: "Server error during review deletion." });
   }
 });
 
