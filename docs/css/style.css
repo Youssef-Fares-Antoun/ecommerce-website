@@ -14,16 +14,16 @@
 
 body.light-theme,
 body.light-mode {
-  --bg-deep: #f8f9fb;
-  --bg-card: #ffffff;
-  --bg-hover: #eef0f5;
-  --accent: #d97706; /* Rich Amber Cognac - bold, high-contrast, premium */
-  --accent-glow: rgba(217, 119, 6, 0.20);
-  --text-main: #131418;
-  --text-muted: #5e6270;
-  --border-subtle: #d5d9e2;
-  --nav-bg: rgba(248, 249, 251, 0.90);
-  --footer-bg: #eceff5;
+  --bg-deep: #e8ebf1;        /* Soft, glare-free warm titanium slate */
+  --bg-card: #f3f5f9;        /* Calming off-white parchment card surface */
+  --bg-hover: #dde1e9;       /* Subtle hover depth */
+  --accent: #c26500;         /* Warm bronze amber — soothing, rich & clear */
+  --accent-glow: rgba(194, 101, 0, 0.18);
+  --text-main: #1b1e26;      /* Deep obsidian charcoal instead of harsh black */
+  --text-muted: #575c6c;     /* Muted gunmetal for labels and descriptions */
+  --border-subtle: #c8ceda;  /* Gentle contour framing */
+  --nav-bg: rgba(232, 235, 241, 0.90);
+  --footer-bg: #dce0e9;
 }
 
 /* Custom Scrollbar for sleek motorsport aesthetic */
@@ -1000,16 +1000,16 @@ button.size-btn.selected {
 ========================================= */
 body.light-mode,
 body.light-theme {
-  --bg-deep: #f8f9fb;
-  --bg-card: #ffffff;
-  --bg-hover: #eef0f5;
-  --text-main: #131418;
-  --text-muted: #5e6270;
-  --border-subtle: #d5d9e2;
-  --accent: #d97706;
-  --accent-glow: rgba(217, 119, 6, 0.20);
-  --nav-bg: rgba(248, 249, 251, 0.90);
-  --footer-bg: #eceff5;
+  --bg-deep: #e8ebf1;
+  --bg-card: #f3f5f9;
+  --bg-hover: #dde1e9;
+  --text-main: #1b1e26;
+  --text-muted: #575c6c;
+  --border-subtle: #c8ceda;
+  --accent: #c26500;
+  --accent-glow: rgba(194, 101, 0, 0.18);
+  --nav-bg: rgba(232, 235, 241, 0.90);
+  --footer-bg: #dce0e9;
 }
 
 /* Light Mode Navbar Glass */
