@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/profile.css"> 
   
-  <script src="/admin/admin.js?v=4" defer></script>
+  <script src="/admin/admin.js?v=5" defer></script>
 
   <style>
     /* Desktop-First Bento Admin Styles + Full Mobile & Tablet Responsiveness */
@@ -47,6 +47,12 @@
       border-radius: 4px !important;
       padding: 25px !important;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    }
+    .admin-sidebar .user-info {
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      text-align: center;
     }
     .sidebar-menu .menu-item.active {
       background: var(--accent) !important;
@@ -139,6 +145,13 @@
     /* ========================================== */
     /* TABLET & MOBILE RESPONSIVENESS             */
     /* ========================================== */
+    .admin-nav-toggle-wrap {
+      display: none;
+    }
+    .admin-mobile-backdrop {
+      display: none;
+    }
+
     @media (max-width: 1024px) {
       .admin-container {
         flex-direction: column !important;
@@ -149,38 +162,127 @@
       .admin-sidebar {
         width: 100% !important;
         min-width: 0 !important;
-        padding: 18px !important;
+        padding: 16px 18px !important;
       }
       .admin-sidebar .user-info {
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-start !important;
+        justify-content: space-between !important;
         gap: 14px !important;
         text-align: left !important;
-        padding-bottom: 14px !important;
-        margin-bottom: 14px !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        border-bottom: none !important;
+        width: 100% !important;
+      }
+      .admin-sidebar .user-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
       }
       .admin-sidebar .profile-pic {
         margin: 0 !important;
-        width: 48px !important;
-        height: 48px !important;
-        font-size: 24px !important;
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 22px !important;
         flex-shrink: 0 !important;
       }
-      .sidebar-menu {
-        display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)) !important;
+
+      /* Admin Mobile Hamburger Button */
+      .admin-nav-toggle-wrap {
+        display: block !important;
+      }
+      .admin-hamburger-btn {
+        display: inline-flex !important;
+        align-items: center !important;
         gap: 8px !important;
+        background: var(--bg-hover) !important;
+        border: 1px solid var(--border-subtle) !important;
+        color: var(--text-main) !important;
+        padding: 8px 12px !important;
+        border-radius: 4px !important;
+        font-family: 'Syncopate', sans-serif !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease !important;
+        text-transform: uppercase !important;
+      }
+      .admin-hamburger-btn:hover,
+      .admin-hamburger-btn.active {
+        border-color: var(--accent) !important;
+        color: var(--accent) !important;
+      }
+      .admin-hamburger-icon {
+        display: inline-flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        width: 18px !important;
+        height: 14px !important;
+      }
+      .admin-hamburger-icon span {
+        display: block !important;
+        width: 100% !important;
+        height: 2px !important;
+        background-color: currentColor !important;
+        border-radius: 2px !important;
+        transition: all 0.25s ease !important;
+      }
+      .admin-hamburger-btn.active .admin-hamburger-icon span:nth-child(1) {
+        transform: translateY(6px) rotate(45deg) !important;
+      }
+      .admin-hamburger-btn.active .admin-hamburger-icon span:nth-child(2) {
+        opacity: 0 !important;
+      }
+      .admin-hamburger-btn.active .admin-hamburger-icon span:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg) !important;
+      }
+
+      /* Collapsible Drawer for tabs on Mobile/Tablet */
+      .sidebar-menu {
+        display: none !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-top: 14px !important;
+        padding-top: 14px !important;
+        border-top: 1px solid var(--border-subtle) !important;
+        animation: adminMenuSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      }
+      .sidebar-menu.open {
+        display: flex !important;
       }
       .sidebar-menu .menu-item {
-        text-align: center !important;
-        padding: 10px 8px !important;
-        font-size: 0.72em !important;
+        text-align: left !important;
+        padding: 12px 14px !important;
+        font-size: 0.78em !important;
         border: 1px solid var(--border-subtle) !important;
         margin-top: 0 !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: center !important;
+        justify-content: flex-start !important;
+        border-radius: 4px !important;
+        background: var(--bg-hover) !important;
+      }
+      .sidebar-menu .menu-item.active {
+        border-color: var(--accent) !important;
+        background: var(--accent) !important;
+        color: var(--bg-deep) !important;
+      }
+      .sidebar-menu .menu-item.logout {
+        margin-top: 6px !important;
+        border-color: rgba(231, 76, 60, 0.4) !important;
+      }
+    }
+
+    @keyframes adminMenuSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
@@ -374,15 +476,29 @@
     
     <!-- DARK ADMIN SIDEBAR -->
     <aside class="admin-sidebar">
-      <div class="user-info" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 20px; margin-bottom: 20px; text-align: center;">
-        <div class="profile-pic" style="background: var(--bg-hover); font-size: 32px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 10px auto; border: 2px solid var(--accent);">👑</div>
-        <div>
-          <h3 id="adminNameDisplay" style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1em; text-transform: uppercase; margin: 0;">Superuser</h3>
-          <p style="color: var(--text-muted); font-size: 0.9em; margin: 4px 0 0 0;">Paddock Security Level 1</p>
+      <div class="user-info">
+        <div class="user-meta">
+          <div class="profile-pic" style="background: var(--bg-hover); font-size: 32px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 10px auto; border: 2px solid var(--accent);">👑</div>
+          <div>
+            <h3 id="adminNameDisplay" style="color: var(--text-main); font-family: 'Syncopate', sans-serif; font-size: 1em; text-transform: uppercase; margin: 0;">Superuser</h3>
+            <p style="color: var(--text-muted); font-size: 0.9em; margin: 4px 0 0 0;">Paddock Security Level 1</p>
+          </div>
+        </div>
+
+        <!-- Hamburger toggle button for Mobile/Tablet navigation -->
+        <div class="admin-nav-toggle-wrap">
+          <button id="adminNavToggleBtn" class="admin-hamburger-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+            <span class="admin-hamburger-icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+            <span id="adminActiveTabBadge" class="admin-active-tab-badge">Orders</span>
+          </button>
         </div>
       </div>
       
-      <nav class="sidebar-menu" style="display: flex; flex-direction: column; gap: 10px;">
+      <nav id="adminSidebarMenu" class="sidebar-menu" style="display: flex; flex-direction: column; gap: 10px;">
         <a href="#orders" class="menu-item active" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Orders</a>
         <a href="#inventory" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Inventory</a>
         <a href="#users" class="menu-item" style="padding: 12px; color: var(--text-main); text-decoration: none; font-family: 'Syncopate', sans-serif; font-size: 0.85em; font-weight: 700; border-radius: 4px; transition: 0.3s;">Manage Users</a>

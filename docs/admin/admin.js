@@ -86,10 +86,14 @@ async function handleAdminLogin(e) {
 }
 
 // ==========================================
-// TAB LOGIC
+// TAB LOGIC & MOBILE HAMBURGER
 // ==========================================
 function setupAdminTabs() {
+    const menu = document.getElementById("adminSidebarMenu") || document.querySelector(".sidebar-menu");
+    const toggleBtn = document.getElementById("adminNavToggleBtn");
+    const activeBadge = document.getElementById("adminActiveTabBadge");
     const menuItems = document.querySelectorAll(".sidebar-menu .menu-item:not(.logout)");
+    const logoutItem = document.querySelector(".sidebar-menu .menu-item.logout");
     const ordersCard = document.getElementById("orders-card");
     const inventoryCard = document.getElementById("inventory-card");
     const promosCard = document.getElementById("promos-card"); 
@@ -97,12 +101,55 @@ function setupAdminTabs() {
     const productReviewsCard = document.getElementById("product-reviews-card");
     const usersCard = document.getElementById("users-card"); // 🚀 Get Users Card
 
+    // Helper to close mobile hamburger drawer
+    const closeMobileMenu = () => {
+        if (menu) menu.classList.remove("open");
+        if (toggleBtn) {
+            toggleBtn.classList.remove("active");
+            toggleBtn.setAttribute("aria-expanded", "false");
+        }
+    };
+
+    // Toggle hamburger drawer on mobile/tablet
+    if (toggleBtn && menu) {
+        toggleBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = menu.classList.toggle("open");
+            toggleBtn.classList.toggle("active", isOpen);
+            toggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        // Close when clicking outside on mobile
+        document.addEventListener("click", (e) => {
+            if (window.innerWidth <= 1024 && menu.classList.contains("open")) {
+                if (!menu.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    closeMobileMenu();
+                }
+            }
+        });
+    }
+
+    if (logoutItem) {
+        logoutItem.addEventListener("click", () => {
+            closeMobileMenu();
+        });
+    }
+
     menuItems.forEach(item => {
         item.addEventListener("click", (e) => {
             e.preventDefault();
 
             menuItems.forEach(m => m.classList.remove("active"));
             item.classList.add("active");
+
+            // Update badge text in hamburger button
+            if (activeBadge) {
+                const label = item.textContent.trim().replace(/^Manage\s+/i, "");
+                activeBadge.textContent = label;
+            }
+
+            // Auto-collapse mobile drawer after selecting a tab
+            closeMobileMenu();
 
             if (ordersCard) ordersCard.style.display = "none";
             if (inventoryCard) inventoryCard.style.display = "none";
