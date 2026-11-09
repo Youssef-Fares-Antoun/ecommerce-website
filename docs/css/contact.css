@@ -97,7 +97,7 @@
 .contact-form textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.2);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .contact-form textarea {
@@ -109,21 +109,26 @@
   background: transparent;
   color: var(--accent);
   border: 2px solid var(--accent);
-  border-radius: 0;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 700;
   font-family: 'Syncopate', sans-serif;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
+  letter-spacing: 1.5px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 10px;
-  box-shadow: 0 0 15px rgba(204, 255, 0, 0.05);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .contact-form button:hover { 
   background: var(--accent);
   color: var(--bg-deep);
-  box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
+  box-shadow: 0 4px 25px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.contact-form button:active {
+  transform: translateY(0);
 }
 
 .contact-info p {

@@ -1,12 +1,13 @@
 /* ===== CUSTOM PERFORMANCE VARIABLES ===== */
 :root {
-  --bg-deep: #050505;
-  --bg-card: #111111;
-  --bg-hover: #1a1a1a;
-  --accent: #ccff00; /* Porsche Acid Green */
-  --text-main: #f4f4f4;
-  --text-muted: #888888;
-  --border-subtle: #222222;
+  --bg-deep: #0a0b0e;
+  --bg-card: #12141a;
+  --bg-hover: #191c24;
+  --accent: #ff9e00; /* Porsche GT3 Tachometer Golden Amber */
+  --accent-glow: rgba(255, 158, 0, 0.24);
+  --text-main: #f5f6f8;
+  --text-muted: #9699a6;
+  --border-subtle: #222530;
 }
 
 /* ===== GENERAL RESET ===== */
@@ -111,13 +112,13 @@ h1, h2, h3, h4, .logo {
   letter-spacing: 2px;
   text-transform: uppercase;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 15px rgba(204, 255, 0, 0.1);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .btn-neon:hover {
   background: var(--accent);
   color: var(--bg-deep);
-  box-shadow: 0 4px 25px rgba(204, 255, 0, 0.4);
+  box-shadow: 0 4px 25px var(--accent-glow);
   transform: translateY(-2px);
 }
 
@@ -141,7 +142,7 @@ h1, h2, h3, h4, .logo {
   background: var(--accent);
   color: var(--bg-deep);
   transform: translateY(-2px);
-  box-shadow: 0 4px 18px rgba(204, 255, 0, 0.3);
+  box-shadow: 0 4px 18px var(--accent-glow);
 }
 .btn-solid:active {
   transform: translateY(0);
@@ -199,7 +200,7 @@ h2::after {
 .brand-card:hover {
   border-color: var(--accent);
   transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(204, 255, 0, 0.05);
+  box-shadow: 0 10px 30px var(--accent-glow);
 }
 
 .brand-card img {

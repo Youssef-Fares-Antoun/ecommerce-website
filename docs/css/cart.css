@@ -157,7 +157,7 @@ h1 {
 .checkout-btn:hover {
   background-color: var(--accent);
   color: var(--bg-deep);
-  box-shadow: 0 0 15px rgba(204, 255, 0, 0.2);
+  box-shadow: 0 4px 18px var(--accent-glow);
 }
 
 .clear-btn {

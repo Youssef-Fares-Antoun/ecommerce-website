@@ -146,12 +146,14 @@
 .buy-now {
   color: var(--accent);
   border: 2px solid var(--accent);
-  box-shadow: 0 0 15px rgba(204, 255, 0, 0.05);
+  border-radius: 4px;
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 .buy-now:hover {
   background: var(--accent);
   color: var(--bg-deep);
-  box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
+  box-shadow: 0 4px 25px var(--accent-glow);
+  transform: translateY(-2px);
 }
 
 /* ========================================= */

@@ -1,29 +1,29 @@
 /* ===== GLOBAL THEME VARIABLES ===== */
 :root {
-  --bg-deep: #08080a;
-  --bg-card: #111215;
-  --bg-hover: #18191f;
-  --accent: #ccff00; /* Acid Green / High Octane Neon */
-  --accent-glow: rgba(204, 255, 0, 0.22);
-  --text-main: #f5f5f7;
-  --text-muted: #9496a1;
-  --border-subtle: #23252d;
-  --nav-bg: rgba(8, 8, 10, 0.78);
-  --footer-bg: #050506;
+  --bg-deep: #0a0b0e;
+  --bg-card: #12141a;
+  --bg-hover: #191c24;
+  --accent: #ff9e00; /* Porsche GT3 Tachometer Golden Amber */
+  --accent-glow: rgba(255, 158, 0, 0.24);
+  --text-main: #f5f6f8;
+  --text-muted: #9699a6;
+  --border-subtle: #222530;
+  --nav-bg: rgba(10, 11, 14, 0.82);
+  --footer-bg: #07080a;
 }
 
 body.light-theme,
 body.light-mode {
-  --bg-deep: #f7f8fa;
+  --bg-deep: #f8f9fb;
   --bg-card: #ffffff;
-  --bg-hover: #edeef2;
-  --accent: #0f8a3c; /* Deep Racing Green with crisp contrast on light surfaces */
-  --accent-glow: rgba(15, 138, 60, 0.18);
-  --text-main: #121316;
-  --text-muted: #5e626e;
-  --border-subtle: #d6d9e0;
-  --nav-bg: rgba(247, 248, 250, 0.88);
-  --footer-bg: #eceef2;
+  --bg-hover: #eef0f5;
+  --accent: #d97706; /* Rich Amber Cognac - bold, high-contrast, premium */
+  --accent-glow: rgba(217, 119, 6, 0.20);
+  --text-main: #131418;
+  --text-muted: #5e6270;
+  --border-subtle: #d5d9e2;
+  --nav-bg: rgba(248, 249, 251, 0.90);
+  --footer-bg: #eceff5;
 }
 
 /* Custom Scrollbar for sleek motorsport aesthetic */
@@ -402,7 +402,7 @@ nav a:hover {
     color: var(--bg-deep) !important; /* Force text to dark color */
     border-color: var(--accent) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(204, 255, 0, 0.2); 
+    box-shadow: 0 6px 18px var(--accent-glow); 
   }
   
   .search-wrapper {
@@ -460,20 +460,20 @@ nav a:hover {
   color: var(--accent);
   border: 2px solid var(--accent);
   text-decoration: none;
-  border-radius: 0; 
+  border-radius: 4px; 
   font-weight: 700;
   font-family: 'Syncopate', sans-serif;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(204, 255, 0, 0.05);
+  letter-spacing: 1.5px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .btn-primary:hover {
   background: var(--accent);
   color: var(--bg-deep);
   transform: translateY(-2px);
-  box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
+  box-shadow: 0 4px 25px var(--accent-glow);
 }
 
 /* Layout */
@@ -1000,16 +1000,16 @@ button.size-btn.selected {
 ========================================= */
 body.light-mode,
 body.light-theme {
-  --bg-deep: #f7f8fa;
+  --bg-deep: #f8f9fb;
   --bg-card: #ffffff;
-  --bg-hover: #edeef2;
-  --text-main: #121316;
-  --text-muted: #5e626e;
-  --border-subtle: #d6d9e0;
-  --accent: #0f8a3c;
-  --accent-glow: rgba(15, 138, 60, 0.18);
-  --nav-bg: rgba(247, 248, 250, 0.88);
-  --footer-bg: #eceef2;
+  --bg-hover: #eef0f5;
+  --text-main: #131418;
+  --text-muted: #5e6270;
+  --border-subtle: #d5d9e2;
+  --accent: #d97706;
+  --accent-glow: rgba(217, 119, 6, 0.20);
+  --nav-bg: rgba(248, 249, 251, 0.90);
+  --footer-bg: #eceff5;
 }
 
 /* Light Mode Navbar Glass */

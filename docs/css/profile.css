@@ -76,7 +76,7 @@
 .menu-item.active {
     background: var(--accent);
     color: var(--bg-deep);
-    box-shadow: 0 0 15px rgba(204, 255, 0, 0.1);
+    box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 /* Special styling for Logout */
@@ -160,7 +160,7 @@
 .form-group textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.2);
+    box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 /* The disabled email box */
@@ -180,25 +180,30 @@
 #save-profile-btn {
     width: 100%;
     padding: 16px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     font-family: 'Syncopate', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 0;
+    letter-spacing: 1.5px;
+    border-radius: 4px;
     margin-top: 10px;
     background: transparent;
     color: var(--accent);
     border: 2px solid var(--accent);
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(204, 255, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 15px var(--accent-glow);
 }
 
 #save-profile-btn:hover {
     background: var(--accent);
     color: var(--bg-deep);
-    box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
+    box-shadow: 0 4px 25px var(--accent-glow);
+    transform: translateY(-2px);
+}
+
+#save-profile-btn:active {
+    transform: translateY(0);
 }
 
 /* Responsive fix for Mobile */
