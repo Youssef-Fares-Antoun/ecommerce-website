@@ -17,13 +17,19 @@ h1 {
 .cart-item {
   display: flex;
   align-items: flex-start;
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 15px;
+  border: 1px solid var(--border-subtle);
+  padding: 18px;
   background: var(--bg-card);
-  border-radius: 4px;
-  margin-bottom: 15px;
+  border-radius: 6px;
+  margin-bottom: 16px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  gap: 15px;
+  gap: 18px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cart-item:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 25px var(--accent-glow);
 }
 
 .cart-item img {

@@ -36,12 +36,12 @@
 .auth-box {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     background: var(--bg-card);
-    padding: 40px;
-    border-radius: 4px; /* Sharper edges to match the new aesthetic */
+    padding: 42px 36px;
+    border-radius: 8px;
     border: 1px solid var(--border-subtle);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); 
     text-align: center;
     animation: slideDown 0.4s ease-out;
 }
@@ -115,31 +115,31 @@
 /* Login Button */
 .btn-primary {
     width: 100%;
-    padding: 16px;
+    padding: 15px;
     background: transparent;
     color: var(--accent);
     border: 2px solid var(--accent);
-    border-radius: 0;
-    font-size: 1rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
     font-weight: 700;
     font-family: 'Syncopate', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     margin-top: 10px;
     box-shadow: 0 0 15px rgba(204, 255, 0, 0.05); /* Soft glow */
 }
 
-/* Light mode specific glow adjustment handled natively if variable is red */
 .btn-primary:hover {
     background: var(--accent);
     color: var(--bg-deep);
-    box-shadow: 0 0 25px rgba(204, 255, 0, 0.2);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    transform: translateY(-2px);
 }
 
 .btn-primary:active {
-    transform: scale(0.98);
+    transform: translateY(0);
 }
 
 /* Switch Link */

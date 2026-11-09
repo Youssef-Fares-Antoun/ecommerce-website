@@ -1,26 +1,58 @@
 /* ===== GLOBAL THEME VARIABLES ===== */
 :root {
-  --bg-deep: #050505;
-  --bg-card: #111111;
-  --bg-hover: #1a1a1a;
-  --accent: #ccff00; /* Acid Green */
-  --text-main: #f4f4f4;
-  --text-muted: #888888;
-  --border-subtle: #222222;
-  --nav-bg: rgba(5, 5, 5, 0.7);
-  --footer-bg: #000000;
+  --bg-deep: #08080a;
+  --bg-card: #111215;
+  --bg-hover: #18191f;
+  --accent: #ccff00; /* Acid Green / High Octane Neon */
+  --accent-glow: rgba(204, 255, 0, 0.22);
+  --text-main: #f5f5f7;
+  --text-muted: #9496a1;
+  --border-subtle: #23252d;
+  --nav-bg: rgba(8, 8, 10, 0.78);
+  --footer-bg: #050506;
 }
 
-body.light-theme {
-  --bg-deep: #f5f5f7;
+body.light-theme,
+body.light-mode {
+  --bg-deep: #f7f8fa;
   --bg-card: #ffffff;
-  --bg-hover: #eaeaea;
-  --accent: #d50000; /* Rosso Corsa Red */
-  --text-main: #111111;
-  --text-muted: #555555;
-  --border-subtle: #cccccc;
-  --nav-bg: rgba(255, 255, 255, 0.85);
-  --footer-bg: #e5e5e5;
+  --bg-hover: #edeef2;
+  --accent: #0f8a3c; /* Deep Racing Green with crisp contrast on light surfaces */
+  --accent-glow: rgba(15, 138, 60, 0.18);
+  --text-main: #121316;
+  --text-muted: #5e626e;
+  --border-subtle: #d6d9e0;
+  --nav-bg: rgba(247, 248, 250, 0.88);
+  --footer-bg: #eceef2;
+}
+
+/* Custom Scrollbar for sleek motorsport aesthetic */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+  border: 2px solid var(--bg-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Text Selection Glow */
+::selection {
+  background: var(--accent);
+  color: var(--bg-deep);
+}
+
+/* Global Focus Ring for Keyboard Accessibility & Polish */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Reset */
@@ -49,6 +81,14 @@ input, textarea, select {
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
   font-family: 'Rajdhani', sans-serif;
+  border-radius: 4px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+  outline: none;
 }
 
 /* ✅ NEW: Fluid Image Rule */
@@ -525,16 +565,16 @@ aside ul li:hover {
   border: 1px solid var(--border-subtle);
   padding: 20px;
   text-align: center;
-  border-radius: 4px;
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   background: var(--bg-card);
   position: relative;
   overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: 0 10px 25px rgba(204, 255, 0, 0.05);
-  transform: translateY(-5px);
+  box-shadow: 0 12px 30px var(--accent-glow);
+  transform: translateY(-6px);
   border-color: var(--accent);
 }
 
@@ -564,9 +604,10 @@ button,
   font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
-  border-radius: 0;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 button:hover,
@@ -575,7 +616,15 @@ button:hover,
 .cart-modal-buttons button:hover {
   background: var(--accent);
   color: var(--bg-deep);
-  box-shadow: 0 0 15px rgba(204, 255, 0, 0.2);
+  box-shadow: 0 4px 18px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+button:active,
+.card button:active,
+.featured button:active,
+.cart-modal-buttons button:active {
+  transform: translateY(0);
 }
 
 /* Review Edit Controls */
@@ -949,26 +998,34 @@ button.size-btn.selected {
 /* =========================================
    LIGHT MODE OVERRIDES
 ========================================= */
-body.light-mode {
-  --bg-deep: #ffffff;
-  --bg-card: #f9f9f9;
-  --bg-hover: #f1f1f1;
-  --text-main: #111111;
-  --text-muted: #666666;
-  --border-subtle: #dddddd;
-  --accent: #145214; /* Using your dark green for better contrast on white */
+body.light-mode,
+body.light-theme {
+  --bg-deep: #f7f8fa;
+  --bg-card: #ffffff;
+  --bg-hover: #edeef2;
+  --text-main: #121316;
+  --text-muted: #5e626e;
+  --border-subtle: #d6d9e0;
+  --accent: #0f8a3c;
+  --accent-glow: rgba(15, 138, 60, 0.18);
+  --nav-bg: rgba(247, 248, 250, 0.88);
+  --footer-bg: #eceef2;
 }
 
 /* Light Mode Navbar Glass */
-body.light-mode .navbar.glass-nav {
-  background: rgba(255, 255, 255, 0.85);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+body.light-mode .navbar.glass-nav,
+body.light-theme .navbar.glass-nav {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 /* Make brand logos black in light mode */
-body.light-mode .brand-card img {
+body.light-mode .brand-card img,
+body.light-theme .brand-card img {
   filter: grayscale(100%) brightness(0%); 
 }
-body.light-mode .brand-card:hover img {
+body.light-mode .brand-card:hover img,
+body.light-theme .brand-card:hover img {
   filter: grayscale(0%) brightness(100%);
 }

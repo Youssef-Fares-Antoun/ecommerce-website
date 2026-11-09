@@ -106,19 +106,23 @@ h1, h2, h3, h4, .logo {
   color: var(--accent);
   background: transparent;
   border: 2px solid var(--accent);
-  border-radius: 0; /* Boxy, aggressive edges */
+  border-radius: 4px;
   cursor: pointer;
   letter-spacing: 2px;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 0 15px rgba(204, 255, 0, 0.1);
 }
 
 .btn-neon:hover {
   background: var(--accent);
   color: var(--bg-deep);
-  box-shadow: 0 0 25px rgba(204, 255, 0, 0.5);
+  box-shadow: 0 4px 25px rgba(204, 255, 0, 0.4);
   transform: translateY(-2px);
+}
+
+.btn-neon:active {
+  transform: translateY(0);
 }
 
 .btn-solid {
@@ -127,11 +131,21 @@ h1, h2, h3, h4, .logo {
   font-family: 'Syncopate', sans-serif;
   font-weight: 700;
   border: none;
+  border-radius: 4px;
   padding: 15px 30px;
   cursor: pointer;
-  transition: 0.3s;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
 }
-.btn-solid:hover { background: var(--accent); }
+.btn-solid:hover {
+  background: var(--accent);
+  color: var(--bg-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(204, 255, 0, 0.3);
+}
+.btn-solid:active {
+  transform: translateY(0);
+}
 
 /* ===== SECTION HEADERS ===== */
 h2 {

@@ -57,21 +57,21 @@
 .products .card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  padding: 15px;
+  border-radius: 6px;
+  padding: 18px;
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .products .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
   border-color: var(--accent);
-  box-shadow: 0 10px 25px rgba(204, 255, 0, 0.05);
+  box-shadow: 0 12px 30px var(--accent-glow);
 }
 
 .products .card img {
