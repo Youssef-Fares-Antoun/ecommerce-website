@@ -1,29 +1,38 @@
 /* ===== GLOBAL THEME VARIABLES ===== */
 :root {
-  --bg-deep: #0a0b0e;
-  --bg-card: #12141a;
-  --bg-hover: #191c24;
-  --accent: #ff9e00; /* Porsche GT3 Tachometer Golden Amber */
-  --accent-glow: rgba(255, 158, 0, 0.24);
-  --text-main: #f5f6f8;
-  --text-muted: #9699a6;
-  --border-subtle: #222530;
-  --nav-bg: rgba(10, 11, 14, 0.82);
-  --footer-bg: #07080a;
+  /* Core 5-Color Palette Tokens */
+  --palette-dark-teal: #114B5F;
+  --palette-muted-teal: #6C9A8B;
+  --palette-lime-cream: #E9FF70;
+  --palette-ghost-white: #ECEBF3;
+  --palette-midnight-violet: #241623;
+
+  /* Dark Mode Mapping */
+  --bg-deep: #241623;                        /* Midnight Violet */
+  --bg-card: #162a35;                        /* Deep Midnight-Teal card surface */
+  --bg-hover: #114B5F;                       /* Dark Teal interactive surface */
+  --accent: #E9FF70;                         /* Lime Cream */
+  --accent-glow: rgba(233, 255, 112, 0.24);  /* Lime Cream soft glow */
+  --text-main: #ECEBF3;                      /* Ghost White */
+  --text-muted: #8ab3a5;                     /* Luminous Muted Teal (#6C9A8B lightened for AAA dark-mode contrast) */
+  --border-subtle: rgba(108, 154, 139, 0.35);/* Muted Teal contour border */
+  --nav-bg: rgba(36, 22, 35, 0.85);          /* Midnight Violet glass */
+  --footer-bg: #1a1019;                      /* Deepened Midnight Violet footer */
 }
 
 body.light-theme,
 body.light-mode {
-  --bg-deep: #e8ebf1;        /* Soft, glare-free warm titanium slate */
-  --bg-card: #f3f5f9;        /* Calming off-white parchment card surface */
-  --bg-hover: #dde1e9;       /* Subtle hover depth */
-  --accent: #c26500;         /* Warm bronze amber — soothing, rich & clear */
-  --accent-glow: rgba(194, 101, 0, 0.18);
-  --text-main: #1b1e26;      /* Deep obsidian charcoal instead of harsh black */
-  --text-muted: #575c6c;     /* Muted gunmetal for labels and descriptions */
-  --border-subtle: #c8ceda;  /* Gentle contour framing */
-  --nav-bg: rgba(232, 235, 241, 0.90);
-  --footer-bg: #dce0e9;
+  /* Light Mode Mapping (Glare-Free Ghost White & Dark Teal) */
+  --bg-deep: #ECEBF3;                        /* Ghost White */
+  --bg-card: #F5F4F9;                        /* Elevated Ghost White surface */
+  --bg-hover: #DFDDE9;                       /* Soft Ghost White hover */
+  --accent: #114B5F;                         /* Dark Teal primary accent */
+  --accent-glow: rgba(17, 75, 95, 0.20);     /* Dark Teal glow */
+  --text-main: #241623;                      /* Midnight Violet ink */
+  --text-muted: #4b7366;                     /* Deepened Muted Teal for crisp readability */
+  --border-subtle: rgba(108, 154, 139, 0.42);/* Muted Teal border */
+  --nav-bg: rgba(236, 235, 243, 0.90);       /* Ghost White glass */
+  --footer-bg: #E0DFEA;                      /* Muted Ghost White footer */
 }
 
 /* Custom Scrollbar for sleek motorsport aesthetic */
@@ -429,7 +438,7 @@ nav a:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(5,5,5,0.3), var(--bg-deep)); 
+  background: linear-gradient(to bottom, rgba(17, 75, 95, 0.35), var(--bg-deep)); 
 }
 
 .hero-text {
@@ -1000,16 +1009,17 @@ button.size-btn.selected {
 ========================================= */
 body.light-mode,
 body.light-theme {
-  --bg-deep: #e8ebf1;
-  --bg-card: #f3f5f9;
-  --bg-hover: #dde1e9;
-  --text-main: #1b1e26;
-  --text-muted: #575c6c;
-  --border-subtle: #c8ceda;
-  --accent: #c26500;
-  --accent-glow: rgba(194, 101, 0, 0.18);
-  --nav-bg: rgba(232, 235, 241, 0.90);
-  --footer-bg: #dce0e9;
+  /* Light Mode Mapping (Glare-Free Ghost White & Dark Teal) */
+  --bg-deep: #ECEBF3;                        /* Ghost White */
+  --bg-card: #F5F4F9;                        /* Elevated Ghost White surface */
+  --bg-hover: #DFDDE9;                       /* Soft Ghost White hover */
+  --text-main: #241623;                      /* Midnight Violet ink */
+  --text-muted: #4b7366;                     /* Deepened Muted Teal for crisp readability */
+  --border-subtle: rgba(108, 154, 139, 0.42);/* Muted Teal border */
+  --accent: #114B5F;                         /* Dark Teal primary accent */
+  --accent-glow: rgba(17, 75, 95, 0.20);     /* Dark Teal glow */
+  --nav-bg: rgba(236, 235, 243, 0.90);       /* Ghost White glass */
+  --footer-bg: #E0DFEA;                      /* Muted Ghost White footer */
 }
 
 /* Light Mode Navbar Glass */
