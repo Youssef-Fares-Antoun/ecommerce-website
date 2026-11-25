@@ -1,14 +1,14 @@
 /* ===== CUSTOM PERFORMANCE VARIABLES ===== */
 :root {
-  /* Dark Mode: GT3 Carbon & Brembo Red */
+  /* Dark Mode: Porsche Weissach Satin Champagne Gold & Matte Carbon */
   --bg-deep: #0B0C0E;                        /* Deep Matte Carbon */
-  --bg-card: #131519;                        /* Alcantara Charcoal */
-  --bg-hover: #1C1F26;                       /* Brushed Gunmetal */
-  --accent: #FF2A3C;                         /* Brembo Caliper / Guards Red */
-  --accent-glow: rgba(255, 42, 60, 0.25);    /* Brembo Red Glow */
-  --text-main: #F3F4F6;                      /* Chalk White */
-  --text-muted: #8E939E;                     /* Titanium Silver */
-  --border-subtle: #232730;                  /* Machined Carbon Edge */
+  --bg-card: #121418;                        /* Alcantara Charcoal */
+  --bg-hover: #1A1D23;                       /* Brushed Gunmetal */
+  --accent: #E5C158;                         /* Satin Weissach Champagne Gold */
+  --accent-glow: rgba(229, 193, 88, 0.24);   /* Satin Gold Glow */
+  --text-main: #F4F4F6;                      /* Chalk White */
+  --text-muted: #9296A0;                     /* Titanium Silver */
+  --border-subtle: #242730;                  /* Machined Carbon Edge */
   --nav-bg: rgba(11, 12, 14, 0.84);          /* Carbon Glass */
   --footer-bg: #070809;                      /* Deep Carbon Footer */
 }

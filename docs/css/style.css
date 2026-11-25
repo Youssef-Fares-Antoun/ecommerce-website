@@ -1,26 +1,26 @@
 /* ===== GLOBAL THEME VARIABLES ===== */
 :root {
-  /* Dark Mode: GT3 Carbon & Brembo Red */
+  /* Dark Mode: Porsche Weissach Satin Champagne Gold & Matte Carbon */
   --bg-deep: #0B0C0E;                        /* Deep Matte Carbon */
-  --bg-card: #131519;                        /* Alcantara Charcoal */
-  --bg-hover: #1C1F26;                       /* Brushed Gunmetal */
-  --accent: #FF2A3C;                         /* Brembo Caliper / Guards Red */
-  --accent-glow: rgba(255, 42, 60, 0.25);    /* Brembo Red Glow */
-  --text-main: #F3F4F6;                      /* Chalk White */
-  --text-muted: #8E939E;                     /* Titanium Silver */
-  --border-subtle: #232730;                  /* Machined Carbon Edge */
+  --bg-card: #121418;                        /* Alcantara Charcoal */
+  --bg-hover: #1A1D23;                       /* Brushed Gunmetal */
+  --accent: #E5C158;                         /* Satin Weissach Champagne Gold */
+  --accent-glow: rgba(229, 193, 88, 0.24);   /* Satin Gold Glow */
+  --text-main: #F4F4F6;                      /* Chalk White */
+  --text-muted: #9296A0;                     /* Titanium Silver */
+  --border-subtle: #242730;                  /* Machined Carbon Edge */
   --nav-bg: rgba(11, 12, 14, 0.84);          /* Carbon Glass */
   --footer-bg: #070809;                      /* Deep Carbon Footer */
 }
 
 body.light-theme,
 body.light-mode {
-  /* Light Mode: Porsche Chalk & Deep Racing Crimson (Glare-Free) */
-  --bg-deep: #EAE8E3;                        /* Porsche Chalk / Warm Stone */
-  --bg-card: #F4F3EF;                        /* Soft Alcantara Bone */
+  /* Light Mode: Porsche Chalk & Deep Anodized Bronze-Gold (Glare-Free) */
+  --bg-deep: #EAE8E3;                        /* Porsche Chalk / Warm Alcantara Stone */
+  --bg-card: #F4F3EF;                        /* Warm Ivory */
   --bg-hover: #DFDDD7;                       /* Warm Stone Hover */
-  --accent: #C8102E;                         /* Deep Racing Crimson */
-  --accent-glow: rgba(200, 16, 46, 0.20);    /* Racing Crimson Glow */
+  --accent: #8F6B1A;                         /* Deep Anodized Bronze-Gold */
+  --accent-glow: rgba(143, 107, 26, 0.20);   /* Anodized Bronze-Gold Glow */
   --text-main: #141518;                      /* Carbon Ink */
   --text-muted: #5A5E66;                     /* Gunmetal Grey */
   --border-subtle: #CFCBC2;                  /* Warm Stone Contour */
@@ -1002,15 +1002,15 @@ button.size-btn.selected {
 ========================================= */
 body.light-mode,
 body.light-theme {
-  /* Light Mode: Porsche Chalk & Deep Racing Crimson (Glare-Free) */
-  --bg-deep: #EAE8E3;                        /* Porsche Chalk / Warm Stone */
-  --bg-card: #F4F3EF;                        /* Soft Alcantara Bone */
+  /* Light Mode: Porsche Chalk & Deep Anodized Bronze-Gold (Glare-Free) */
+  --bg-deep: #EAE8E3;                        /* Porsche Chalk / Warm Alcantara Stone */
+  --bg-card: #F4F3EF;                        /* Warm Ivory */
   --bg-hover: #DFDDD7;                       /* Warm Stone Hover */
   --text-main: #141518;                      /* Carbon Ink */
   --text-muted: #5A5E66;                     /* Gunmetal Grey */
   --border-subtle: #CFCBC2;                  /* Warm Stone Contour */
-  --accent: #C8102E;                         /* Deep Racing Crimson */
-  --accent-glow: rgba(200, 16, 46, 0.20);    /* Racing Crimson Glow */
+  --accent: #8F6B1A;                         /* Deep Anodized Bronze-Gold */
+  --accent-glow: rgba(143, 107, 26, 0.20);   /* Anodized Bronze-Gold Glow */
   --nav-bg: rgba(234, 232, 227, 0.90);       /* Chalk Glass */
   --footer-bg: #E0DDD6;                      /* Muted Stone Footer */
 }
