@@ -1,38 +1,31 @@
 /* ===== GLOBAL THEME VARIABLES ===== */
 :root {
-  /* Core 5-Color Palette Tokens */
-  --palette-dark-teal: #114B5F;
-  --palette-muted-teal: #6C9A8B;
-  --palette-lime-cream: #E9FF70;
-  --palette-ghost-white: #ECEBF3;
-  --palette-midnight-violet: #241623;
-
-  /* Dark Mode Mapping */
-  --bg-deep: #241623;                        /* Midnight Violet */
-  --bg-card: #162a35;                        /* Deep Midnight-Teal card surface */
-  --bg-hover: #114B5F;                       /* Dark Teal interactive surface */
-  --accent: #E9FF70;                         /* Lime Cream */
-  --accent-glow: rgba(233, 255, 112, 0.24);  /* Lime Cream soft glow */
-  --text-main: #ECEBF3;                      /* Ghost White */
-  --text-muted: #8ab3a5;                     /* Luminous Muted Teal (#6C9A8B lightened for AAA dark-mode contrast) */
-  --border-subtle: rgba(108, 154, 139, 0.35);/* Muted Teal contour border */
-  --nav-bg: rgba(36, 22, 35, 0.85);          /* Midnight Violet glass */
-  --footer-bg: #1a1019;                      /* Deepened Midnight Violet footer */
+  /* Dark Mode: GT3 Carbon & Brembo Red */
+  --bg-deep: #0B0C0E;                        /* Deep Matte Carbon */
+  --bg-card: #131519;                        /* Alcantara Charcoal */
+  --bg-hover: #1C1F26;                       /* Brushed Gunmetal */
+  --accent: #FF2A3C;                         /* Brembo Caliper / Guards Red */
+  --accent-glow: rgba(255, 42, 60, 0.25);    /* Brembo Red Glow */
+  --text-main: #F3F4F6;                      /* Chalk White */
+  --text-muted: #8E939E;                     /* Titanium Silver */
+  --border-subtle: #232730;                  /* Machined Carbon Edge */
+  --nav-bg: rgba(11, 12, 14, 0.84);          /* Carbon Glass */
+  --footer-bg: #070809;                      /* Deep Carbon Footer */
 }
 
 body.light-theme,
 body.light-mode {
-  /* Light Mode Mapping (Glare-Free Ghost White & Dark Teal) */
-  --bg-deep: #ECEBF3;                        /* Ghost White */
-  --bg-card: #F5F4F9;                        /* Elevated Ghost White surface */
-  --bg-hover: #DFDDE9;                       /* Soft Ghost White hover */
-  --accent: #114B5F;                         /* Dark Teal primary accent */
-  --accent-glow: rgba(17, 75, 95, 0.20);     /* Dark Teal glow */
-  --text-main: #241623;                      /* Midnight Violet ink */
-  --text-muted: #4b7366;                     /* Deepened Muted Teal for crisp readability */
-  --border-subtle: rgba(108, 154, 139, 0.42);/* Muted Teal border */
-  --nav-bg: rgba(236, 235, 243, 0.90);       /* Ghost White glass */
-  --footer-bg: #E0DFEA;                      /* Muted Ghost White footer */
+  /* Light Mode: Porsche Chalk & Deep Racing Crimson (Glare-Free) */
+  --bg-deep: #EAE8E3;                        /* Porsche Chalk / Warm Stone */
+  --bg-card: #F4F3EF;                        /* Soft Alcantara Bone */
+  --bg-hover: #DFDDD7;                       /* Warm Stone Hover */
+  --accent: #C8102E;                         /* Deep Racing Crimson */
+  --accent-glow: rgba(200, 16, 46, 0.20);    /* Racing Crimson Glow */
+  --text-main: #141518;                      /* Carbon Ink */
+  --text-muted: #5A5E66;                     /* Gunmetal Grey */
+  --border-subtle: #CFCBC2;                  /* Warm Stone Contour */
+  --nav-bg: rgba(234, 232, 227, 0.90);       /* Chalk Glass */
+  --footer-bg: #E0DDD6;                      /* Muted Stone Footer */
 }
 
 /* Custom Scrollbar for sleek motorsport aesthetic */
@@ -438,7 +431,7 @@ nav a:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(17, 75, 95, 0.35), var(--bg-deep)); 
+  background: linear-gradient(to bottom, rgba(11, 12, 14, 0.35), var(--bg-deep)); 
 }
 
 .hero-text {
@@ -1009,17 +1002,17 @@ button.size-btn.selected {
 ========================================= */
 body.light-mode,
 body.light-theme {
-  /* Light Mode Mapping (Glare-Free Ghost White & Dark Teal) */
-  --bg-deep: #ECEBF3;                        /* Ghost White */
-  --bg-card: #F5F4F9;                        /* Elevated Ghost White surface */
-  --bg-hover: #DFDDE9;                       /* Soft Ghost White hover */
-  --text-main: #241623;                      /* Midnight Violet ink */
-  --text-muted: #4b7366;                     /* Deepened Muted Teal for crisp readability */
-  --border-subtle: rgba(108, 154, 139, 0.42);/* Muted Teal border */
-  --accent: #114B5F;                         /* Dark Teal primary accent */
-  --accent-glow: rgba(17, 75, 95, 0.20);     /* Dark Teal glow */
-  --nav-bg: rgba(236, 235, 243, 0.90);       /* Ghost White glass */
-  --footer-bg: #E0DFEA;                      /* Muted Ghost White footer */
+  /* Light Mode: Porsche Chalk & Deep Racing Crimson (Glare-Free) */
+  --bg-deep: #EAE8E3;                        /* Porsche Chalk / Warm Stone */
+  --bg-card: #F4F3EF;                        /* Soft Alcantara Bone */
+  --bg-hover: #DFDDD7;                       /* Warm Stone Hover */
+  --text-main: #141518;                      /* Carbon Ink */
+  --text-muted: #5A5E66;                     /* Gunmetal Grey */
+  --border-subtle: #CFCBC2;                  /* Warm Stone Contour */
+  --accent: #C8102E;                         /* Deep Racing Crimson */
+  --accent-glow: rgba(200, 16, 46, 0.20);    /* Racing Crimson Glow */
+  --nav-bg: rgba(234, 232, 227, 0.90);       /* Chalk Glass */
+  --footer-bg: #E0DDD6;                      /* Muted Stone Footer */
 }
 
 /* Light Mode Navbar Glass */

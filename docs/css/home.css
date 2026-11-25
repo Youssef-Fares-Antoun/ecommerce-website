@@ -1,23 +1,16 @@
 /* ===== CUSTOM PERFORMANCE VARIABLES ===== */
 :root {
-  /* Core 5-Color Palette Tokens */
-  --palette-dark-teal: #114B5F;
-  --palette-muted-teal: #6C9A8B;
-  --palette-lime-cream: #E9FF70;
-  --palette-ghost-white: #ECEBF3;
-  --palette-midnight-violet: #241623;
-
-  /* Dark Mode Mapping */
-  --bg-deep: #241623;                        /* Midnight Violet */
-  --bg-card: #162a35;                        /* Deep Midnight-Teal card surface */
-  --bg-hover: #114B5F;                       /* Dark Teal interactive surface */
-  --accent: #E9FF70;                         /* Lime Cream */
-  --accent-glow: rgba(233, 255, 112, 0.24);  /* Lime Cream soft glow */
-  --text-main: #ECEBF3;                      /* Ghost White */
-  --text-muted: #8ab3a5;                     /* Luminous Muted Teal (#6C9A8B lightened for AAA dark-mode contrast) */
-  --border-subtle: rgba(108, 154, 139, 0.35);/* Muted Teal contour border */
-  --nav-bg: rgba(36, 22, 35, 0.85);          /* Midnight Violet glass */
-  --footer-bg: #1a1019;                      /* Deepened Midnight Violet footer */
+  /* Dark Mode: GT3 Carbon & Brembo Red */
+  --bg-deep: #0B0C0E;                        /* Deep Matte Carbon */
+  --bg-card: #131519;                        /* Alcantara Charcoal */
+  --bg-hover: #1C1F26;                       /* Brushed Gunmetal */
+  --accent: #FF2A3C;                         /* Brembo Caliper / Guards Red */
+  --accent-glow: rgba(255, 42, 60, 0.25);    /* Brembo Red Glow */
+  --text-main: #F3F4F6;                      /* Chalk White */
+  --text-muted: #8E939E;                     /* Titanium Silver */
+  --border-subtle: #232730;                  /* Machined Carbon Edge */
+  --nav-bg: rgba(11, 12, 14, 0.84);          /* Carbon Glass */
+  --footer-bg: #070809;                      /* Deep Carbon Footer */
 }
 
 /* ===== GENERAL RESET ===== */
@@ -75,7 +68,7 @@ h1, h2, h3, h4, .logo {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   /* Dark fade from top to bottom */
-  background: linear-gradient(to bottom, rgba(17, 75, 95, 0.35) 0%, rgba(36, 22, 35, 0.82) 80%, var(--bg-deep) 100%);
+  background: linear-gradient(to bottom, rgba(11, 12, 14, 0.35) 0%, rgba(11, 12, 14, 0.82) 80%, var(--bg-deep) 100%);
   z-index: 1;
 }
 
