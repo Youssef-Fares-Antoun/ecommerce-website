@@ -3,8 +3,7 @@
 
 /* =================== PRODUCT PAGE =================== */
 .product-page {
-  /* 🚀 INCREASED TOP PADDING TO 120px TO CLEAR THE FIXED NAVBAR */
-  padding: 120px 20px 50px 20px;
+  padding: 50px 20px;
   background: var(--bg-deep); /* Sync with global background */
 }
 

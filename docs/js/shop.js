@@ -8,10 +8,12 @@ async function loadProducts() {
         const products = await response.json();
 
         const featuredItem = products.find(p => p.isFeatured === true);
+        const featuredContainer = document.querySelector('.featured');
 
-        if (featuredItem) {
-            const featuredContainer = document.querySelector('.featured');
-            featuredContainer.innerHTML = `
+        if (featuredContainer) {
+            if (featuredItem) {
+                featuredContainer.style.display = '';
+                featuredContainer.innerHTML = `
             <h4>🌟 Featured</h4>
             <a href="product_detail.html?id=${featuredItem.id}">
                 <img src="${featuredItem.image}" alt="${featuredItem.name}" />
@@ -25,6 +27,9 @@ async function loadProducts() {
                 View Details
             </button>
         `;
+            } else {
+                featuredContainer.style.display = 'none';
+            }
         }
 
         const grid = document.getElementById('productGrid');

@@ -177,7 +177,8 @@
 }
 
 /* Save Button */
-#save-profile-btn {
+#save-profile-btn,
+#save-address-btn {
     width: 100%;
     padding: 16px;
     font-size: 15px;
@@ -195,14 +196,16 @@
     box-shadow: 0 0 15px var(--accent-glow);
 }
 
-#save-profile-btn:hover {
+#save-profile-btn:hover,
+#save-address-btn:hover {
     background: var(--accent);
     color: var(--bg-deep);
     box-shadow: 0 4px 25px var(--accent-glow);
     transform: translateY(-2px);
 }
 
-#save-profile-btn:active {
+#save-profile-btn:active,
+#save-address-btn:active {
     transform: translateY(0);
 }
 

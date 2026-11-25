@@ -13,11 +13,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
   <link rel="stylesheet" href="css/shop.css?v=4" />
 
-  <script src="js/script.js?v=4" defer></script>
-  <script src="js/shop.js?v=4" defer></script>
+  <script src="js/script.js?v=6" defer></script>
+  <script src="js/shop.js?v=6" defer></script>
   <script src="js/cart.js" defer></script>
 
   <style>
@@ -39,18 +39,22 @@
     /* Price styles */
     .price {
       margin-top: 8px;
-      font-size: 1.1em;
+      font-size: 1.05em;
       font-family: 'Syncopate', sans-serif;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px 10px;
     }
     .price .old-price {
       text-decoration: line-through;
       color: var(--text-muted);
-      margin-right: 6px;
+      font-size: 0.85em;
     }
     .price .new-price {
       color: var(--accent);
       font-weight: bold;
-      margin-right: 6px;
     }
     .price .save-price {
       color: #e74c3c;
@@ -58,6 +62,7 @@
       font-family: 'Rajdhani', sans-serif;
       font-weight: 700;
       text-transform: uppercase;
+      flex-basis: 100%;
     }
 
     /* Ensure card is positioned relative for badge */
@@ -98,7 +103,7 @@
         <a href="javascript:void(0)" id="searchToggle" class="search-icon" aria-label="Toggle Search" style="color: var(--text-main);">🔍</a>
       </div>
       
-      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
+      <a href="javascript:void(0)" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
       
       <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: var(--text-main);">
         🛒
@@ -128,20 +133,8 @@
   <li data-brand="all" class="active">All</li>
   </ul>
 
-  <div class="featured">
-    <h4>🌟 Featured</h4>
-    <!-- Change the href to use your dynamic detail page -->
-    <a href="product_detail.html?id=4"> 
-        <img src="images/SennaBack.png" alt="McLaren Senna Tee Featured" />
-    </a>
-    <p><strong>Senna Limited Edition Tee</strong></p>
-    <p class="price">
-        <span class="old-price">LE 900.00</span>
-        <span class="new-price">LE 700.00</span>
-        <span class="save-price">Save LE 200.00</span>
-    </p>
-    <!-- Ensure the button also matches your database info -->
-    <button class="btn-add" onclick="window.location.href='product_detail.html?id=4'">View Details</button>
+  <div class="featured" style="display: none;">
+    <!-- Populated dynamically by shop.js -->
   </div>
     </aside>
 
@@ -197,7 +190,7 @@
       <a href="https://www.instagram.com/revvocartshirts/" target="_blank">Instagram</a> |
       <a href="https://www.facebook.com/p/RevvoCartshirts-61579528091663/" target="_blank">Facebook</a>
     </div>
-    <p>&copy; 2025 CarTees. All rights reserved.</p>
+    <p>&copy; 2026 CarTees. All rights reserved.</p>
   </footer>
 </body>
 </html>

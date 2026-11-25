@@ -148,19 +148,22 @@ if (!imgSrc.startsWith("http") && !imgSrc.startsWith("images/")) {
     const div = document.createElement("div");
     div.classList.add("cart-item");
     div.innerHTML = `
-      <img src="${imgSrc}" alt="${item.name}" class="cart-item-img">
+      <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.name)}" class="cart-item-img">
       <div class="cart-item-info">
-        <h3>${item.name}</h3>
-        <p>Size: ${item.size}</p>
+        <h3>${escapeHtml(item.name)}</h3>
+        <p>Size: ${escapeHtml(item.size)}</p>
         <p>Price: LE ${item.price}</p>
         <div class="quantity-controls">
-          <button class="qty-btn" onclick="updateQuantity('${item.name}', '${item.size}', -1)">−</button>
+          <button type="button" class="qty-btn qty-minus">−</button>
           <span>${item.quantity}</span>
-          <button class="qty-btn" onclick="updateQuantity('${item.name}', '${item.size}', 1)">+</button>
+          <button type="button" class="qty-btn qty-plus">+</button>
         </div>
-        <button class="remove-btn" onclick="removeFromCart('${item.name}', '${item.size}')">Remove</button>
+        <button type="button" class="remove-btn">Remove</button>
       </div>
     `;
+    div.querySelector(".qty-minus").addEventListener("click", () => updateQuantity(item.name, item.size, -1));
+    div.querySelector(".qty-plus").addEventListener("click", () => updateQuantity(item.name, item.size, 1));
+    div.querySelector(".remove-btn").addEventListener("click", () => removeFromCart(item.name, item.size));
     cartItemsContainer.appendChild(div);
   });
 
@@ -294,6 +297,7 @@ async function autofillCheckout() {
       const response = await fetch('/api/addresses/me');
       if (response.ok) {
         const addresses = await response.json();
+        window.savedUserAddresses = addresses;
   
         if (addresses.length > 0) {
             guestForm.style.display = "none";
@@ -312,10 +316,10 @@ async function autofillCheckout() {
                            style="margin-top: 5px; cursor: pointer; transform: scale(1.2);" 
                            onclick="document.querySelectorAll('.amazon-address-card').forEach(c => c.classList.remove('selected-address')); this.parentElement.classList.add('selected-address');">
                     <label for="addr_${addr.id}" style="cursor: pointer; width: 100%;">
-                        <strong style="display:block; font-size: 1.1em; color: var(--text-main);">${addr.firstName} ${addr.lastName}</strong>
-                        <span style="display:block; color: var(--text-muted); margin-top: 4px;">${addr.street}</span>
-                        <span style="display:block; color: var(--text-muted);">${addr.city}, ${addr.governorate}</span>
-                        <span style="display:block; color: var(--text-muted); margin-top: 4px;">Phone: ${addr.phone}</span>
+                        <strong style="display:block; font-size: 1.1em; color: var(--text-main);">${escapeHtml(addr.firstName)} ${escapeHtml(addr.lastName)}</strong>
+                        <span style="display:block; color: var(--text-muted); margin-top: 4px;">${escapeHtml(addr.street)}</span>
+                        <span style="display:block; color: var(--text-muted);">${escapeHtml(addr.city)}, ${escapeHtml(addr.governorate)}</span>
+                        <span style="display:block; color: var(--text-muted); margin-top: 4px;">Phone: ${escapeHtml(addr.phone)}</span>
                     </label>
                 `;
                 addressList.appendChild(div);
@@ -364,6 +368,27 @@ async function handlePlaceOrder(e) {
   if (!allValid) return;
 
   const cart = getCart();
+  if (cart.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  let shippingInfo = null;
+  if (window.isAmazonMode) {
+    const checkedRadio = document.querySelector('input[name="selectedAddress"]:checked');
+    if (checkedRadio) {
+      shippingInfo = { addressId: Number(checkedRadio.value) };
+    }
+  } else {
+    shippingInfo = {
+      firstName: document.getElementById("firstName")?.value.trim() || "",
+      lastName: document.getElementById("lastName")?.value.trim() || "",
+      street: document.getElementById("address")?.value.trim() || "",
+      city: document.getElementById("city")?.value.trim() || "",
+      governorate: document.getElementById("governorate")?.value.trim() || "",
+      phone: document.getElementById("phone")?.value.trim() || ""
+    };
+  }
   
   const paymentSelect = document.getElementById("payment");
   const selectedPayment = paymentSelect ? paymentSelect.value : "card";
@@ -382,7 +407,8 @@ async function handlePlaceOrder(e) {
       body: JSON.stringify({ 
           cart: cart,
           payment: selectedPayment,
-          promoCode: appliedPromoString 
+          promoCode: appliedPromoString,
+          shippingInfo
       })
     });
     
@@ -394,7 +420,7 @@ async function handlePlaceOrder(e) {
       }
       window.location.href = data.url;
     } else {
-      alert("Error connecting to the payment gateway.");
+      alert(data.error || "Error connecting to the payment gateway.");
       if (submitBtn) { submitBtn.innerText = originalBtnText; submitBtn.disabled = false; }
     }
   } catch (err) {
@@ -658,6 +684,16 @@ async function initAuth() {
   injectAuthModal(); 
   const userIcon = document.getElementById("userIcon");
   const authModal = document.getElementById("authModal");
+
+  // Prevent clicking 👤 before /api/users/me resolves from navigating to non-existent login.html
+  if (userIcon && authModal) {
+    userIcon.href = "javascript:void(0)";
+    userIcon.onclick = (e) => {
+      e.preventDefault();
+      if (window.resetAuthModalToLogin) window.resetAuthModalToLogin();
+      authModal.style.display = "flex";
+    };
+  }
 
   const currentUser = await getCurrentUser();
 
@@ -998,6 +1034,8 @@ async function initProfile() {
   userEmailDisplay.textContent = currentUser.email;
   if(document.getElementById("displayUserName")) document.getElementById("displayUserName").textContent = currentUser.name;
   if(document.getElementById("displayUserEmail")) document.getElementById("displayUserEmail").textContent = currentUser.email;
+  const updateEmailInput = document.getElementById("updateEmail");
+  if (updateEmailInput && !updateEmailInput.value) updateEmailInput.value = currentUser.email;
 
   const loadAddresses = async () => {
       const addrList = document.getElementById("saved-addresses-list");
@@ -1795,6 +1833,25 @@ async function loadProductReviews(productId) {
     currentProductReviews = Array.isArray(reviews) ? reviews : [];
     populateProductPastReviewSelector(productId);
 
+    const overallBox = document.querySelector(".overall-rating");
+    if (overallBox) {
+      const count = currentProductReviews.length;
+      if (count === 0) {
+        overallBox.innerHTML = `
+          <h3 class="global-stars">☆☆☆☆☆</h3>
+          <p><strong>No ratings yet</strong> (0 reviews)</p>
+        `;
+      } else {
+        const avg = currentProductReviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / count;
+        const rounded = Math.round(avg);
+        const starsDisplay = "⭐".repeat(rounded) + "☆".repeat(Math.max(0, 5 - rounded));
+        overallBox.innerHTML = `
+          <h3 class="global-stars">${starsDisplay}</h3>
+          <p><strong>${avg.toFixed(1)} out of 5</strong> (${count} ${count === 1 ? 'review' : 'reviews'})</p>
+        `;
+      }
+    }
+
     if (currentProductReviews.length === 0) {
       reviewGrid.innerHTML = "<p style='color: var(--text-muted);'>No reviews yet. Be the first to review this tee!</p>";
       return;
@@ -1806,6 +1863,9 @@ async function loadProductReviews(productId) {
       reviewsToRender.forEach(review => {
         const isMine = isMyReview(review, 'product');
         const stars = "⭐".repeat(review.rating);
+        const verifiedBadgeHtml = review.UserId
+          ? `<span class="verified-purchase">Verified Driver</span>`
+          : `<span class="verified-purchase" style="color: var(--text-muted);">Guest Review</span>`;
         const article = document.createElement("article");
         article.className = "detailed-review-row";
         article.id = `prod-review-${review.id}`;
@@ -1820,7 +1880,7 @@ async function loadProductReviews(productId) {
           </div>
           <div class="review-rating-row">
             <span class="review-stars">${stars}</span>
-            <span class="verified-purchase">Verified Purchase</span>
+            ${verifiedBadgeHtml}
           </div>
           <p class="review-text">"${escapeHtml(review.comment)}"</p>
           ${getAdminAuthorBadgeHtml(review)}
@@ -2113,6 +2173,18 @@ function initProductReviewForm(productId) {
 
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle(); // Initializes the Dark/Light Mode Engine
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('paid') === '1' || urlParams.get('orderConfirmed')) {
+    const confirmedOrderId = urlParams.get('orderConfirmed');
+    localStorage.removeItem('cart');
+    if (confirmedOrderId) {
+      alert(`✅ Order #${confirmedOrderId} confirmed! Thank you for shopping with CarTees.`);
+    }
+    const cleanUrl = window.location.pathname + (window.location.hash || '');
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+
   displayCart(); 
   displayCheckoutSummary(); 
   autofillCheckout(); 
@@ -2128,7 +2200,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initSiteReviewForm();
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
   const currentProductId = urlParams.get('id');
   if (currentProductId && document.getElementById("dynamic-product-reviews")) {
       loadProductReviews(currentProductId);
@@ -2150,12 +2221,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+window.closeModal = function() {
+  const modal = document.getElementById('cartModal');
+  if (modal) modal.style.display = 'none';
+};
+
 // 🚀 THE BULLETPROOF INTERACTION CATCHER
 document.addEventListener("click", function(e) {
     
     // 1. CATCH: "BUY NOW" BUTTON
     const buyNowBtn = e.target.closest("#buyNowBtn") || e.target.closest(".buy-now");
     if (buyNowBtn) {
+        if (buyNowBtn.dataset.bound === "true") return;
         e.preventDefault(); 
 
         const sizeInput = document.getElementById("size");
@@ -2224,9 +2301,18 @@ if (settingsForm) {
     settingsForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const email = document.getElementById('updateEmail').value;
+        const email = document.getElementById('updateEmail').value.trim();
         const currentPassword = document.getElementById('currentPassword').value;
         const newPassword = document.getElementById('newPassword').value;
+
+        if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
+            alert("Please enter both your current password and a new password to change your password.");
+            return;
+        }
+        if (newPassword && newPassword.length < 6) {
+            alert("New password must be at least 6 characters long.");
+            return;
+        }
 
         try {
             const res = await fetch('/api/users/me', {
@@ -2241,6 +2327,11 @@ if (settingsForm) {
                 alert("Account updated securely!");
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
+                const updatedEmail = data.email || email;
+                if (updatedEmail) {
+                    if (document.getElementById('userEmailDisplay')) document.getElementById('userEmailDisplay').textContent = updatedEmail;
+                    if (document.getElementById('displayUserEmail')) document.getElementById('displayUserEmail').textContent = updatedEmail;
+                }
             } else {
                 alert(data.message || "Failed to update account.");
             }

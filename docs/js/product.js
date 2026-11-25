@@ -32,7 +32,38 @@ document.addEventListener("DOMContentLoaded", async () => {
         const descEl = document.getElementById('productDescription');
         
         if (titleEl) titleEl.innerText = product.name;
-        if (mainImg) mainImg.src = product.image;
+        if (mainImg) {
+            mainImg.src = product.image;
+            mainImg.alt = product.name;
+        }
+
+        // Populate Front/Back product thumbnails if available
+        const thumbContainer = document.getElementById('thumbnailContainer');
+        if (thumbContainer && product.image) {
+            thumbContainer.innerHTML = '';
+            const imageVariants = [product.image];
+            if (/Back(\.[a-z0-9]+)$/i.test(product.image)) {
+                imageVariants.push(product.image.replace(/Back(\.[a-z0-9]+)$/i, 'Front$1'));
+            } else if (/Front(\.[a-z0-9]+)$/i.test(product.image)) {
+                imageVariants.push(product.image.replace(/Front(\.[a-z0-9]+)$/i, 'Back$1'));
+            }
+
+            imageVariants.forEach((src, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = src;
+                thumb.alt = `${product.name} view ${index + 1}`;
+                if (index === 0) thumb.classList.add('active');
+                thumb.onclick = () => {
+                    changeImage(src);
+                    thumbContainer.querySelectorAll('img').forEach(t => t.classList.remove('active'));
+                    thumb.classList.add('active');
+                };
+                thumb.onerror = () => {
+                    thumb.remove();
+                };
+                thumbContainer.appendChild(thumb);
+            });
+        }
         
         // 4. Handle Pricing Logic (Adding the "Sale" effect)
         const currentPriceVal = parseFloat(product.price);
@@ -54,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // 6. Update Button Logic
         // These now use the real data from the database
         const addToCartBtn = document.getElementById('addToCartBtn');
-        const buyNowBtn = document.getElementById('buyNowBtn');
+        const buyNowBtn = document.getElementById('buyNowBtn') || document.getElementById('secureBuyBtn');
 
         if (addToCartBtn) {
             addToCartBtn.onclick = () => {
@@ -63,9 +94,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (buyNowBtn) {
-            buyNowBtn.onclick = () => {
-                addToCart(product.name, product.price, product.image, false);
-                window.location.href = 'checkout.html';
+            buyNowBtn.dataset.bound = "true";
+            buyNowBtn.onclick = (e) => {
+                if (e) e.preventDefault();
+                const added = addToCart(product.name, product.price, product.image, false);
+                if (added) {
+                    window.location.href = 'checkout.html';
+                }
             };
         }
 

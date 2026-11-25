@@ -10,15 +10,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=6">
   
-  <script src="js/script.js" defer></script>
+  <script src="js/script.js?v=6" defer></script>
   <script src="js/cart.js" defer></script>
   
   <style>
     .terms-container {
       max-width: 900px;
-      margin: 140px auto 60px auto; /* Clears the glass-nav */
+      margin: 40px auto 60px auto; /* Sits neatly below the sticky navbar */
       padding: 40px;
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
@@ -66,7 +66,7 @@
     
     @media(max-width: 600px) {
         .terms-container {
-            margin: 120px 15px 40px 15px;
+            margin: 30px 15px 40px 15px;
             padding: 25px;
         }
         .terms-container h1 {
@@ -93,7 +93,7 @@
       <!-- THEME TOGGLE BUTTON -->
       <button id="themeToggle" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 15px; color: var(--text-main); transition: 0.3s;">🌗</button>
 
-      <a href="login.html" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
+      <a href="javascript:void(0)" class="user-icon" id="userIcon" style="text-decoration:none; font-size: 22px; color: var(--text-main);">👤</a>
       <div class="cart-icon" onclick="window.location.href='cart.html'" style="color: var(--text-main);">
         🛒
         <span id="cart-indicator"></span>
@@ -122,11 +122,11 @@
       <li>All prices are listed in EGP (Egyptian Pounds) unless otherwise stated.</li>
       <li>Orders are only confirmed once payment is successfully processed.</li>
       <li>We reserve the right to cancel or refuse any order at our discretion.</li>
-      <li>We currently only accept and fulfill orders within Cairo, Egypt.</li>
+      <li>We accept and fulfill orders across all governorates in Egypt.</li>
     </ul>
 
     <h2>4. Shipping & Delivery</h2>
-    <p>We provide <strong>free delivery within Cairo</strong>. Delivery times are typically 2–5 business days depending on your location in Cairo. CarTees is not responsible for delays caused by traffic, courier services, or other factors beyond our control.</p>
+    <p>We ship across all Egyptian governorates and provide <strong>free delivery within Cairo</strong>. Delivery times are typically 2–5 business days within Cairo and 3–7 business days in other governorates. CarTees is not responsible for delays caused by traffic, courier services, or other factors beyond our control.</p>
 
     <h2>5. Returns & Refunds</h2>
     <p>We accept returns within 14 days of delivery if the item is unused, unworn, and in original packaging. Customers within Cairo can request a courier pickup for returns. CarTees will cover return shipping costs only in cases of defective or incorrect items.</p>

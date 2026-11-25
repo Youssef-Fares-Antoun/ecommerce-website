@@ -36,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'docs')));
 app.use('/admin', express.static(path.join(__dirname, 'docs', 'admin')));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'docs', 'home.html'));
+  res.sendFile(path.join(__dirname, 'docs', 'index.html'));
 });
 
 // 🚀 ZONE 2: CLOUDINARY MEDIA STORAGE
@@ -144,7 +144,11 @@ ProductReview.belongsTo(User);
 const Order = sequelize.define('Order', {
   totalAmount: { type: DataTypes.FLOAT, allowNull: false },
   status: { type: DataTypes.STRING, defaultValue: 'Processing' },
-  paymentMethod: { type: DataTypes.STRING, defaultValue: 'card' } 
+  paymentMethod: { type: DataTypes.STRING, defaultValue: 'card' },
+  customerName: { type: DataTypes.STRING, allowNull: true },
+  customerEmail: { type: DataTypes.STRING, allowNull: true },
+  customerPhone: { type: DataTypes.STRING, allowNull: true },
+  shippingAddress: { type: DataTypes.TEXT, allowNull: true }
 });
 
 const OrderItem = sequelize.define('OrderItem', {
@@ -173,6 +177,11 @@ async function ensureReviewColumns() {
     await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "lastIp" VARCHAR(255);');
     await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "resetCode" VARCHAR(255);');
     await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "resetCodeExpires" TIMESTAMPTZ;');
+    await sequelize.query('ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS "customerName" VARCHAR(255);');
+    await sequelize.query('ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS "customerEmail" VARCHAR(255);');
+    await sequelize.query('ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS "customerPhone" VARCHAR(255);');
+    await sequelize.query('ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS "shippingAddress" TEXT;');
+    await sequelize.query('ALTER TABLE "Orders" ALTER COLUMN "UserId" DROP NOT NULL;').catch(() => {});
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS "BannedIdentities" (
         id SERIAL PRIMARY KEY,
@@ -458,9 +467,30 @@ app.put('/api/users/me', async (req, res) => {
 
     const { email, currentPassword, newPassword } = req.body;
 
-    if (email) user.email = email;
+    if (email && String(email).trim() !== '') {
+      const cleanNewEmail = String(email).trim().toLowerCase();
+      if (cleanNewEmail !== String(user.email || '').trim().toLowerCase()) {
+        const existingUser = await User.findOne({
+          where: {
+            id: { [Op.ne]: user.id },
+            [Op.and]: [sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), cleanNewEmail)]
+          }
+        });
+        if (existingUser) {
+          return res.status(400).json({ message: "This email is already in use by another account." });
+        }
+        user.email = String(email).trim();
+      }
+    }
+
+    if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
+      return res.status(400).json({ message: "Please provide both your current password and a new password." });
+    }
 
     if (currentPassword && newPassword) {
+        if (String(newPassword).length < 6) {
+          return res.status(400).json({ message: "New password must be at least 6 characters long." });
+        }
         const validPassword = await bcrypt.compare(currentPassword, user.password);
         if (!validPassword) return res.status(401).json({ message: "Incorrect current password." });
         
@@ -469,9 +499,9 @@ app.put('/api/users/me', async (req, res) => {
     }
 
     await user.save();
-    res.json({ message: "Account updated successfully!" });
+    res.json({ message: "Account updated successfully!", email: user.email });
   } catch (err) {
-    res.status(500).json({ error: "Failed to update account" });
+    res.status(500).json({ message: "Failed to update account.", error: "Failed to update account" });
   }
 });
 
@@ -660,12 +690,40 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', verifyAdmin, async (req, res) => {
   try{
     const allUsers = await User.findAll({ attributes: { exclude: ['password', 'resetCode', 'resetCodeExpires'] } });
     res.json(allUsers);
   } catch(err) {
     res.status(500).json({ error: "Failed to fetch users." });
+  }
+});
+
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    const cleanName = (name || '').trim();
+    const cleanEmail = (email || '').trim();
+    const cleanMessage = (message || '').trim();
+
+    if (!cleanName || !cleanEmail || !cleanMessage) {
+      return res.status(400).json({ message: "Please fill in your name, email, and message." });
+    }
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      transporter.sendMail({
+        from: `"CarTees Contact" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER,
+        replyTo: cleanEmail,
+        subject: `📩 Contact Form Message from ${cleanName}`,
+        text: `Name: ${cleanName}\nEmail: ${cleanEmail}\n\nMessage:\n${cleanMessage}`
+      }).catch(err => console.error("Contact Email Error:", err));
+    }
+
+    res.json({ message: "✅ Thank you! Your message has been sent." });
+  } catch (err) {
+    console.error("Contact route error:", err);
+    res.status(500).json({ message: "Failed to send message. Please try again." });
   }
 });
 
@@ -950,7 +1008,11 @@ app.post('/api/promo/validate', async (req, res) => {
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const origin = req.headers.origin || `http://localhost:${PORT}`;
-    const { cart, payment, promoCode } = req.body; 
+    const { cart, payment, promoCode, shippingInfo } = req.body;
+    if (!Array.isArray(cart) || cart.length === 0) {
+      return res.status(400).json({ error: "Cart is empty" });
+    }
+
     const token = req.cookies.token;
     let userId = null;
     let user = null;
@@ -962,6 +1024,31 @@ app.post('/api/create-checkout-session', async (req, res) => {
       } catch (err) { }
     }
 
+    // Resolve shipping info from selected saved address, guest form, or default user address
+    let addrSource = null;
+    if (shippingInfo && shippingInfo.addressId && userId) {
+      addrSource = await Address.findOne({ where: { id: shippingInfo.addressId, UserId: userId } });
+    } else if (shippingInfo && (shippingInfo.street || shippingInfo.firstName || shippingInfo.phone)) {
+      addrSource = shippingInfo;
+    } else if (userId) {
+      addrSource = await Address.findOne({
+        where: { UserId: userId },
+        order: [['isDefault', 'DESC'], ['createdAt', 'DESC']]
+      });
+    }
+
+    const firstName = addrSource && addrSource.firstName ? String(addrSource.firstName).trim() : '';
+    const lastName = addrSource && addrSource.lastName ? String(addrSource.lastName).trim() : '';
+    const street = addrSource && addrSource.street ? String(addrSource.street).trim() : '';
+    const city = addrSource && addrSource.city ? String(addrSource.city).trim() : '';
+    const governorate = addrSource && addrSource.governorate ? String(addrSource.governorate).trim() : '';
+    const phone = addrSource && addrSource.phone ? String(addrSource.phone).trim() : '';
+
+    const resolvedName = [firstName, lastName].filter(Boolean).join(' ') || (user ? user.name : 'Guest Customer');
+    const resolvedEmail = user ? user.email : ((shippingInfo && shippingInfo.email) ? String(shippingInfo.email).trim() : null);
+    const resolvedPhone = phone || (user ? user.phone : null) || null;
+    const resolvedAddress = [street, city, governorate].filter(Boolean).join(', ') || (user ? user.address : null) || null;
+
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     if (promoCode) {
@@ -972,36 +1059,40 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     }
 
-    if (userId && user) {
-      const newOrder = await Order.create({ 
-          totalAmount: total, 
-          status: 'Processing', 
-          paymentMethod: payment || 'card', 
-          UserId: userId 
-      });
+    const newOrder = await Order.create({ 
+        totalAmount: total, 
+        status: 'Processing', 
+        paymentMethod: payment || 'card', 
+        UserId: userId || null,
+        customerName: resolvedName,
+        customerEmail: resolvedEmail,
+        customerPhone: resolvedPhone,
+        shippingAddress: resolvedAddress
+    });
+    
+    let emailItemsHtml = ''; 
+    let adminItemsHtml = '';
+
+    for (let item of cart) {
+      await OrderItem.create({ name: item.name, size: item.size, price: item.price, quantity: item.quantity, OrderId: newOrder.id });
       
-      let emailItemsHtml = ''; 
-      let adminItemsHtml = '';
+      emailItemsHtml += `
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 15px 0; color: #555;"><strong>${item.name}</strong><br><small style="color: #888;">Size: ${item.size}</small></td>
+          <td style="padding: 15px 0; color: #555; text-align: center;">${item.quantity}</td>
+          <td style="padding: 15px 0; color: #555; text-align: right;">LE ${(item.price * item.quantity).toFixed(2)}</td>
+        </tr>
+      `;
+      adminItemsHtml += `<li>${item.quantity}x ${item.name} (Size: ${item.size})</li>`;
+    }
 
-      for (let item of cart) {
-        await OrderItem.create({ name: item.name, size: item.size, price: item.price, quantity: item.quantity, OrderId: newOrder.id });
-        
-        emailItemsHtml += `
-          <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 15px 0; color: #555;"><strong>${item.name}</strong><br><small style="color: #888;">Size: ${item.size}</small></td>
-            <td style="padding: 15px 0; color: #555; text-align: center;">${item.quantity}</td>
-            <td style="padding: 15px 0; color: #555; text-align: right;">LE ${(item.price * item.quantity).toFixed(2)}</td>
-          </tr>
-        `;
-        adminItemsHtml += `<li>${item.quantity}x ${item.name} (Size: ${item.size})</li>`;
-      }
-
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      if (resolvedEmail) {
         const customerMailOptions = {
           from: `"CarTees Store" <${process.env.EMAIL_USER}>`,
-          to: user.email,
+          to: resolvedEmail,
           subject: `Order Confirmed! #${newOrder.id} - CarTees`,
-          text: `Hi ${user.name}, your order #${newOrder.id} for LE ${total.toFixed(2)} is confirmed!`,
+          text: `Hi ${resolvedName}, your order #${newOrder.id} for LE ${total.toFixed(2)} is confirmed!`,
           html: `
             <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f7f6; padding: 20px;">
               <div style="background-color: #111; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 4px solid #145214;">
@@ -1009,7 +1100,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
               </div>
               <div style="background-color: #fff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                 <h2 style="color: #111; margin-top: 0; font-size: 22px;">Order Confirmed! 🏁</h2>
-                <p style="color: #555; font-size: 16px;">Hi ${user.name},</p>
+                <p style="color: #555; font-size: 16px;">Hi ${resolvedName},</p>
                 <p style="color: #555; font-size: 16px;">Your order <strong>#${newOrder.id}</strong> is locked in. Our pit crew is getting it ready for the track.</p>
                 
                 <table style="width: 100%; border-collapse: collapse; margin-top: 25px; margin-bottom: 25px;">
@@ -1036,35 +1127,40 @@ app.post('/api/create-checkout-session', async (req, res) => {
             </div>
           `
         };
-
-        const adminMailOptions = {
-          from: `"CarTees System" <${process.env.EMAIL_USER}>`,
-          to: process.env.EMAIL_USER,
-          subject: `🚨 NEW ORDER #${newOrder.id} - LE ${total.toFixed(2)}`,
-          text: `New order from ${user.name}. Total: LE ${total.toFixed(2)}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fff; border: 2px solid #e74c3c; border-radius: 8px;">
-              <h2 style="color: #e74c3c; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">🚨 New Order Received! (#${newOrder.id})</h2>
-              <p><strong>Customer:</strong> ${user.name} (${user.email})</p>
-              <p><strong>Total:</strong> LE ${total.toFixed(2)}</p>
-              <p><strong>Payment Method:</strong> <span style="text-transform: uppercase;">${payment || 'Card'}</span></p>
-              ${promoCode ? `<p><strong>Promo Code Used:</strong> <span style="color: #e74c3c;">${promoCode.toUpperCase()}</span></p>` : ''}
-              <h3 style="margin-bottom: 5px;">Items Ordered:</h3>
-              <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 4px; border: 1px solid #ddd;">
-                ${adminItemsHtml}
-              </ul>
-              <p style="margin-top: 20px;"><a href="${origin}/admin" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
-            </div>
-          `
-        };
-
         transporter.sendMail(customerMailOptions).catch(err => console.error("Customer Email Error:", err));
-        transporter.sendMail(adminMailOptions).catch(err => console.error("Admin Email Error:", err));
       }
+
+      const adminMailOptions = {
+        from: `"CarTees System" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER,
+        subject: `🚨 NEW ORDER #${newOrder.id} - LE ${total.toFixed(2)}`,
+        text: `New order from ${resolvedName}. Total: LE ${total.toFixed(2)}${resolvedAddress ? ` | Address: ${resolvedAddress}` : ''}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fff; border: 2px solid #e74c3c; border-radius: 8px;">
+            <h2 style="color: #e74c3c; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">🚨 New Order Received! (#${newOrder.id})</h2>
+            <p><strong>Customer:</strong> ${resolvedName}${resolvedEmail ? ` (${resolvedEmail})` : ' (Guest)'}</p>
+            ${resolvedPhone ? `<p><strong>Phone:</strong> ${resolvedPhone}</p>` : ''}
+            ${resolvedAddress ? `<p><strong>Shipping Address:</strong> ${resolvedAddress}</p>` : ''}
+            <p><strong>Total:</strong> LE ${total.toFixed(2)}</p>
+            <p><strong>Payment Method:</strong> <span style="text-transform: uppercase;">${payment || 'Card'}</span></p>
+            ${promoCode ? `<p><strong>Promo Code Used:</strong> <span style="color: #e74c3c;">${promoCode.toUpperCase()}</span></p>` : ''}
+            <h3 style="margin-bottom: 5px;">Items Ordered:</h3>
+            <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 4px; border: 1px solid #ddd;">
+              ${adminItemsHtml}
+            </ul>
+            <p style="margin-top: 20px;"><a href="${origin}/admin" style="display: inline-block; padding: 12px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Dashboard</a></p>
+          </div>
+        `
+      };
+
+      transporter.sendMail(adminMailOptions).catch(err => console.error("Admin Email Error:", err));
     }
 
     if (payment === 'cod') { 
-        return res.json({ url: '/profile.html#orders' }); 
+        return res.json({
+          url: userId ? '/profile.html#orders' : `/index.html?orderConfirmed=${newOrder.id}`,
+          orderId: newOrder.id
+        }); 
     }
     
     let currentDiscountMultiplier = 1;
@@ -1088,7 +1184,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
       payment_method_types: ['card'], 
       line_items: lineItems, 
       mode: 'payment',
-      success_url: `${origin}/profile.html#orders`, 
+      success_url: userId ? `${origin}/profile.html?paid=1#orders` : `${origin}/index.html?orderConfirmed=${newOrder.id}`, 
       cancel_url: `${origin}/checkout.html`,
     });
     
@@ -1102,8 +1198,16 @@ app.post('/api/create-checkout-session', async (req, res) => {
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
     try {
         const totalOrders = await Order.count();
-        const totalRevenue = await Order.sum('totalAmount');
-        const allItems = await OrderItem.findAll();
+        const totalRevenue = await Order.sum('totalAmount', {
+            where: { status: { [Op.ne]: 'Cancelled' } }
+        });
+        const allItems = await OrderItem.findAll({
+            include: [{
+                model: Order,
+                where: { status: { [Op.ne]: 'Cancelled' } },
+                attributes: []
+            }]
+        });
         const salesCount = {};
         allItems.forEach(item => { salesCount[item.name] = (salesCount[item.name] || 0) + item.quantity; });
         let topSeller = 'N/A';

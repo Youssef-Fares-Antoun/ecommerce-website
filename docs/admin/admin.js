@@ -424,14 +424,21 @@ async function loadAllOrders() {
             if (order.status === "Delivered") { statusBg = "rgba(46, 204, 113, 0.15)"; statusColor = "#2ecc71"; }
             if (order.status === "Cancelled") { statusBg = "rgba(231, 76, 60, 0.15)"; statusColor = "#e74c3c"; }
 
+            const customerName = order.customerName || (order.User ? order.User.name : 'Guest');
+            const customerEmail = order.customerEmail || (order.User ? order.User.email : '');
+            const customerPhone = order.customerPhone || (order.User ? order.User.phone : '');
+            const shippingAddr = order.shippingAddress || '';
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td data-label="Order #" style="font-weight: bold; color: var(--text-main);">#${order.id}</td>
                 <td data-label="Date" style="font-size: 0.9em;">${date}</td>
                 <td data-label="Customer" style="font-size: 0.9em;">
                     <div>
-                        <strong style="color: var(--text-main);">${order.User ? order.User.name : 'Unknown'}</strong><br>
-                        <span style="color: var(--text-muted);">${order.User ? order.User.email : ''}</span>
+                        <strong style="color: var(--text-main);">${escapeAdminHtml(customerName)}</strong>${!order.User ? ' <span style="font-size:0.75em; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 1px 5px; border-radius: 3px;">Guest</span>' : ''}<br>
+                        ${customerEmail ? `<span style="color: var(--text-muted);">${escapeAdminHtml(customerEmail)}</span><br>` : ''}
+                        ${customerPhone ? `<span style="color: var(--text-muted);">Tel: ${escapeAdminHtml(customerPhone)}</span><br>` : ''}
+                        ${shippingAddr ? `<span style="color: var(--accent); font-size: 0.9em;">📍 ${escapeAdminHtml(shippingAddr)}</span>` : ''}
                     </div>
                 </td>
                 <td data-label="Items">${itemsHtml}</td>
@@ -476,7 +483,8 @@ async function updateOrderStatus(orderId, newStatus) {
             body: JSON.stringify({ status: newStatus })
         });
         if (response.ok) {
-            loadAllOrders(); 
+            loadAllOrders();
+            loadAdminStats();
         } else {
             alert("Failed to update status.");
         }
