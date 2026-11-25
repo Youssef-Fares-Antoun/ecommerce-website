@@ -371,6 +371,17 @@ footer a:hover { color: var(--accent); }
   .brand-grid { grid-template-columns: repeat(2, 1fr); }
   .brand-card:nth-child(1) { grid-column: span 2; grid-row: span 1; }
   .brand-card:nth-child(2) { grid-column: span 2; }
+  .brand-card,
+  .brand-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: var(--border-subtle) !important;
+  }
+  .brand-card img,
+  .brand-card:hover img {
+    filter: grayscale(0%) brightness(100%) !important;
+    transform: none !important;
+  }
 }
 @media (max-width: 600px) {
   .hero h1 { font-size: 32px; }

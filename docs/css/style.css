@@ -1032,3 +1032,11 @@ body.light-mode .brand-card:hover img,
 body.light-theme .brand-card:hover img {
   filter: grayscale(0%) brightness(100%);
 }
+@media (max-width: 900px) {
+  body.light-mode .brand-card img,
+  body.light-theme .brand-card img,
+  body.light-mode .brand-card:hover img,
+  body.light-theme .brand-card:hover img {
+    filter: grayscale(0%) brightness(100%) !important;
+  }
+}
